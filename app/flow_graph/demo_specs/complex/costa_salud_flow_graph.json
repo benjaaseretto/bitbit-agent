@@ -1,0 +1,602 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "costa_salud_flow",
+    "visible_name": "Costa Salud",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (22 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/costa_salud.json",
+      "company_id": "costa_salud-demo",
+      "description": "Base de conocimiento de Costa Salud."
+    },
+    "company_id": "costa_salud-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "santander_mora_temprana_flow_graph.json",
+      "node_count": 22,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Costa Salud",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "allow_identity_correction_after_denial": true,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí",
+            "con él",
+            "con ella",
+            "dígame",
+            "cuénteme",
+            "claro",
+            "sí, dígame",
+            "sí, claro"
+          ],
+          "identity_pregunta": "{saludo_por_horario}, ¿hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Te habla {nombre_agente} de Colektia, por encargo de Costa Salud.",
+          "identity_repregunta": "¿Hablo con {nombre_deudor}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "intent.ask_payment_total_or_partial",
+            "pay_confirmation_config": {
+              "pay_identification_phrases": [
+                "ya pagué",
+                "ya lo hice",
+                "ya realicé un turno",
+                "hoy pagué",
+                "ya hice el turno",
+                "ya realicé un turno",
+                "ya lo pagué",
+                "ya cancelé",
+                "ya transferí",
+                "ya deposité"
+              ]
+            }
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "intent.verify_phone_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.verify_phone_recado": {
+        "type": "intention",
+        "label": "Verificar teléfono (no titular)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "La persona indicó que no es el titular. Debes clasificar su respuesta en UNA de estas opciones. Selecciona 'Titular' si se CORRIGE y afirma que SÍ es el titular o {nombre_deudor} (por ejemplo 'sí soy yo', 'perdón sí soy', 'ah sí soy yo', 'me equivoqué soy yo', 'espera sí soy', 'sí soy el titular'). Selecciona 'Si' si confirma que este SÍ es el teléfono de contacto de {nombre_deudor} sin decir que es él/ella (por ejemplo 'sí', 'correcto', 'sí, es su número', 'claro', 'ajá'). Selecciona 'No' si indica que el número es incorrecto, que no corresponde al titular o que se equivocaron de número (por ejemplo 'no', 'número equivocado', 'no es su teléfono', 'se equivocaron', 'no conozco a esa persona'). NO continúes conversando aquí ni dejes el mensaje de recado todavía; solo selecciona una opción según la respuesta.",
+        "prompt": "Para confirmar, ¿este es el teléfono de contacto de {nombre_deudor}?",
+        "on": {
+          "Titular": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "intent.ask_payment_total_or_partial",
+            "pay_confirmation_config": {
+              "pay_identification_phrases": [
+                "ya pagué",
+                "ya lo hice",
+                "ya realicé un turno",
+                "hoy pagué",
+                "ya hice el turno",
+                "ya realicé un turno",
+                "ya lo pagué",
+                "ya cancelé",
+                "ya transferí",
+                "ya deposité"
+              ]
+            }
+          },
+          "Si": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto_by": {
+              "field": "dias_mora",
+              "rules": [
+                {
+                  "op": "between",
+                  "min": 1,
+                  "max": 10,
+                  "goto": "final.end_recado_a"
+                },
+                {
+                  "op": ">=",
+                  "value": 11,
+                  "goto": "final.end_recado_b"
+                }
+              ],
+              "default": "final.end_recado_b"
+            }
+          },
+          "No": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          }
+        }
+      },
+      "intent.ask_payment_total_or_partial": {
+        "type": "intention",
+        "label": "Confirmar si el turno fue total o parcial",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "El paciente indicó que ya realizó un turno. Debes confirmar si fue el total o solo una parte. Selecciona 'Total' si confirma que asistió el turno completo, el total, todo, o que ya no debe nada (por ejemplo 'el total', 'todo', 'completo', 'pagé todo', 'el turno completo', 'sí, el total'). Selecciona 'Parcial' si indica abono parcial, una parte, que falta turno, o que asistió menos del total (por ejemplo 'una parte', 'parcial', 'solo una parte', 'aboné algo', 'falta', 'no todo', 'parte del turno'). NO sigas negociando aquí; solo elige la opción correcta según lo que diga el paciente.",
+        "prompt": "¿Me confirmas si pagaste el total o solo una parte?",
+        "on": {
+          "Total": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Parcial": {
+            "goto_by": {
+              "field": "dias_mora",
+              "rules": [
+                {
+                  "op": "between",
+                  "min": 1,
+                  "max": 10,
+                  "goto": "intent.partial_payment_reminder_a"
+                },
+                {
+                  "op": ">=",
+                  "value": 11,
+                  "goto": "intent.partial_payment_reminder_b"
+                }
+              ],
+              "default": "intent.partial_payment_reminder_b"
+            }
+          }
+        }
+      },
+      "intent.partial_payment_reminder_a": {
+        "type": "intention",
+        "label": "Recordatorio turno completo (Agente A)",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "decision": "Si el paciente te interrumpe: responde brevemente, completa el guion pendiente sin inventar preguntas nuevas y avanza con Continuar. Si ya respondió con claridad a la pregunta del guion, avanza con Continuar.",
+        "prompt": "¡Genial que ya realizaste parte del turno! Para que quede todo en orden, el turno debe completarse por el total. ¿Puedes cubrir el resto hoy o mañana?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_a"
+          }
+        }
+      },
+      "intent.partial_payment_reminder_b": {
+        "type": "intention",
+        "label": "Recordatorio turno completo (Agente B)",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "decision": "Si el paciente te interrumpe: responde brevemente, completa el guion pendiente sin inventar preguntas nuevas y avanza con Continuar. Si ya respondió con claridad a la pregunta del guion, avanza con Continuar.",
+        "prompt": "Entendido, pero el turno parcial no regulariza la cuenta. El turno pendiente es de {due_balance_palabras} y necesitamos que lo abones hoy o mañana. ¿Cuándo puedes hacerlo?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_b"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura (presentación + divulgación + turno pendiente)",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "decision": "PRIORIDAD ABSOLUTA: si el paciente dice que no reconoce el producto, que no tiene esa credencial/crédito/cuenta, que no es suyo o que nunca lo contrató (por ejemplo 'no tengo esa credencial', 'no tengo credencial Classic', 'no reconozco', 'eso no es mío', 'nunca contraté', 'no tengo nada con ustedes'), selecciona 'No reconoce producto' de inmediato. NO inventes preguntas, NO ofrezcas revisar la cuenta ni más detalles, NO continues el guion de coordinación de agenda. Si el paciente te interrumpe con otra cosa (pregunta quién llama, qué es el turno, etc.): (1) responde BREVEMENTE a lo que dijo (si es una pregunta frecuente, usa esa respuesta de forma fiel; no inventes); (2) retoma y completa el guion de apertura pendiente sin reformularlo ni inventar un guion nuevo; (3) cuando termines ese guion, avanza INMEDIATAMENTE con Continuar en silencio. No abras un hilo de preguntas y respuestas en este paso ni te quedes esperando más aclaraciones: el objetivo es responder la interrupción, terminar la apertura y pasar a negociación. Si el paciente ya respondió con claridad a la pregunta final del guion (por ejemplo hoy, mañana, sí, no, de acuerdo), avanza con Continuar.",
+        "prompt_by": {
+          "field": "dias_mora",
+          "rules": [
+            {
+              "op": "between",
+              "min": 1,
+              "max": 10,
+              "template": "Mucho gusto {nombre_deudor}, te habla {nombre_agente} de Colektia, por encargo de Costa Salud. Te informo que la llamada está siendo grabada por efectos de calidad. Te contactamos para avisarte que tienes un turno pendiente de {due_balance_palabras} con fecha propuesta el {fecha_vencimiento}. Sabemos que a veces se nos pasa, por eso te escribimos a tiempo. ¿Puedes realizarlo hoy o mañana?"
+            },
+            {
+              "op": ">=",
+              "template": "Mucho gusto {nombre_deudor}, te habla {nombre_agente} de Colektia, por encargo de Costa Salud. Te informo que la llamada está siendo grabada por efectos de calidad. Te contactamos por un turno pendiente de {due_balance_palabras} que lleva {dias_mora} días vencido. Es importante confirmar la cita esta situación a la brevedad para evitar inconvenientes en tu cuenta. Necesitamos que realices el turno hoy o mañana. ¿Podemos contar con eso?",
+              "value": 11
+            }
+          ],
+          "default": "Mucho gusto {nombre_deudor}, te habla {nombre_agente} de Colektia, por encargo de Costa Salud. Te informo que la llamada está siendo grabada por efectos de calidad. Te contactamos para avisarte que tienes un turno pendiente de {due_balance_palabras} con fecha propuesta el {fecha_vencimiento}. Sabemos que a veces se nos pasa, por eso te escribimos a tiempo. ¿Puedes realizarlo hoy o mañana?"
+        },
+        "on": {
+          "No reconoce producto": {
+            "goto": "intent.confirm_no_reconoce_producto"
+          },
+          "always": {
+            "goto_by": {
+              "field": "dias_mora",
+              "rules": [
+                {
+                  "op": "between",
+                  "min": 1,
+                  "max": 10,
+                  "goto": "task.negotiation_a"
+                },
+                {
+                  "op": ">=",
+                  "goto": "task.negotiation_b",
+                  "value": 11
+                }
+              ],
+              "default": "task.negotiation_b"
+            }
+          }
+        }
+      },
+      "task.negotiation_a": {
+        "type": "task",
+        "label": "Negociación V2 - Agente A (tono cercano, atraso de agenda 1-10 días)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": 7,
+          "suggest_dias": 2,
+          "max_attempts": "{max_intentos}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "ask_nonpayment_reason": false,
+          "ask_nonpayment_reason_at_start": false,
+          "skip_opening_generate_reply": true,
+          "allow_interruptions": true,
+          "allow_partial_payments": "{ofrece_pago_minimo}",
+          "lock_partial_to_min": "{ofrece_pago_minimo}",
+          "min_partial_amount": "{invoiced_balance}",
+          "min_partial_label": "el turno mínimo",
+          "partial_offer_message": "Por si te resulta más accesible, también tienes la opción de abonar el turno mínimo de {invoiced_balance_palabras} hoy o mañana. ¿Te sería posible eso?",
+          "rejection_step_messages": [
+            "Entiendo, no hay problema. ¿Qué día te acomodaría más para poder realizarlo? Con eso queda todo en orden.",
+            "Entiendo que puede ser un momento difícil. ¿Hay algún familiar que pudiera ayudarte a realizar el turno mientras tanto?",
+            "{frase_pago_minimo_a}"
+          ],
+          "custom_instructions": "El objetivo es facilitar el turno, no presionar. NUNCA uses las palabras 'cita pendiente', 'atraso de agenda' ni 'incumplimiento'; usa 'turno pendiente' y 'ponerte al día'. Puedes usar expresiones como 'rapidito'.",
+          "objection_handlers": [
+            {
+              "objection": "paciente indica que ya asistió | ya pagué | ya lo hice | ya realicé un turno | hoy pagué | ya hice el turno | ya lo pagué | ya cancelé | ya transferí | ya deposité",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "paciente no reconoce el producto o la cita pendiente | no reconozco | no reconozco ese producto | no tengo ese producto | no tengo esa credencial | no tengo ese crédito | eso no es mío | no es mi cuenta | no tengo nada con Santander | nunca contraté | no sé de qué producto me habla | no tengo productos con ustedes",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce producto"
+            },
+            {
+              "objection": "paciente confundido, no entiende de qué se trata | no entiendo | de qué me hablas | explícame | cuál turno",
+              "answer": "{respuesta_cliente_confuso}"
+            },
+            {
+              "objection": "paciente quiere hablar con un agente humano | quiero hablar con una persona | necesito un asesor | pásame con alguien",
+              "answer": "Por este canal puedo ayudarte directamente con tu turno. Si prefieres hablar con un asesor, puedes llamar al seis, cero, cero, tres, dos, cero, tres, cero, cero, cero."
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment_a"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.ask_payment_total_or_partial"
+          },
+          "No reconoce producto": {
+            "goto": "intent.confirm_no_reconoce_producto"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "task.negotiation_b": {
+        "type": "task",
+        "label": "Negociación V2 - Agente B (tono firme, atraso de agenda 11-30 días)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": 7,
+          "suggest_dias": 2,
+          "max_attempts": "{max_intentos}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "ask_nonpayment_reason": false,
+          "ask_nonpayment_reason_at_start": false,
+          "skip_opening_generate_reply": true,
+          "allow_interruptions": true,
+          "allow_partial_payments": "{ofrece_pago_minimo}",
+          "lock_partial_to_min": "{ofrece_pago_minimo}",
+          "min_partial_amount": "{invoiced_balance}",
+          "min_partial_label": "el turno mínimo",
+          "partial_offer_message": "Como alternativa, puedes abonar el turno mínimo de {invoiced_balance_palabras} hoy o mañana para evitar que la situación se agrave. ¿Puedes comprometerte a eso?",
+          "rejection_step_messages": [
+            "Necesito que me confirmes una fecha concreta en la que puedas realizarlo. Con {dias_mora} días de atraso, es importante confirmar la cita cuanto antes para no generar mayores inconvenientes en tu cuenta.",
+            "Entiendo que puede ser un momento difícil, pero es necesario confirmar la cita cuanto antes. ¿Hay algún familiar que pudiera ayudarte a realizar el turno mientras tanto?",
+            "{frase_pago_minimo_b}"
+          ],
+          "custom_instructions": "Puedes nombrar explícitamente los días de atraso ({dias_mora} días) para reforzar la urgencia. El foco es lograr una fecha de turno concreta. Evita lenguaje rígido o bancario, el exceso de formalidad y las frases largas.",
+          "objection_handlers": [
+            {
+              "objection": "paciente indica que ya asistió | ya pagué | ya lo hice | ya realicé un turno | hoy pagué | ya hice el turno | ya lo pagué | ya cancelé | ya transferí | ya deposité",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "paciente no reconoce el producto o la cita pendiente | no reconozco | no reconozco ese producto | no tengo ese producto | no tengo esa credencial | no tengo ese crédito | eso no es mío | no es mi cuenta | no tengo nada con Santander | nunca contraté | no sé de qué producto me habla | no tengo productos con ustedes",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce producto"
+            },
+            {
+              "objection": "paciente confundido, no entiende de qué se trata | no entiendo | de qué me hablas | explícame | cuál turno",
+              "answer": "{respuesta_cliente_confuso}"
+            },
+            {
+              "objection": "paciente quiere hablar con un agente humano | quiero hablar con una persona | necesito un asesor | pásame con alguien",
+              "answer": "Por este canal puedo ayudarte directamente con tu turno. Si prefieres hablar con un asesor, puedes llamar al seis, cero, cero, tres, dos, cero, tres, cero, cero, cero."
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment_b"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.ask_payment_total_or_partial"
+          },
+          "No reconoce producto": {
+            "goto": "intent.confirm_no_reconoce_producto"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.confirm_no_reconoce_producto": {
+        "type": "intention",
+        "label": "Pregunta filtro - no reconoce producto",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "El paciente está respondiendo a si NO reconoce el producto con Costa Salud. Selecciona 'Confirma negativa' si afirma que NO lo reconoce, que no lo tiene, que no es suyo, o confirma la negativa (por ejemplo 'sí', 'exacto', 'correcto', 'no lo reconozco', 'no es mío', 'no tengo eso', 'así es', 'claro que no'). Selecciona 'Reconoce producto' si se corrige, dice que SÍ lo reconoce o que sí es su producto, o que hubo un malentendido y quiere continuar (por ejemplo 'sí lo tengo', 'ah sí es mío', 'perdón sí', 'sí lo reconozco', 'continúa', 'sí es mío'). NO sigas negociando el turno aquí; solo elige la opción correcta. NO hagas más preguntas ni continues la conversación aquí.",
+        "prompt": "¿No reconoce el {account_type} que tiene con Costa Salud?",
+        "on": {
+          "Niega datos": {
+            "goto": "final.end_no_reconoce_producto"
+          },
+          "Reconoce producto": {
+            "goto": "intent.resume_after_reconoce_producto"
+          }
+        }
+      },
+      "intent.resume_after_reconoce_producto": {
+        "type": "intention",
+        "label": "Retomar negociación tras reconocer producto",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "decision": "Si el paciente te interrumpe: responde brevemente, completa el guion pendiente sin inventar preguntas nuevas y avanza con Continuar. Si ya respondió con claridad a la pregunta del guion, avanza con Continuar.",
+        "prompt_by": {
+          "field": "dias_mora",
+          "rules": [
+            {
+              "op": "between",
+              "min": 1,
+              "max": 10,
+              "template": "Perfecto, gracias por confirmar. Entonces retomamos: tienes un turno pendiente de {due_balance_palabras} con fecha propuesta el {fecha_vencimiento}. ¿Puedes realizarlo hoy o mañana?"
+            },
+            {
+              "op": ">=",
+              "value": 11,
+              "template": "Perfecto, gracias por confirmar. Entonces retomamos: tienes un turno pendiente de {due_balance_palabras} que lleva {dias_mora} días vencido. ¿Podemos contar con el turno hoy o mañana?"
+            }
+          ],
+          "default": "Perfecto, gracias por confirmar. Entonces retomamos: tienes un turno pendiente de {due_balance_palabras}. ¿Puedes realizarlo hoy o mañana?"
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "dias_mora",
+              "rules": [
+                {
+                  "op": "between",
+                  "min": 1,
+                  "max": 10,
+                  "goto": "task.negotiation_a"
+                },
+                {
+                  "op": ">=",
+                  "value": 11,
+                  "goto": "task.negotiation_b"
+                }
+              ],
+              "default": "task.negotiation_b"
+            }
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmación de cita y medios de turno",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "decision": "Si el paciente te interrumpe: responde brevemente (si pregunta por medios de turno u otra duda frecuente, usa la respuesta fiel), completa el guion pendiente sin inventar preguntas nuevas y avanza con Continuar.",
+        "prompt": "Perfecto, entonces confirmamos tu cita de turno por {payment_amount_palabras} para el {commitment_date_spoken}. Para que puedas ponerte al día, tienes disponibles los siguientes medios de turno: el Botón de turno en santander punto ce ele, desde tu App Santander, o presencialmente en nuestras sucursales.",
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "dias_mora",
+              "rules": [
+                {
+                  "op": "between",
+                  "min": 1,
+                  "max": 10,
+                  "goto": "final.end_commitment_a"
+                },
+                {
+                  "op": ">=",
+                  "value": 11,
+                  "goto": "final.end_commitment_b"
+                }
+              ],
+              "default": "final.end_commitment_b"
+            }
+          }
+        }
+      },
+      "final.end_commitment_a": {
+        "type": "final",
+        "label": "Despedida cita (Agente A)",
+        "delivery": "say",
+        "prompt": "¡Perfecto! Queda anotado que realizarás el turno el {commitment_date_spoken}. Cualquier consulta, estamos a tu disposición. ¡Hasta pronto!"
+      },
+      "final.end_commitment_b": {
+        "type": "final",
+        "label": "Despedida cita (Agente B)",
+        "delivery": "say",
+        "prompt": "Queda registrado el cita de turno para el {commitment_date_spoken}. Te recordamos que es fundamental cumplir con esa fecha. Ante cualquier imprevisto, comunícate de inmediato."
+      },
+      "final.end_no_commitment_a": {
+        "type": "final",
+        "label": "Despedida sin cita (Agente A)",
+        "delivery": "say",
+        "prompt": "Entendemos. Quedamos a tu disposición si necesitas más información. ¡Que tengas un buen día!"
+      },
+      "final.end_no_commitment_b": {
+        "type": "final",
+        "label": "Despedida sin cita (Agente B)",
+        "delivery": "say",
+        "prompt": "Dejamos constancia de la gestión. La situación continuará siendo monitoreada. Cualquier cambio, puedes contactarnos a través de nuestros canales oficiales."
+      },
+      "final.end_no_reconoce_producto": {
+        "type": "final",
+        "label": "Despedida (no reconoce producto)",
+        "delivery": "say",
+        "prompt": "Entiendo, lamento las molestias. Para tener información acerca de su {account_type}, comuníquese al seis, cero, cero, tres, dos, cero, tres, cero, cero, cero, o a través del Botón de turno en santander punto ce ele, desde su App Santander, o presencialmente en nuestras sucursales. Le habló {nombre_agente}, que tenga buen día."
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado total)",
+        "delivery": "say",
+        "prompt": "¡Excelente, {nombre_deudor}! Gracias por confirmar la cita tu turno. Que tengas buen día."
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "delivery": "say",
+        "prompt": "Gracias por tu tiempo, {nombre_deudor}. Dejamos registrada tu intención de turno y te contactaremos nuevamente pronto para confirmarlo."
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "delivery": "say",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día."
+      },
+      "final.end_recado_a": {
+        "type": "final",
+        "label": "Despedida (recado Agente A)",
+        "delivery": "say",
+        "prompt": "Perfecto, ¿podrías avisarle a {nombre_deudor} que lo contactamos de Costa Salud? Es por un asunto personal, y sería bueno que se comunique cuanto antes. ¡Muchas gracias!"
+      },
+      "final.end_recado_b": {
+        "type": "final",
+        "label": "Despedida (recado Agente B)",
+        "delivery": "say",
+        "prompt": "Por favor, es importante que {nombre_deudor} se comunique con nosotros a la brevedad por un asunto con su cuenta. Gracias."
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "delivery": "say",
+        "prompt": "Gracias. Hasta luego."
+      }
+    }
+  }
+}

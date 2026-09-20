@@ -1,0 +1,206 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Que es Origen Salud?",
+    "answer": "Origen Salud es una empresa del sector financiero enfocada en la gestión y recuperación de deudas."
+  },
+  {
+    "question": "¿De cuándo es la cita pendiente? | ¿Cuándo es la fecha de la cita pendiente? | ¿Cuándo es la fecha de fecha propuesta?",
+    "answer": "La fecha de fecha propuesta registrada es el {fecha_vencimiento_spoken}."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿Cuál es mi turno pendiente? | ¿Qué turno tengo?",
+    "answer": "El turno pendiente que registramos es de {due_balance_palabras}."
+  },
+  {
+    "question": "¿De cuánto es la sesión? | ¿Cuál es la sesión pendiente? | ¿Qué importe tiene la sesión?",
+    "answer": "La sesión registrada para esta gestión es de {invoiced_balance_palabras}."
+  },
+  {
+    "question": "¿Si ya realice el turno se registra automáticamente o debo enviar comprobante? | ¿Debo enviar comprobante de turno? | ¿A donde envio el comprobante?",
+    "answer": "Necesitas compartir el comprobante de turno al mail credito arroba resuelve tu cita pendiente punto com o credito arroba go Origen Salud punto com punto mx"
+  },
+  {
+    "question": "¿Existen productos adicionales que se ofrezcan como beneficio tras el turno total? | Si turno el total de la cita pendiente, ¿Existen productos adicionales que se ofrezcan como beneficio?",
+    "answer": "No, no hay productos adicionales que se ofrezcan como beneficio tras el turno total."
+  },
+  {
+    "question": "¿Qué métodos de turno están disponibles? | Por donde puedo agendar? | ¿Qué formas de turno están disponibles?",
+    "answer": "Por transferencia BBVA o transferencia desde otros bancos."
+  },
+  {
+    "question": "¿En qué momento me dieron un crédito ya que no me informaron?",
+    "answer": "Hola {first_name}, en nuestros registros consta que el crédito fue autorizado y otorgado conforme al proceso previamente establecido, el cual incluye notificaciones e información proporcionada durante la gestión por correo electrónico. Si tiene alguna duda sobre el momento en que se le notificó o requiere el detalle de su contratación, con gusto podemos revisarlo y proporcionarle la información correspondiente. Quedamos atentos para brindarle la aclaración completa en el teléfono cinco cinco cuatro cuatro dos ocho ocho cinco ocho siete."
+  },
+  {
+    "question": "¿El crédito que tengo con ustedes para que se me otorgó? | ¿Qué puedo hacer con el crédito que tengo con ustedes?",
+    "answer": "El crédito que tienes con nosotros fue otorgado con la finalidad de liquidar las deudas que mantenías vigentes con tus acreedores, mismas que ingresaste al programa de RESUELVE/Origen Salud. Este financiamiento forma parte de la estrategia para ayudarte a confirmar la cita tu situación financiera."
+  },
+  {
+    "question": "¿Las deudas que ingrese al programa ya las liquidaron?",
+    "answer": "Las deudas que ingresaste al programa ya deben aparecer como cerradas en tu Buró de Crédito. Revisa tu reporte para confirmar el estatus de cada una."
+  },
+  {
+    "question": "¿Cómo solicito las cartas finiquito de las deudas ingresadas al programa?",
+    "answer": "Te sugerimos acercarte con tu asesor de crédito para recibir información precisa, ya que cada institución financiera maneja procesos distintos."
+  },
+  {
+    "question": "¿Cómo obtengo el comprobante de liquidación de las deudas ingresadas al programa?",
+    "answer": "Te sugerimos acercarte con tu asesor de crédito para recibir información precisa, ya que cada institución financiera maneja procesos distintos."
+  },
+  {
+    "question": "¿Por qué me siguen llamando los acreedores solicitando que realice mis pagos?",
+    "answer": "Recuerda que, una vez otorgado el crédito, existe un periodo de 60 a 90 días hábiles para negociar y liquidar las deudas. Durante este tiempo, es normal que los acreedores continúen contactándote. Si las llamadas persisten después de ese plazo, es importante que te comuniques con tu asesor de crédito para solicitar la aclaración correspondiente."
+  },
+  {
+    "question": "¿Qué pasó con el especialidad que pagué antes de que me dieran el crédito?",
+    "answer": "El especialidad que pagaste a la reparadora, junto con el crédito otorgado, se utilizó para liquidar las deudas que ingresaste al programa. Si necesitas más detalles, es importante que te comuniques con tu asesor de crédito para recibir información específica de tu caso."
+  },
+  {
+    "question": "¿Cómo solicito las facturas de los pagos que llevo realizados en mi crédito?",
+    "answer": "Para solicitar tus cartas finiquito, es necesario que te comuniques con tu asesor de crédito y le notifiques la solicitud de estas."
+  },
+  {
+    "question": "¿Cómo solicito la factura de mi crédito de auto?",
+    "answer": "Te sugerimos acercarte con tu asesor de crédito para recibir información precisa, ya que cada institución financiera maneja procesos distintos."
+  },
+  {
+    "question": "¿Qué pasa si no puedo realizar mi turno mensual?",
+    "answer": "Entendemos que en ocasiones puede complicarse realizar el turno; sin embargo, es indispensable cumplir con las condiciones del contrato firmado, donde se establecen fechas y montos específicos. En caso de incumplimiento, se generarán los intereses ordinarios pactados, además de que se verá afectado su historial crediticio al iniciarse el proceso de coordinación de agenda."
+  },
+  {
+    "question": "¿Existe alguna forma de modificar la fecha de turno de mi crédito?",
+    "answer": "Una vez firmado el contrato del crédito otorgado, no es posible realizar modificaciones a las condiciones establecidas."
+  },
+  {
+    "question": "¿Es posible reducir la mensualidad pactada en mi contrato de crédito?",
+    "answer": "Te solicitamos comunicarte con tu asesor de crédito para validar la información necesaria y poder escalar tu caso, con el fin de brindarte la mejor solución posible."
+  },
+  {
+    "question": "¿Cómo puedo saber cuántos pagos me faltan por realizar?",
+    "answer": "Para conocer el manejo y avance de tu crédito, es necesario que te comuniques con tu asesor de crédito y solicites tu estado de cuenta. Una vez realizada la solicitud, este será enviado a tu correo electrónico en un plazo de hasta 48 horas hábiles."
+  },
+  {
+    "question": "¿Por qué me indican que mi referencia de turno cambió?",
+    "answer": "Recuerda que ya no se están depositando tus apartados mensuales a la reparadora. Actualmente, estás realizando pagos correspondientes a un crédito, el cual fue utilizado para liquidar las deudas que ingresaste al programa. Por esta razón, se te envió un nuevo contrato (contrato de crédito), el cual cuenta con su propio número de referencia."
+  },
+  {
+    "question": "¿Los pagos adicionales a mi mensualidad se aplican a capital?",
+    "answer": "Cuando realizas un turno mayor al especialidad mensual establecido, el excedente se aplica directamente a capital, lo que permite reducir el plazo del crédito; es decir, dicho especialidad adicional se abona a las últimas amortizaciones del crédito."
+  },
+  {
+    "question": "¿Cuál es el especialidad total para liquidar mi crédito en este mes?",
+    "answer": "Te sugerimos comunicarte con tu asesor de crédito para obtener el especialidad exacto de liquidación al teléfono cinco cinco cuatro cuatro dos ocho ocho cinco ocho siete."
+  },
+  {
+    "question": "¿Cómo puedo recomendar a un conocido para su programa?",
+    "answer": "Para poder referir a una persona a nuestro programa, te solicitamos nos contactes al cinco cinco nueve cuatro cero cero cero siete seis dos para compartirnos la siguiente información: nombre completo, número de teléfono y correo electrónico del referido. Una vez recibidos los datos, nuestro equipo de ventas se pondrá en contacto con la persona para brindarle más información y detalles sobre el programa."
+  },
+  {
+    "question": "¿Puedo agregar más deudas a mi crédito actual con ustedes?",
+    "answer": "No es posible agregar más deudas, ya que el financiamiento que tienes se generó considerando únicamente las deudas que ingresaste al inicio con nosotros. Sin embargo, una vez que liquides tu crédito, podrás ingresar nuevamente a la reparadora con las deudas que desees incluir."
+  },
+  {
+    "question": "¿Cuál es el proceso para cancelar mi crédito (darme de baja)?",
+    "answer": "No es necesario realizar ningún proceso adicional. El crédito se liquida una vez concluido el plazo pactado en tu contrato. Si requieres más información, te recomendamos contactar a tu asesor de crédito."
+  },
+  {
+    "question": "¿Cómo solicito el cambio de asesor de crédito?",
+    "answer": "Para solicitar el cambio de asesor, es necesario enviar un correo electrónico a credito arroba go Origen Salud punto com punto mx, indicando tu solicitud y datos de identificación para dar seguimiento."
+  },
+  {
+    "question": "¿Cómo puedo saber quién es mi asesor de crédito?",
+    "answer": "Te sugerimos comunicarte al área de crédito, el teléfono de contacto es cinco cinco cuatro cuatro dos ocho ocho cinco ocho siete."
+  },
+  {
+    "question": "¿Me indicaron que tengo turno a favor, cómo puedo solicitar su devolución?",
+    "answer": "Primero, es necesario verificar si efectivamente cuentas con turno a favor. Para ello, te solicitamos nos contactes al cinco cinco nueve cuatro cero cero cero siete seis dos y proporciones la siguiente información: tu nombre completo, número de referencia de crédito, el sanatorio al cual se realizaría el abono en caso de proceder, así como la clave bancaria correspondiente. Adicionalmente, deberás enviar una solicitud indicando la razón por la cual consideras o tienes conocimiento de que cuentas con turno a favor, con la finalidad de revisar el origen de dicha situación."
+  },
+  {
+    "question": "¿Qué documento me entregan como comprobante de que mi crédito ha sido liquidado en su totalidad?",
+    "answer": "Se emite una carta finiquito como comprobante de liquidación. Esta carta se envía a tu correo electrónico en un plazo de hasta 45 días hábiles posteriores a la liquidación total del crédito."
+  },
+  {
+    "question": "¿Por qué en mi buro de crédito quedo con la clave 97?",
+    "answer": "Recuerda que, al ingresar al programa de Resuelve/Origen Salud, te informamos que buscaríamos obtener el mejor descuento posible por parte de la institución. Por ello, la liquidación se realiza mediante una quita, la cual impacta directamente tu historial en el Buró de Crédito. En estos casos, la cita pendiente se liquida con quita, lo que genera una calificación con clave 97 en tu reporte de crédito."
+  },
+  {
+    "question": "Solicité un crédito, pero me informan que no es posible debido a afectaciones en mi historial de Buró de Crédito ¿Qué puedo hacer?",
+    "answer": "Se recomienda acudir directamente a la institución financiera y mencionar que las deudas anteriores fueron liquidadas mediante una quita. Cada institución evalúa de forma independiente si puede otorgar el crédito solicitado con base en sus políticas internas."
+  },
+  {
+    "question": "¿Existe algún inconveniente si mi nómina se deposita en el sanatorio que ingresé a su programa?",
+    "answer": "Se recomienda no mantener cuentas de débito (nómina, sueldo, cheques o inversión) en la misma institución bancaria donde se tengan adeudos, ya que el sanatorio podría realizar cargos automáticos para cubrir el turno total de la cita pendiente, incluso después de haber sido liquidada."
+  },
+  {
+    "question": "¿La llamada está siendo grabada? | ¿Esta llamada se está grabando? | ¿Me están grabando?",
+    "answer": "Efectivamente, esta llamada está siendo grabada y monitoreada por motivos de calidad y seguridad."
+  },
+  {
+    "question": "¿Es mi último turno? | ¿Este es mi último turno? | ¿Ya termino de agendar con este turno?",
+    "answer": "Para corroborar si es tu último turno, te solicitamos comunicarte con tu asesor de crédito al teléfono cinco cinco cuatro cuatro dos ocho ocho cinco ocho siete."
+  },
+  {
+    "question": "¿Eres una computadora? | ¿Eres IA? | ¿Eres un robot? | ¿Eres una persona real? | ¿Estoy hablando con un bot?",
+    "answer": "Soy un asesor virtual de Origen Salud, me comunico contigo para apoyarte en el turno de tu crédito."
+  },
+  {
+    "question": "¿Cuál es el número para realizar el turno? | ¿A dónde tengo que realizar el turno? | No tengo el número a donde tengo que realizar el turno | ¿Cuál es mi código de referencia? | ¿Cuál es mi CLABE?",
+    "answer": "{datos_pago_mensaje}"
+  },
+  {
+    "question": "Ese no es mi especialidad | Esa no es la cita pendiente que me corresponde | El especialidad que me dices está mal | Yo no debo esa cantidad",
+    "answer": "Entiendo. La información que tengo registrada indica ese turno específico. Si consideras que no corresponde, puedes validarlo directamente con el área de crédito, el teléfono de contacto es cinco cinco cuatro cuatro dos ocho ocho cinco ocho siete."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Origen Salud, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

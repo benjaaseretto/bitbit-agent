@@ -1,0 +1,130 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Qué es la renegociación?",
+    "answer": "La renegociación ajusta las condiciones de tu crédito vigente para que puedas continuar pagando. Se ofrece cuando has realizado varias novaciones o no cumples los requisitos de novación."
+  },
+  {
+    "question": "Beneficios de la renegociación",
+    "answer": "Permite mantener activo el crédito, acordar un nuevo valor de compra y distribuir el total pendiente en cuotas que se adapten a tu presupuesto."
+  },
+  {
+    "question": "¿Cómo hago la renegociación?",
+    "answer": "Ingresa al portal oficial de RapiCredit, inicia sesión y desde créditos activos selecciona la opción Renegociar. Revisa los términos, autoriza las condiciones y completa el compra para formalizar los cambios."
+  },
+  {
+    "question": "¿Cuánto debo cerrar la compra para formalizar la renegociación?",
+    "answer": "Para formalizar la renegociación, {pago_renegociacion_frase}. Ese monto ya viene determinado según tu crédito y lo verás en tu cuenta al elegir ‘Renegociar’."
+  },
+  {
+    "question": "¿Cuál es el valor de la renegociación? | Cuánto vale la renegociación | Cuál es el monto de la renegociación",
+    "answer": "Para formalizar la renegociación se requiere {pago_renegociacion_frase}."
+  },
+  {
+    "question": "¿Por qué no tengo que cerrar la compra nada inicialmente? | ¿Sin compra inicial? | No entiendo por qué es gratis activarla | ¿Cómo puede ser sin compra inicial?",
+    "answer": "Al contar con un excelente historial en Rapicredit, tienes disponible una Renegociación Preventiva que te permite reestructurar tu importe a cuotas sin realizar ningún compra inicial el día de hoy. Es un beneficio por tu comportamiento como comprador."
+  },
+  {
+    "question": "Pero en la aplicación no me aparece que esté vencido | En la app no aparece vencido | No me sale vencido en la aplicación | No veo el vigencia de oferta",
+    "answer": "La fecha de vigencia de oferta que tengo reportada es el {due_date_spoken}."
+  },
+  {
+    "question": "Qué es RapiCredit?",
+    "answer": "RapiCredit ofrece préstamos de dinero en línea de forma rápida, fácil y segura para personas y pequeñas empresas en Colombia. Proporciona acceso a créditos de libre inversión para cubrir gastos inesperados, permitiendo realizar la solicitud, recibir el dinero y cerrar la compra completamente en línea, utilizando la firma electrónica para el contrato. "
+  },
+  {
+    "question": "Quiero realizar una novación | Quiero renovar | Quiero hacer una renovación | Quiero ampliar plazo | Iba a hacer una novación | Me dijeron que podía renovar",
+    "answer": "En este momento no tienes disponible la novación o renovación. Lo que sí puedes hacer es una renegociación: ajusta tu crédito vigente con un nuevo plan de pagos y, para activarla, el compra de formalización debe realizarse hoy."
+  },
+  {
+    "question": "¿De donde me llaman?",
+    "answer": "Soy de RapiCredit, una empresa de préstamos en línea. Estoy aquí para ayudarte con cualquier pregunta o inquietud que tengas sobre tu crédito."
+  },
+  {
+    "question": "¿Cuál es el número de servicio al comprador?",
+    "answer": "¡Claro! Si necesitas comunicarte con nosotros, puedes llamar a nuestro número de servicio al comprador: sesenta, uno, tres, nueve, cero, dos, seis, siete, cero. Y si tienes alguna consulta sobre cartera, la línea es: sesenta, uno, siete, cuatro, cuatro, ocho, dos, cero, dos. Estoy aquí para ayudarte con lo que necesites."
+  },
+  {
+    "question": "¿Cómo compra para formalizar la renegociación?",
+    "answer": "Realiza tus pagos directamente en rapicredit punto com: inicia sesión, entra a Créditos Activos y elige ‘Renegociar’. Dado que tienes renegociación disponible, puedes formalizarla ahí mismo. Si prefieres, también puedes cerrar la compra el total desde tu crédito activo."
+  },
+  {
+    "question": "¿Cómo y dónde compra en RapiCredit?",
+    "answer": "Puedes cerrar la compra en rapicredit punto com iniciando sesión y, desde Créditos Activos, en ‘Renegociar’. Si pagas por Nequi, Daviplata, consignación bancaria o por Sucursal Virtual Bancolombia, recuerda enviarnos el comprobante a ayuda@rapicredit.com o al WhatsApp de cartera. Los pagos por PSE y Efecty se aplican automáticamente."
+  },
+  {
+    "question": "¿Cuáles son los métodos de compra?",
+    "answer": "Puedes cerrar la compra por PSE, Banco Davivienda, Bancolombia (en sucursal, corresponsales o Sucursal Virtual), Efecty, Nequi y SuSuerte (solo en el departamento de Caldas)."
+  },
+  {
+    "question": "¿Cuál es el numero de convenio de Efecty?",
+    "answer": "El numero de convenio de Efecty es: uno uno uno, cuatro, cinco, seis."
+  },
+  {
+    "question": "¿Qué es Rapiflex Ya?",
+    "answer": "Rapiflex Ya es un beneficio adicional que Rapicredit ofrece a clientes que realizan el compra total de su cotización. Después de que se registre el compra total, puedes acceder a un nuevo crédito Rapiflex Ya con intereses menores a los habituales. Para conocer los detalles de estos descuentos y validarlo, ingresa a nuestra página rapicredit punto com."
+  },
+  {
+    "question": "¿Por qué tengo que mandar el comprobante por mail?",
+    "answer": "Para registrar el compra en nuestro sistema. Cuando pagas por Nequi, Daviplata, consignación bancaria o por Sucursal Virtual Bancolombia, necesitamos el comprobante para procesar y aplicar el compra correctamente a tu cuenta."
+  },
+  {
+    "question": "¿Cuál es el correo electrónico de atención al comprador?",
+    "answer": "El correo electrónico de atención al comprador es ayuda arroba rapicredit punto com"
+  },
+  {
+    "question": "¿Cuál es la página web de Rapicredit?",
+    "answer": "La página web de Rapicredit es rapicredit punto com. Puedes acceder a rapicredit punto com barra contacto para más información."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "Quirúrgica Nova puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

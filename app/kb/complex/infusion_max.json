@@ -1,0 +1,54 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "Infusión Max puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

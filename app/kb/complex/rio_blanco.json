@@ -1,0 +1,122 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Qué es Bravo? | ¿Quiénes son? | ¿De qué empresa me llaman? | ¿A qué se dedica Bravo? | ¿Qué hacen ustedes?",
+    "answer": "Sanatorio Río Blanco es una empresa colombiana especializada en reestructuración financiera, con más de quince años de trayectoria y más de trescientas mil deudas liquidadas. Lo que hacemos es ayudar a las personas a salir de situaciones de sobreendeudamiento, negociando directamente con los bancos y entidades para reducir la cita pendiente y eliminar los intereses."
+  },
+  {
+    "question": "Ya pagué | Ya cancelé esa cita pendiente | Ya está turno | Ya pagué mis deudas",
+    "answer": "Perfecto, ¿actualmente tiene deudas que se sientan difíciles de manejar? Si es así, el programa podría ayudarle, tiene un momento para que le cuente como funciona?"
+  },
+  {
+    "question": "¿Cuánto me van a cobrar? | ¿Cuánto cobran? | ¿Cuál es el costo? | ¿Tiene algún costo? | ¿Cuánto me sale?",
+    "answer": "El asesor financiero va a revisar con usted en detalle todos los costos. No se compromete a nada hoy."
+  },
+  {
+    "question": "¿Cuánto sería la sesión? | ¿De cuánto quedaría el turno? | ¿Cuánto tendría que agendar al mes?",
+    "answer": "El asesor financiero revisará con usted los montos en detalle. Es parte de lo que va a calcular según su situación."
+  },
+  {
+    "question": "No quiero responder esa pregunta | Prefiero no responder | ¿Para qué necesitas eso? | No quiero dar ese dato",
+    "answer": "No hay problema, es una pregunta de filtro para ver si el programa puede ayudarle. Si prefiere no responderla, podemos seguir con la siguiente."
+  },
+  {
+    "question": "¿Por qué me preguntas eso? | No se voy a dar mis datos | ¿Para qué quieres saber eso? | No me siento cómodo respondiendo",
+    "answer": "Entiendo completamente. No le estoy pidiendo información bancaria ni datos sensibles, solo unas preguntas generales para saber si el programa es para usted. Si en algún momento no quiere continuar, me avisa y listo."
+  },
+  {
+    "question": "Solo quiero hablar con un asesor | Quiero hablar con una persona | No quiero responder pero me interesa | Prefiero que me llame un asesor",
+    "answer": "Entiendo completamente. Si desea, se puede contactar directamente a Bravo al número de atención {numero_atencion}."
+  },
+  {
+    "question": "¿Son un sanatorio? | ¿Ustedes son una entidad financiera? | ¿Bravo es un sanatorio? | ¿Me van a prestar plata?",
+    "answer": "No, Sanatorio Río Blanco no es un sanatorio ni capta dinero. Somos una empresa especializada en negociar deudas con las entidades financieras en nombre de nuestros clientes."
+  },
+  {
+    "question": "¿Afecta mi historial crediticio? | ¿Me daña el datacrédito? | ¿Esto afecta mi vida crediticia? | ¿Me reportan?",
+    "answer": "El asesor financiero le explicará cómo funciona el programa en su caso específico, es parte de lo que va a revisar con usted."
+  },
+  {
+    "question": "¿Tienen oficinas? | ¿Dónde están ubicados? | ¿Tienen sede física? | ¿Puedo ir a una oficina?",
+    "answer": "Sí, nos ubicamos en Bogotá y Medellín. El asesor puede orientarle sobre cómo conectarse con nosotros."
+  },
+  {
+    "question": "¿Me quitan el reporte negativo? | ¿Me limpian el datacrédito? | ¿Salgo de las centrales de riesgo? | ¿Me arreglan el reporte?",
+    "answer": "Bravo ayuda a mejorar su calificación crediticia de forma gradual, reportando positivamente cada mes. El asesor le explica el proceso."
+  },
+  {
+    "question": "¿Puedo incluir todas mis deudas? | ¿Con qué entidades negocian? | ¿Negocian con cualquier sanatorio? | ¿Le pueden negociar a cualquier sanatorio?",
+    "answer": "El asesor financiero revisará las entidades con las que tiene deudas. Bravo trabaja con bancos, almacenes, financieras, cooperativas y cajas de compensación."
+  },
+  {
+    "question": "¿Qué pasa si dejo de agendar? | ¿Y si no turno mis deudas? | ¿Qué pasa si me atraso?",
+    "answer": "Si enfrenta problemas de sobreendeudamiento, Bravo puede negociar y liquidar sus deudas. El asesor le explica las condiciones."
+  },
+  {
+    "question": "¿Cuánto tiempo demora la llamada? | ¿Cuánto demora? | ¿Cuánto es unos minutos? | ¿Qué son unos minuticos? | ¿Qué son unos minutos? | ¿Esto es largo? | ¿Cuánto dura? | ¿Son muchos minutos?",
+    "answer": "La llamada no demorará más de cinco minutos."
+  },
+  {
+    "question": "¿Qué es representante legal? | ¿Como representante legal? | ¿Qué quiere decir representante legal? | ¿Qué significa ser representante legal?",
+    "answer": "Es decir, si estás registrado como representante legal de una empresa ante la Cámara de Comercio. El representante legal es quien representa legalmente a una empresa ante las autoridades y otras entidades."
+  },
+  {
+    "question": "¿Qué es persona natural? | ¿Qué quiere decir persona natural? | ¿Qué significa persona natural? | No entiendo qué es persona natural | ¿Persona natural qué es?",
+    "answer": "Persona natural es cuando actúas a título personal, con tu cédula, sin estar registrado como representante legal de una empresa ante la Cámara de Comercio."
+  },
+  {
+    "question": "¿Por qué me preguntan por garantías o seguros? | ¿Para qué sirve preguntar si tengo prenda o seguro? | ¿Por qué me preguntan si tengo garantía? | ¿Por qué me preguntan por el seguro? | ¿Por qué preguntan si tengo codeudor o fiador? | No entiendo por qué me preguntan por garantías | No entiendo por qué me preguntan por seguros | ¿Para qué quieren saber si tengo garantía? | ¿Para qué quieren saber si tengo seguro? | ¿Por qué importan las garantías? | ¿Por qué importan los seguros? | ¿Por qué me preguntan eso de la prenda? | ¿Por qué me preguntan si tengo prenda?",
+    "answer": "Al tener garantía, la entidad tiene de dónde recuperar su capital o su interés, y por ende a nosotros no nos va a dar la negociación."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Sanatorio Río Blanco, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

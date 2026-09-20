@@ -1,0 +1,523 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "faro_clinico_flow",
+    "visible_name": "Faro Clínico",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (24 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/faro_clinico.json",
+      "company_id": "faro_clinico-demo",
+      "description": "Base de conocimiento de Faro Clínico."
+    },
+    "company_id": "faro_clinico-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "nu_mx_strict_flow_graph.json",
+      "node_count": 24,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Faro Clínico",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "agent_mode": "strict",
+    "start": "intent.identity_intro",
+    "nodes": {
+      "intent.identity_intro": {
+        "type": "intention",
+        "label": "Inicio y confirmación de identidad",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Hola, ¿Hablo con {nombre_deudor_completo}?",
+        "fallback": "¿Me confirma si es {nombre_deudor_completo}, por favor?",
+        "decision": "Espera PRIMERO que se entregue el mensaje completo antes de procesar cualquier respuesta. Si el usuario solo dice 'si?' o interrumpe antes del mensaje completo, NO avances. Solo después del mensaje completo, si confirma que es el titular, elige 'Sí'; si dice que no es el titular, 'No'; si es un tercero, 'Tercero'. Si el usuario pregunta '¿de parte de quién?', '¿quién habla?' o '¿de dónde llaman?', elige 'QuienHabla'. MODISMOS DE CONFIRMACIÓN DE TITULARIDAD: considera estas frases como confirmación de identidad y elige 'Sí': 'sí, soy yo', 'sí, soy el titular', 'sí, es mi cuenta', 'sí, yo soy', 'sí, con él habla'.",
+        "on": {
+          "Sí": {
+            "status": "Entregado",
+            "ct": true,
+            "goto": "intent.debt_info"
+          },
+          "No": {
+            "goto": "intent.ask_knows_debtor"
+          },
+          "Tercero": {
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "QuienHabla": {
+            "goto": "intent.quien_habla"
+          }
+        }
+      },
+      "intent.ask_knows_debtor": {
+        "type": "intention",
+        "label": "¿Conoce al titular?",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "¿Conoce a {nombre_deudor_completo}?",
+        "fallback": "¿Conoce a {nombre_deudor_completo}?",
+        "on": {
+          "Sí": {
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "No": {
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Es el titular": {
+            "status": "Entregado",
+            "ct": true,
+            "goto": "intent.debt_info"
+          }
+        }
+      },
+      "intent.quien_habla": {
+        "type": "intention",
+        "label": "Identificación del agente",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Soy {nombre_agente} de Colektia, agencia de coordinación de agenda autorizada por Nu. ¿Hablo con {nombre_deudor_completo}?",
+        "fallback": "¿Me confirma si es {nombre_deudor_completo}, por favor?",
+        "decision": "Si el usuario confirma que es el titular, elige 'Sí'; si dice que no es el titular, 'No'; si es un tercero, 'Tercero'. MODISMOS DE CONFIRMACIÓN DE TITULARIDAD: considera estas frases como confirmación de identidad y elige 'Sí': 'sí, soy yo', 'sí, soy el titular', 'sí, es mi cuenta', 'sí, yo soy', 'sí, con él habla'.",
+        "on": {
+          "Sí": {
+            "status": "Entregado",
+            "ct": true,
+            "goto": "intent.debt_info"
+          },
+          "No": {
+            "goto": "intent.ask_knows_debtor"
+          },
+          "Tercero": {
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          }
+        }
+      },
+      "intent.debt_info": {
+        "type": "intention",
+        "label": "Entrega de información de coordinación de agenda",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Gracias por confirmarlo, {nombre_deudor}. Soy {nombre_agente} de Colektia, Agencia de coordinación de agenda autorizada por Nu. Su cuenta registra {dias_mora} días de atraso y un turno vencido de {monto_deuda_palabras}. ¿Le parece si revisamos una opción para regularizarlo?",
+        "fallback": "Su cuenta tiene {dias_mora} días de atraso y un turno vencido de {monto_deuda_palabras}. ¿Le parece si revisamos opciones para regularizarlo?",
+        "decision": "Si pide que lo llamen luego, elige 'Llamar luego'; si dice que ya asistió, 'Ya pagué'; si no reconoce la cita pendiente, 'No reconoce cita pendiente'; si acepta continuar, 'Continuar'; si dice que va a agendar en una fecha, 'Fecha de cita'.",
+        "on": {
+          "Llamar luego": {
+            "goto": "intent.handle_call_later"
+          },
+          "Ya atendido": {
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "No reconoce la cita": {
+            "status": "Disputa",
+            "goto": "final.end_dispute"
+          },
+          "Fecha de compromiso": {
+            "goto": "intent.ask_full_payment_fast"
+          },
+          "always": {
+            "goto": "intent.ask_full_payment"
+          }
+        }
+      },
+      "intent.handle_call_later": {
+        "type": "intention",
+        "label": "Manejo de objeción: pide que lo llamen luego",
+        "delivery": "say",
+        "prompt": "Entiendo que está ocupado; si me regala dos minutos le explico brevemente una opción que puede ayudarle y evitamos cargos adicionales, ¿le parece?",
+        "fallback": "¿Le explico una opción concreta? Será breve.",
+        "on": {
+          "Insiste en terminar": {
+            "goto": "task.next_contact"
+          },
+          "always": {
+            "goto": "intent.ask_full_payment"
+          }
+        }
+      },
+      "task.next_contact": {
+        "type": "task",
+        "label": "Captura fecha próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "require_franja": false,
+          "require_day": true,
+          "default_to_tomorrow": false,
+          "confirm_ambiguous_week": true,
+          "strict_cancel": true,
+          "allow_today": true
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_next_contact"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.ask_full_payment_fast": {
+        "type": "intention",
+        "label": "Solicitud de turno total",
+        "delivery": "say",
+        "prompt": "perfecto, entonces ¿Podría cubrir el turno total de {monto_deuda_palabras} en los próximos {max_dias} días?",
+        "fallback": "El turno total es de {monto_deuda_palabras}. Si no fuera posible hoy, ¿podría indicarme una fecha dentro de los próximos {max_dias} días?",
+        "decision": "Si el usuario acepta agendar y menciona una fecha, elige 'Intención de turno' y pasa la fecha ISO en 'dato'. Si rechaza agendar o no puede agendar el total, elige 'Rechaza turno Total'. MODISMOS DE CONFIRMACIÓN DE turno HOY (México): considera estas frases como aceptación de turno para HOY y elige 'Intención de turno' pasando la fecha de hoy en formato ISO (YYYY-MM-DD) en 'dato', sin repreguntar el calendario: 'hoy turno', 'hoy le turno', 'hoy hago el turno', 'hoy deposito', 'hoy hago la transferencia', 'hoy me pongo al día', 'hoy mismo turno', 'hoy sin falta turno', 'de hoy no pasa', 'al rato turno'. Aplica la misma lógica para 'mañana' u otros días próximos cuando el paciente los mencione explícitamente.",
+        "on": {
+          "Intención de agendar": {
+            "ct": true,
+            "payload": {
+              "required": true,
+              "type": "date",
+              "save_as": "commitment_date",
+              "missing_message": "¿Me puede confirmar la fecha en que realizará el turno?"
+            },
+            "validate": {
+              "rule": "date_in_next_days",
+              "days_var": "max_dias",
+              "max_tries": 3,
+              "invalid_message": "Esa fecha está fuera del plazo. Necesito una fecha dentro de los próximos {max_dias} días. ¿Qué fecha le funciona?"
+            },
+            "max_tries_exceeded_goto": "final.end_commitment_max_tries_exceeded",
+            "goto": "intent.close_commitment"
+          },
+          "Rechaza paquete completo": {
+            "status": "Transferencia",
+            "goto": "final.transfer"
+          }
+        }
+      },
+      "intent.ask_full_payment": {
+        "type": "intention",
+        "label": "Solicitud de turno total y fecha",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "¿Podría cubrir el turno total de {monto_deuda_palabras} en los próximos {max_dias} días? Si es así, ¿para qué fecha podría realizar el turno?",
+        "fallback": "El turno total es de {monto_deuda_palabras}. Si no fuera posible hoy, ¿podría indicarme una fecha dentro de los próximos {max_dias} días?",
+        "decision": "Si el usuario acepta agendar y menciona una fecha, elige 'cita' y pasa la fecha en formato ISO (YYYY-MM-DD) en 'dato'. Si rechaza o no puede agendar el total, elige 'No'. Si dice que ya asistió, elige 'Ya pagué'. Si pide humano, elige 'Transferencia'. MODISMOS DE CONFIRMACIÓN DE turno HOY (México): considera estas frases como cita para HOY y elige 'cita' pasando la fecha de hoy en formato ISO (YYYY-MM-DD) en 'dato', sin repreguntar el calendario: 'hoy turno', 'hoy le turno', 'hoy hago el turno', 'hoy deposito', 'hoy hago la transferencia', 'hoy me pongo al día', 'hoy mismo turno', 'hoy sin falta turno', 'de hoy no pasa', 'al rato turno'. Aplica la misma lógica para 'mañana' u otros días próximos cuando el paciente los mencione explícitamente.",
+        "on": {
+          "Cita agendada": {
+            "status": "Intención de agendar",
+            "payload": {
+              "required": true,
+              "type": "date",
+              "save_as": "commitment_date",
+              "missing_message": "¿Me puede confirmar la fecha en que realizará el turno?"
+            },
+            "validate": {
+              "rule": "date_in_next_days",
+              "days_var": "max_dias",
+              "max_tries": 3,
+              "invalid_message": "La fecha indicada no es válida. Por favor indique una fecha dentro de los próximos {max_dias} días."
+            },
+            "max_tries_exceeded_goto": "final.end_commitment_max_tries_exceeded",
+            "goto": "intent.confirm_commitment"
+          },
+          "No": {
+            "goto": "intent.ask_full_payment_retry",
+            "status": "Sin cita"
+          },
+          "Ya atendido": {
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Transferencia": {
+            "goto": "intent.offer_transfer",
+            "status": "Transferencia"
+          }
+        }
+      },
+      "intent.ask_full_payment_retry": {
+        "type": "intention",
+        "label": "Segundo intento de turno total y fecha",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Comprendo. Para evitar futuras afectaciones asociadas a la obligación y apoyarle de la mejor forma, ¿podría cubrir el turno total de {monto_deuda_palabras} e indicarme una fecha dentro de los próximos {max_dias} días?",
+        "fallback": "Para evitar futuras afectaciones, ¿podría indicarme si logra cubrir el turno total de {monto_deuda_palabras} dentro de los próximos {max_dias} días?",
+        "decision": "Si el usuario acepta agendar el total y menciona una fecha, elige 'cita' y pasa la fecha en formato ISO (YYYY-MM-DD) en 'dato'. Si rechaza nuevamente o no puede agendar el total, elige 'No'. Si dice que ya asistió, elige 'Ya pagué'. Si pide humano, elige 'Transferencia'. MODISMOS DE CONFIRMACIÓN DE turno HOY (México): considera estas frases como cita para HOY y elige 'cita' pasando la fecha de hoy en formato ISO (YYYY-MM-DD) en 'dato', sin repreguntar el calendario: 'hoy turno', 'hoy le turno', 'hoy hago el turno', 'hoy deposito', 'hoy hago la transferencia', 'hoy me pongo al día', 'hoy mismo turno', 'hoy sin falta turno', 'de hoy no pasa', 'al rato turno'. Aplica la misma lógica para 'mañana' u otros días próximos cuando el paciente los mencione explícitamente.",
+        "on": {
+          "Cita agendada": {
+            "status": "Intención de agendar",
+            "payload": {
+              "required": true,
+              "type": "date",
+              "save_as": "commitment_date",
+              "missing_message": "¿Me puede confirmar la fecha en que realizará el turno?"
+            },
+            "validate": {
+              "rule": "date_in_next_days",
+              "days_var": "max_dias",
+              "max_tries": 3,
+              "invalid_message": "La fecha indicada no es válida. Por favor indique una fecha dentro de los próximos {max_dias} días."
+            },
+            "max_tries_exceeded_goto": "final.end_commitment_max_tries_exceeded",
+            "goto": "intent.confirm_retry_commitment"
+          },
+          "No": {
+            "goto": "intent.offer_50_partial",
+            "status": "Sin cita"
+          },
+          "Ya atendido": {
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Transferencia": {
+            "goto": "intent.offer_transfer",
+            "status": "Transferencia"
+          }
+        }
+      },
+      "intent.confirm_retry_commitment": {
+        "type": "intention",
+        "label": "Confirmar fecha de cita tras segundo intento",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto. Para confirmar, ¿usted pagará el {commitment_date_spoken}?",
+        "fallback": "Solo para confirmar: ¿pagará el {commitment_date_spoken}?",
+        "decision": "Si confirma explícitamente, elige 'Sí'. Si dice que no o duda, elige 'No'. Si pide otra fecha, elige 'Otra fecha'.",
+        "on": {
+          "Sí": {
+            "status": "Cita agendada",
+            "ct": true,
+            "goto": "intent.close_commitment"
+          },
+          "Otra fecha": {
+            "goto": "intent.ask_full_payment_retry"
+          },
+          "No": {
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.offer_50_partial": {
+        "type": "intention",
+        "label": "Oferta 50% del valor adeudado",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Comprendo las dificultades que me comenta. Si el turno total no es posible en este momento, podríamos evaluar un cita por el 50% del valor adeudado, es decir, {monto_parcial_palabras}. ¿Considera que esta opción podría ajustarse mejor a sus posibilidades actuales?",
+        "fallback": "Si el turno total no es posible, podemos evaluar un cita por el 50% del valor adeudado, es decir, {monto_parcial_palabras}. ¿Esta opción le ayudaría?",
+        "decision": "Si acepta agendar el 50% y menciona una fecha, elige 'Acepta parcial' y pasa la fecha en formato ISO (YYYY-MM-DD) en 'dato'. Si acepta el 50% pero no da fecha, elige 'Acepta parcial' sin dato para pedir la fecha. Si rechaza el turno parcial o dice que tampoco puede, elige 'Rechaza parcial'. Si dice que ya asistió, elige 'Ya pagué'. Si pide humano, elige 'Transferencia'.",
+        "on": {
+          "Acepta parcial": {
+            "status": "Intención de agendar",
+            "substatus": "turno parcial",
+            "payload": {
+              "required": true,
+              "type": "date",
+              "save_as": "commitment_date",
+              "missing_message": "¿Me puede confirmar la fecha en que realizaría este turno parcial de {monto_parcial_palabras}?"
+            },
+            "validate": {
+              "rule": "date_in_next_days",
+              "days_var": "max_dias",
+              "max_tries": 3,
+              "invalid_message": "La fecha indicada no es válida. Por favor indique una fecha dentro de los próximos {max_dias} días."
+            },
+            "max_tries_exceeded_goto": "final.end_commitment_max_tries_exceeded",
+            "goto": "intent.confirm_partial_commitment"
+          },
+          "Rechaza parcial": {
+            "goto": "intent.offer_transfer",
+            "status": "Sin cita"
+          },
+          "Ya atendido": {
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Transferencia": {
+            "goto": "intent.offer_transfer",
+            "status": "Transferencia"
+          }
+        }
+      },
+      "intent.confirm_partial_commitment": {
+        "type": "intention",
+        "label": "Confirmar fecha de cita parcial",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto. Para confirmar, ¿usted realizará este turno parcial de {monto_parcial_palabras} el {commitment_date_spoken}?",
+        "fallback": "Solo para confirmar: ¿realizará este turno parcial de {monto_parcial_palabras} el {commitment_date_spoken}?",
+        "decision": "Si confirma explícitamente, elige 'Sí'. Si dice que no o duda, elige 'No'. Si pide otra fecha, elige 'Otra fecha'.",
+        "on": {
+          "Sí": {
+            "status": "Cita agendada",
+            "ct": true,
+            "goto": "intent.close_commitment"
+          },
+          "Otra fecha": {
+            "goto": "intent.offer_50_partial"
+          },
+          "No": {
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar fecha de cita",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto. Para confirmar, ¿usted pagará el {commitment_date_spoken}?",
+        "fallback": "Solo para confirmar: ¿pagará el {commitment_date_spoken}?",
+        "decision": "Si confirma explícitamente, elige 'Sí'. Si dice que no o duda, elige 'No'. Si pide otra fecha, elige 'Otra fecha'.",
+        "on": {
+          "Sí": {
+            "status": "Cita agendada",
+            "ct": true,
+            "goto": "intent.close_commitment"
+          },
+          "Otra fecha": {
+            "goto": "intent.ask_full_payment"
+          },
+          "No": {
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.close_commitment": {
+        "type": "intention",
+        "label": "Cierre (cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto, su cita quedó registrado para {commitment_date_spoken}. Le enviaremos por correo y WhatsApp las instrucciones de turno.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment",
+            "status": "Cita agendada"
+          }
+        }
+      },
+      "intent.offer_transfer": {
+        "type": "intention",
+        "label": "Ofrecer especialista (opt-in)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo. ¿Quiere que lo comunique con un especialista para revisar alternativas?",
+        "fallback": "¿Desea que lo comunique con un especialista?",
+        "decision": "Si acepta explícitamente, elige 'Sí'. Si rechaza, 'No'.",
+        "on": {
+          "Sí": {
+            "status": "Transferencia",
+            "goto": "final.transfer"
+          },
+          "No": {
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.transfer": {
+        "type": "final",
+        "label": "Transferencia",
+        "delivery": "say",
+        "prompt": "Te paso con un especialista para ayudarte mejor.",
+        "transfer": true,
+        "transfer_reason": "{transfer_reason}"
+      },
+      "final.end_commitment_max_tries_exceeded": {
+        "type": "final",
+        "label": "Despedida (sin acuerdo)",
+        "prompt": "Gracias por su tiempo. No logramos registrar una fecha válida hoy. Puede realizar el turno cuando le sea posible o contactarnos si necesita ayuda. Que tenga buen día.",
+        "delivery": "say",
+        "status": "Sin cita"
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Gracias por su cita. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Gracias por su tiempo.",
+        "delivery": "say"
+      },
+      "final.end_next_contact": {
+        "type": "final",
+        "label": "Despedida (próximo contacto)",
+        "prompt": "Correcto, ya quedó agendado para {next_contact_date_natural}. Gracias por su tiempo.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por la información. Registraremos su turno. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_dispute": {
+        "type": "final",
+        "label": "Despedida (disputa)",
+        "prompt": "Gracias por su aclaración. Escalaremos su caso para su revisión.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, indíquele al titular que Colektia, Agencia de coordinación de agenda autorizada por Nu intentó comunicarse para apoyarle con su cuenta.",
+        "delivery": "say"
+      }
+    }
+  }
+}

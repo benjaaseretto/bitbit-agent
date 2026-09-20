@@ -1,0 +1,94 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "paciente solicita más información sobre su cita pendiente o cuenta",
+    "answer": "Recuerda que toda la información detallada de tu cuenta la puedes consultar directamente en la app de Centro Sol Integral."
+  },
+  {
+    "question": "paciente pregunta o tiene dudas sobre los métodos de turno",
+    "answer": "Puedes realizar tu turno por turno Móvil, transferencia bancaria o depósito en USD, ya sea en bolívares o dólares directamente registrados en la app."
+  },
+  {
+    "question": "paciente pregunta números de atención al paciente",
+    "answer": "Atención al paciente: disponible a través de la aplicación Centro Sol Integral."
+  },
+  {
+    "question": "paciente pregunta horarios de atención al paciente",
+    "answer": "Horarios de atención: lunes a viernes de 9 a 18 horas."
+  },
+  {
+    "question": "paciente pregunta sobre la moneda de turno",
+    "answer": "La moneda de cobro es en dólares estadounidenses."
+  },
+  {
+    "question": "paciente pregunta qué es Centro Sol Integral o cómo funciona",
+    "answer": "Centro Sol Integral es una plataforma financiera que ofrece una solución de crédito sin intereses. Permite comprar productos o servicios en comercios aliados y pagarlos en cuotas quincenales, sin recargos."
+  },
+  {
+    "question": "paciente pregunta sobre penalizaciones o consecuencias de no agendar",
+    "answer": "{penalizacion_mora}"
+  },
+  {
+    "question": "paciente pregunta sobre el Club Centro Sol Integral Plus o beneficios",
+    "answer": "El Club Centro Sol Integral Plus te ofrece beneficios exclusivos. Con tu turno mantiene activa tu línea, evitas recargos y sigues disfrutando de los beneficios."
+  },
+  {
+    "question": "paciente pregunta por qué el turno es distinto, no coincide o indica que ya realizó un turno",
+    "answer": "Corresponde a un turno restante de su último turno."
+  },
+  {
+    "question": "paciente pregunta cuál es el especialidad de la sesión vencida más antigua",
+    "answer": "Ahorita no tengo esa información a la mano, pero puedes revisar fácilmente desde tu App Centro Sol Integral."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Centro Sol Integral, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

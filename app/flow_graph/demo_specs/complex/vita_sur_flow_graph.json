@@ -1,0 +1,805 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "vita_sur_flow",
+    "visible_name": "Vita Sur",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (29 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/vita_sur.json",
+      "company_id": "vita_sur-demo",
+      "description": "Base de conocimiento de Vita Sur."
+    },
+    "company_id": "vita_sur-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "bodesa_castigo_flow_graph.json",
+      "node_count": 29,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Vita Sur",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí, soy yo",
+            "Sí, con él habla",
+            "Sí, con ella habla",
+            "Sí, habla con {nombre_deudor}",
+            "Sí señor",
+            "Sí señora",
+            "Sí, correcto",
+            "Sí, dígame",
+            "Sí, cuénteme",
+            "Sí, diga",
+            "Sí, ¿en qué le colaboro?",
+            "Sí, a la orden",
+            "Sí, presente",
+            "Sí, soy el titular",
+            "Sí, yo respondo por eso",
+            "Sí, soy el de la póliza",
+            "Sí, soy el del producto",
+            "Sí, soy el paciente",
+            "Sí, habla directamente con él",
+            "Sí, soy quien realiza los aportes",
+            "Sí, soy el dueño de la cuenta",
+            "Sí, el mismo",
+            "Sí, soy",
+            "Sí claro",
+            "Claro, soy yo",
+            "Correcto",
+            "Así es",
+            "Con gusto",
+            "Sí, me encuentro",
+            "Sí, ¿qué necesita?",
+            "Sí, yo manejo eso"
+          ],
+          "identity_pregunta": "{saludo_por_horario}, ¿me comunico con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le habla {nombre_agente} de {portfolio_type}.",
+          "identity_no_titular_pregunta": "Le agradezco su atención. ¿Me podría confirmar si este es el número que utiliza {nombre_deudor_completo}? Lo conoce?"
+        },
+        "on": {
+          "Entregado": {
+            "status": "Entregado",
+            "goto": "intent.disclosure_plus31",
+            "express_route": true,
+            "express_route_next": "task.negotiation_plus31",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid"
+          },
+          "Equivocado": {
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "status": "Recado conocido",
+            "goto": "intent.tercero_route"
+          },
+          "Buzon de Voz": {
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.tercero_route": {
+        "type": "intention",
+        "label": "Caso especial con tercero",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Clasifica la respuesta según la relación con {nombre_deudor}. NO hagas más preguntas ni continues la conversación aquí. 'Encargado de pagos': indica que realiza, maneja o es responsable de los pagos (ej.: 'yo turno', 'yo manejo sus pagos', 'soy quien paga', 'soy el responsable de sus pagos'). 'Tercero cercano': esposa(o)/pareja, mamá/papá, hermano(a), hijo(a), abuelo(a), tío(a), primo(a), amigo(a), vecino(a), referencia personal, familiar, o equivalentes ('soy la esposa', 'soy el hermano', 'soy un amigo', 'soy una referencia'). 'Contacto laboral': asistente, secretaria(o), recepcionista, compañero(a) de trabajo, jefe/supervisor, colaborador, RH, administrativo, 'trabajo con él/ella', 'habla la empresa', 'es la oficina', cualquier otra relación laboral o que identifique a una empresa. 'Fallecimiento': el titular falleció. 'Equivocado': no conoce al titular o número equivocado. 'No colabora': se niega a indicar su relación. 'Transferencia': pide un agente. 'Continuar': solo si es ambigua pero sugiere conocer al titular.",
+        "prompt": "¿Me podría indicar si es familiar o encargado de pagos de {nombre_deudor_completo}?",
+        "on": {
+          "Fallecimiento": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "fallecimiento",
+            "goto": "final.end_deceased"
+          },
+          "Encargado de pagos": {
+            "goto": "task.negotiation_tercero_plus31"
+          },
+          "Tercero cercano": {
+            "goto": "intent.indagar_familiar"
+          },
+          "Familiar o cónyuge": {
+            "goto": "intent.indagar_familiar"
+          },
+          "Contacto laboral": {
+            "goto": "intent.laboral_confirma_empresa"
+          },
+          "No colabora": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "familiar_no_colabora",
+            "goto": "final.end_recado"
+          },
+          "Equivocado": {
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Transferencia": {
+            "status": "Transferir",
+            "goto": "final.transfer"
+          },
+          "Continuar": {
+            "goto": "intent.indagar_familiar"
+          }
+        }
+      },
+      "intent.laboral_confirma_empresa": {
+        "type": "intention",
+        "label": "Confirmar si el titular labora en la empresa",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si confirma que el titular trabaja o labora ahí, elige 'Si'. Si indica que ya no trabaja en la empresa, elige 'Ya no labora'. Si no conoce al titular, elige 'Equivocado'. Si no quiere colaborar, elige 'No colabora'. NO hagas más preguntas aquí.",
+        "prompt": "Disculpe, ¿{nombre_deudor_completo} trabaja o labora en esta empresa?",
+        "on": {
+          "Si": {
+            "goto": "intent.laboral_quien_habla"
+          },
+          "Ya no labora": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "titular_ya_no_labora",
+            "goto": "final.end_laboral_ya_no_labora"
+          },
+          "Equivocado": {
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "No colabora": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "contacto_laboral_no_colabora",
+            "goto": "final.end_laboral_no_colabora"
+          },
+          "Continuar": {
+            "goto": "intent.laboral_quien_habla"
+          }
+        }
+      },
+      "intent.laboral_quien_habla": {
+        "type": "intention",
+        "label": "Identificar contacto laboral",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si se identifica con cualquier rol laboral (asistente, secretaria, recepcionista, compañero de trabajo, jefe, supervisor, colaborador, RH, administrativo) o da su nombre/cargo, elige 'Contacto laboral válido'. Si no quiere colaborar, 'No colabora'. Si no conoce al titular, 'Equivocado'. NO hagas más preguntas aquí.",
+        "prompt": "Muchas gracias. ¿Con quién tengo el gusto de hablar?",
+        "on": {
+          "Contacto laboral válido": {
+            "goto": "intent.laboral_pedir_recado"
+          },
+          "No colabora": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "contacto_laboral_no_colabora",
+            "goto": "final.end_laboral_no_colabora"
+          },
+          "Equivocado": {
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Continuar": {
+            "goto": "intent.laboral_pedir_recado"
+          }
+        }
+      },
+      "intent.laboral_pedir_recado": {
+        "type": "intention",
+        "label": "Pedir recado a contacto laboral",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si acepta dejar el recado o colaborar, elige 'Acepta'. Si rechaza o no puede, elige 'No acepta'. NO hagas más preguntas aquí.",
+        "prompt": "Muchas gracias. ¿Sería tan amable de apoyarnos dejando un recado a {nombre_deudor_completo}?",
+        "on": {
+          "Acepta": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "recado_contacto_laboral",
+            "goto": "final.end_laboral_recado"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "contacto_laboral_no_colabora",
+            "goto": "final.end_laboral_no_colabora"
+          },
+          "Continuar": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "recado_contacto_laboral",
+            "goto": "final.end_laboral_recado"
+          }
+        }
+      },
+      "intent.disclosure_plus31": {
+        "type": "intention",
+        "label": "Presentación y motivo (+31)",
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "interruptible": false,
+        "prompt": "Gracias por atenderme, me comunico de {portfolio_type}. Esta llamada está siendo grabada para fines de calidad. Su cuenta presenta un atraso de {dias_mora} días con un turno total adeudado de {monto_deuda_palabras}. Al superar los 30 días de atraso, su cuenta ya afecta negativamente su historial en Buró de Crédito.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_plus31"
+          }
+        }
+      },
+      "intent.indagar_familiar": {
+        "type": "intention",
+        "label": "Indagar familiar",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo. {nombre_deudor} se encuentra en condiciones normales o ha ocurrido algun evento importante que debamos conocer?",
+        "on": {
+          "Fallecimiento": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "fallecimiento",
+            "goto": "final.end_deceased"
+          },
+          "Normal": {
+            "goto": "intent.tercero_postform"
+          },
+          "No colabora": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "tercero_no_colabora",
+            "goto": "final.end_recado"
+          },
+          "Continuar": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "recado_con_familiar",
+            "goto": "final.end_recado"
+          }
+        }
+      },
+      "intent.tercero_postform": {
+        "type": "intention",
+        "label": "¿Recado o apoyo con turno?",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "¿Prefiere que deje un recado para el titular o podemos revisar cómo apoyar con el turno hoy o dentro de los próximos 2 días hábiles?",
+        "on": {
+          "Dejar recado": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "substatus": "recado_con_familiar",
+            "goto": "final.end_recado"
+          },
+          "Negociar": {
+            "goto": "task.negotiation_tercero_plus31"
+          }
+        }
+      },
+      "task.negotiation_plus31": {
+        "type": "task",
+        "label": "Negociación V2 (+31)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias}",
+          "allow_partial_payments": true,
+          "min_partial_percentage": 50,
+          "use_full_amount_when_skip_partial": true,
+          "require_confirmation": true,
+          "date_only": true,
+          "commitment_windows": {
+            "default": {
+              "confirmation_message": "Perfecto, entonces dejamos registrado su cita de turno para el {date}. Quiero aclararle que durante este tiempo su cuenta podrá seguir acumulando intereses moratorios y gastos de coordinación de agenda. ¿Confirmamos ese cita de turno?"
+            }
+          },
+          "invalid_date_message": "Entiendo. Sin embargo, esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a frenar el impacto en Buró de Crédito y a evitar que el atraso siga creciendo. ¿Podría realizarlo ese día o antes?",
+          "invalid_date_retry_message": "Le comprendo. Le recomiendo realizar el turno lo antes posible para evitar que la cita pendiente continúe incrementándose. ¿Podría hacerlo a más tardar {fecha_limite}?",
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy turno",
+              "hoy le turno",
+              "hoy hago el turno",
+              "hoy deposito",
+              "hoy hago la transferencia",
+              "hoy me pongo al día",
+              "hoy mismo turno",
+              "hoy sin falta turno",
+              "de hoy no pasa",
+              "al rato turno"
+            ],
+            "mañana": [
+              "mañana turno",
+              "mañana le turno",
+              "mañana hago el turno",
+              "mañana deposito",
+              "mañana hago la transferencia",
+              "mañana sin falta",
+              "mañana temprano turno",
+              "mañana mismo turno"
+            ],
+            "pasado_mañana": [
+              "pasado mañana turno",
+              "pasado mañana le turno",
+              "pasado mañana hago el turno",
+              "pasado mañana deposito",
+              "pasado mañana hago la transferencia",
+              "pasado mañana sin falta",
+              "pasado mañana temprano turno",
+              "pasado mañana mismo turno"
+            ]
+          },
+          "benefit_hints": [
+            "frenar el impacto negativo en Buró de Crédito",
+            "evitar que el atraso e intereses sigan creciendo",
+            "confirmar la cita la cuenta antes de que termine el mes (no se aceptan promesas para el mes siguiente)"
+          ],
+          "custom_instructions": "Inicia la negociación diciendo exactamente: \"¿Podemos contar con su turno hoy, mañana o pasado?\", no agregues nada más en ese primer turno. Cuando el paciente muestre disposición a agendar el TOTAL, llama cliente_dispuesto(fecha_propuesta='YYYY-MM-DD', es_parcial=false) DE INMEDIATO sin repreguntar. Si el paciente acepta hacer un abono o turno parcial, llama cliente_dispuesto(dispuesto=true, es_parcial=true). No asumas que el abono será exactamente la mitad: si no indicó especialidad, deja que la tarea de payment pregunte el especialidad; acepta cualquier abono igual o mayor al 50%. NO repitas la confirmación ni pidas una segunda validación. NO vuelvas a solicitar ni confirmar el especialidad.",
+          "objection_handlers_builtin": true,
+          "objection_handlers": [
+            {
+              "objection": "El paciente dice que no puede agendar | El paciente dice que no tiene dinero | El paciente indica que no puede agendar el total | El paciente menciona que no tiene el especialidad completo",
+              "answer": "Entiendo completamente, {nombre_deudor}. Precisamente por eso quiero ayudarle a encontrar una opción que se ajuste a su situación."
+            },
+            {
+              "objection": "Cualquier mención de abono parcial | El paciente dice que no puede agendar el total | El paciente dice que no llega al total | El paciente dice que solo puede agendar una parte | El paciente dice que haría un abono | El paciente pregunta por turno parcial",
+              "answer": "Como una alternativa para que pueda confirmar la cita su cuenta sin esperar más tiempo, podemos gestionar un abono de al menos la mitad del turno, es decir, {min_partial_amount_palabras}. Esto le ayuda a mantener su historial en orden. ¿Podría realizar ese abono hoy, mañana o pasado?"
+            },
+            {
+              "objection": "El paciente rechaza también el turno parcial | El paciente dice que tampoco puede agendar la mitad | El paciente no acepta hacer el abono mínimo | El paciente rechaza el abono de al menos la mitad",
+              "answer": "Entiendo su situación, {nombre_deudor}. ¿Habría alguna posibilidad de realizar el turno dentro de los próximos 3 días?",
+              "on_trigger": {
+                "tipo": "rechazo_pago_parcial",
+                "substatus": "rechazo_pago_parcial",
+                "max_remaining_attempts": 1
+              }
+            },
+            {
+              "objection": "El paciente se muestra molesto, incomodo o irritado | El paciente expresa que no quiere continuar la llamada | Elcliente se muestra enojado",
+              "answer": "Lamento que se sienta asi, {nombre_deudor}. Entiendo su frustracion. La intencion de esta llamada es darle seguimiento y apoyarle a confirmar la cita su cuenta, ya que la solucion es lo que mas le beneficia a usted. ¿Podría indicarme si le es posible realizar algún turno mañana?"
+            },
+            {
+              "objection": "El paciente solicita hablar con un representante, asesor o agente humano",
+              "answer": "Con gusto. Puede acercarse a una de nuestras oficinas de coordinación de agenda, donde será atendido. También puedo derivar su llamada a un agente físico si así lo prefiere."
+            },
+            {
+              "objection": "El paciente indica que está desempleado, sin trabajo o sin ingresos",
+              "answer": "Entiendo lo difícil que puede ser esta situación, {nombre_deudor}. Le sugiero acercarse a una oficina de coordinación de agenda para revisar juntos una alternativa de turno que funcione para ambos."
+            },
+            {
+              "objection": "El paciente menciona problemas de salud, enfermedad o que está enfermo",
+              "answer": "Lamento su situación y le deseo una pronta mejoría. Le sugiero acercarse a una oficina de coordinación de agenda, donde con gusto podrán revisar una solución para su cuenta."
+            },
+            {
+              "objection": "El paciente dice que desconoce la cita pendiente, que no reconoce el adeudo o que no sabe de qué turno se trata",
+              "answer": "El turno vencido puede corresponder a un turno pendiente que no se realizó. Para más información, contacte al número de atención de su entidad."
+            }
+          ],
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment_plus31"
+          },
+          "Sin cita": {
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "substatus",
+              "cases": {
+                "rechazo_pago_parcial": "final.end_partial_rejected"
+              },
+              "default": "intent.offer_reagenda"
+            }
+          },
+          "Ya atendido": {
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Transferencia": {
+            "status": "Sin cita",
+            "substatus": "transferencia",
+            "goto": "final.transfer"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "task.negotiation_tercero_plus31": {
+        "type": "task",
+        "label": "Negociación V2 (tercero) (+31)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias}",
+          "allow_partial_payments": true,
+          "min_partial_percentage": 50,
+          "use_full_amount_when_skip_partial": true,
+          "require_confirmation": true,
+          "date_only": true,
+          "commitment_windows": {
+            "default": {
+              "confirmation_message": "Perfecto, entonces dejamos registrado su cita de turno para el {date}. Quiero aclararle que durante este tiempo su cuenta podrá seguir acumulando intereses moratorios y gastos de coordinación de agenda. ¿Confirmamos ese cita de turno?"
+            }
+          },
+          "invalid_date_message": "Entiendo. Sin embargo, esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a frenar el impacto en Buró de Crédito y a evitar que el atraso siga creciendo. ¿Podría realizarlo ese día o antes?",
+          "invalid_date_retry_message": "Le comprendo. Le recomiendo realizar el turno lo antes posible para evitar que la cita pendiente continúe incrementándose. ¿Podría hacerlo a más tardar {fecha_limite}?",
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy turno",
+              "hoy le turno",
+              "hoy hago el turno",
+              "hoy deposito",
+              "hoy hago la transferencia",
+              "hoy me pongo al día",
+              "hoy mismo turno",
+              "hoy sin falta turno",
+              "de hoy no pasa",
+              "al rato turno"
+            ],
+            "mañana": [
+              "mañana turno",
+              "mañana le turno",
+              "mañana hago el turno",
+              "mañana deposito",
+              "mañana hago la transferencia",
+              "mañana sin falta",
+              "mañana temprano turno",
+              "mañana mismo turno"
+            ],
+            "pasado_mañana": [
+              "pasado mañana turno",
+              "pasado mañana le turno",
+              "pasado mañana hago el turno",
+              "pasado mañana deposito",
+              "pasado mañana hago la transferencia",
+              "pasado mañana sin falta",
+              "pasado mañana temprano turno",
+              "pasado mañana mismo turno"
+            ]
+          },
+          "benefit_hints": [
+            "frenar el impacto negativo en Buró de Crédito",
+            "evitar que el atraso e intereses sigan creciendo",
+            "confirmar la cita la cuenta antes de que termine el mes (no se aceptan promesas para el mes siguiente)"
+          ],
+          "custom_instructions": "Inicia la conversación diciendo exactamente: \"Como encargado de pagos, me podría decir la razón por la que {nombre_deudor} no ha realizado su turno pendiente, y si hay posibilidad de que lo haga hoy, mañana o pasado?\", no agregues nada más, y ten en cuenta durante toda la negociación que estás hablando con un tercero y no con el titular de la cita pendiente. Cuando el tercero muestre disposición a apoyar con el turno TOTAL, llama cliente_dispuesto(fecha_propuesta='YYYY-MM-DD', es_parcial=false) DE INMEDIATO sin repreguntar. Si el tercero acepta apoyar con un abono o turno parcial, llama cliente_dispuesto(dispuesto=true, es_parcial=true). No asumas que el abono será exactamente la mitad: si no indicó especialidad, deja que la tarea de payment pregunte el especialidad; acepta cualquier abono igual o mayor al 50%. NO repitas la confirmación ni pidas una segunda validación. NO vuelvas a solicitar ni confirmar el especialidad.",
+          "objection_handlers_builtin": true,
+          "objection_handlers": [
+            {
+              "objection": "El paciente dice que no puede agendar | El paciente dice que no tiene dinero | El paciente indica que no puede agendar el total | El paciente menciona que no tiene el especialidad completo",
+              "answer": "Entiendo completamente, {nombre_deudor}. Precisamente por eso quiero ayudarle a encontrar una opción que se ajuste a su situación."
+            },
+            {
+              "objection": "Cualquier mención de abono parcial | El paciente dice que no puede agendar el total | El paciente dice que no llega al total | El paciente dice que solo puede agendar una parte | El paciente dice que haría un abono | El paciente pregunta por turno parcial",
+              "answer": "Como una alternativa para que pueda confirmar la cita su cuenta sin esperar más tiempo, podemos gestionar un abono de al menos la mitad del turno, es decir, {min_partial_amount_palabras}. Esto le ayuda a mantener su historial en orden. ¿Podría realizar ese abono hoy, mañana o pasado?"
+            },
+            {
+              "objection": "El paciente rechaza también el turno parcial | El paciente dice que tampoco puede agendar la mitad | El paciente no acepta hacer el abono mínimo | El paciente rechaza el abono de al menos la mitad",
+              "answer": "Entiendo su situación, {nombre_deudor}. ¿Habría alguna posibilidad de realizar el turno dentro de los próximos 3 días?",
+              "on_trigger": {
+                "tipo": "rechazo_pago_parcial",
+                "substatus": "rechazo_pago_parcial",
+                "max_remaining_attempts": 1
+              }
+            },
+            {
+              "objection": "El paciente se muestra molesto, incomodo o irritado | El paciente expresa que no quiere continuar la llamada | Elcliente se muestra enojado",
+              "answer": "Lamento que se sienta asi, {nombre_deudor}. Entiendo su frustracion. La intencion de esta llamada es darle seguimiento y apoyarle a confirmar la cita su cuenta, ya que la solucion es lo que mas le beneficia a usted. ¿Podría indicarme si le es posible realizar algún turno mañana?"
+            },
+            {
+              "objection": "El paciente solicita hablar con un representante, asesor o agente humano",
+              "answer": "Con gusto. Puede acercarse a una de nuestras oficinas de coordinación de agenda, donde será atendido. También puedo derivar su llamada a un agente físico si así lo prefiere."
+            },
+            {
+              "objection": "El paciente indica que está desempleado, sin trabajo o sin ingresos",
+              "answer": "Entiendo lo difícil que puede ser esta situación, {nombre_deudor}. Le sugiero acercarse a una oficina de coordinación de agenda para revisar juntos una alternativa de turno que funcione para ambos."
+            },
+            {
+              "objection": "El paciente menciona problemas de salud, enfermedad o que está enfermo",
+              "answer": "Lamento su situación y le deseo una pronta mejoría. Le sugiero acercarse a una oficina de coordinación de agenda, donde con gusto podrán revisar una solución para su cuenta."
+            },
+            {
+              "objection": "El paciente dice que desconoce la cita pendiente, que no reconoce el adeudo o que no sabe de qué turno se trata",
+              "answer": "El turno vencido puede corresponder a un turno pendiente que no se realizó. Para más información, contacte al número de atención de su entidad."
+            }
+          ],
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "status": "Cita agendada",
+            "substatus": "compromiso_tercero",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment_plus31"
+          },
+          "Sin cita": {
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "substatus",
+              "cases": {
+                "rechazo_pago_parcial": "final.end_partial_rejected"
+              },
+              "default": "intent.post_negotiation_router"
+            }
+          },
+          "Ya atendido": {
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Transferencia": {
+            "status": "Sin cita",
+            "substatus": "transferencia",
+            "goto": "final.transfer"
+          }
+        }
+      },
+      "intent.offer_reagenda": {
+        "type": "intention",
+        "label": "Oferta de reagenda",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Si prefiere, puedo agendar una nueva llamada en el día y horario que le acomode. ¿Le parece bien reagendar la llamada?",
+        "on": {
+          "Si": {
+            "goto": "task.form_reagenda"
+          },
+          "No": {
+            "status": "Sin cita",
+            "substatus": "no_reagenda",
+            "goto": "final.end_no_commitment"
+          },
+          "Transferencia": {
+            "status": "Transferencia",
+            "substatus": "transferencia",
+            "goto": "final.transfer"
+          }
+        }
+      },
+      "task.form_reagenda": {
+        "type": "task",
+        "label": "Formulario de reagenda",
+        "task_type": "FormTask",
+        "params": {
+          "title": "Reagenda de llamada",
+          "allow_interruptions": true,
+          "instructions": "En este formulario de reagenda SOLO debes recolectar los campos 'motivo', 'fecha' y 'hora' usando SIEMPRE las herramientas del FormTask.",
+          "schema": [
+            {
+              "name": "motivo",
+              "type": "string",
+              "label": "motivo (opcional)",
+              "required": false,
+              "min_length": 0,
+              "max_length": 200
+            },
+            {
+              "name": "fecha",
+              "type": "date",
+              "label": "fecha del siguiente contacto",
+              "required": true
+            },
+            {
+              "name": "hora",
+              "type": "time",
+              "label": "horario del siguiente contacto",
+              "required": true
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "status": "Sin cita",
+            "substatus": "reagenda",
+            "goto": "final.end_reagenda"
+          },
+          "Cancelado": {
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.soft_close_commitment_plus31": {
+        "type": "intention",
+        "label": "Cierre suave (cita) (+31)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del paciente antes de avanzar. Si confirma que no tiene dudas, elige 'Continuar' en silencio. Si indica que ya asistió (ya pagué, ya hice el depósito, ya quedó pagado, le envío el comprobante u equivalente), elige 'Pagado'. Si reporta que la APP no funciona o falló el turno por APP, reconoce lo ocurrido, NO vuelvas a sugerir la APP y ofrece agendar en tienda. Si solicita hablar con un agente o representante, elige 'Transferencia'. Si hace otra pregunta, respóndela brevemente con la base de conocimiento. NO sigas la conversación ni te despidas aquí.",
+        "prompt": "Perfecto, he registrado su cita el dia {commitment_date_spoken} por un especialidad de {payment_amount_palabras}. Le recomiendo, para su seguridad y para que el turno se refleje rápido, realizar su abono en tienda o a través de la APP de {portfolio_type}. ¿Tiene alguna duda o tuvo algún inconveniente con alguno de estos medios de turno?",
+        "on": {
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Transferencia": {
+            "set_variables": {
+              "transfer_reason": "paciente solicita agente en cierre de cita"
+            },
+            "goto": "final.transfer"
+          },
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.payment_info_plus31": {
+        "type": "intention",
+        "label": "Medios de turno (+31)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Puede realizar su turno únicamente en Tienda o mediante la APP de La Marina o El Bodegón. Use solo canales autorizados para evitar inconvenientes.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.post_negotiation_router": {
+        "type": "intention",
+        "label": "Router post negociación",
+        "delivery": "generate",
+        "interruptible": false,
+        "prompt": "Clasifica la última intención del paciente: si pide asesor/humano/transferencia elige exactamente 'Transferencia'. Si quiere terminar/no quiere nada más elige exactamente 'Cerrar'. En cualquier otro caso elige exactamente 'Reagendar'. Devuelve SOLO una palabra: Transferencia / Cerrar / Reagendar.",
+        "on": {
+          "Transferencia": {
+            "status": "Sin cita",
+            "substatus": "transferencia",
+            "goto": "final.transfer"
+          },
+          "Cerrar": {
+            "status": "Sin cita",
+            "substatus": "cierre_sin_reagenda",
+            "goto": "final.end_no_commitment"
+          },
+          "Reagendar": {
+            "goto": "intent.offer_reagenda"
+          }
+        }
+      },
+      "final.transfer": {
+        "type": "final",
+        "label": "Transferencia",
+        "delivery": "say",
+        "prompt": "Te paso con un especialista para ayudarte mejor.",
+        "transfer": true,
+        "transfer_reason": "{transfer_reason}"
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Muchas gracias por su disposición, {nombre_deudor}. Esta acción le ayudará a mejorar su historial crediticio y desbloqueará su credencial para que la pueda usar sin problemas. Quedamos atentos a cualquier cosa que necesite.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Entiendo su situación, {nombre_deudor}. No se preocupe, estaremos en contacto con usted más adelante para apoyarle. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_partial_rejected": {
+        "type": "final",
+        "label": "Despedida (rechazo turno parcial)",
+        "prompt": "Entiendo su situación, {nombre_deudor}. No se preocupe, estaremos en contacto con usted más adelante para apoyarle. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Si ya realizo su turno, este se vera reflejado una vez confirmado por el sistema. En caso de demora, puede comunicarse a la linea de coordinación de agenda de su entidad {portfolio_type}. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (número equivocado)",
+        "prompt": "Le agradezco la información. Registraré el número como equivocado. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado a tercero)",
+        "prompt": "Muchísimas gracias por su apoyo, le agradeceríamos indicar al titular que tiene una comunicación pendiente con {portfolio_type} relacionada con su cuenta. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_laboral_recado": {
+        "type": "final",
+        "label": "Despedida (recado con contacto laboral)",
+        "prompt": "Le agradezco mucho su apoyo. ¿Podría informarle a {nombre_deudor_completo} que lo estamos contactando en relación con su cuenta de {portfolio_type} y que necesitamos que se comunique con nosotros a la brevedad posible? Muchas gracias por su colaboración. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_laboral_no_colabora": {
+        "type": "final",
+        "label": "Despedida (contacto laboral no colabora)",
+        "prompt": "Entiendo perfectamente. Muchas gracias por su tiempo y atención. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_laboral_ya_no_labora": {
+        "type": "final",
+        "label": "Despedida (titular ya no labora)",
+        "prompt": "Muchas gracias por la información. Procederemos a actualizar nuestros registros. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_reagenda": {
+        "type": "final",
+        "label": "Despedida (reagendado)",
+        "prompt": "Muchas gracias. Queda agendado el siguiente contacto. Que tenga excelente día.",
+        "delivery": "say"
+      },
+      "final.end_deceased": {
+        "type": "final",
+        "label": "Despedida (fallecimiento)",
+        "prompt": "Lamento mucho esta situacion. Agradezco que me lo informe. Para que las gestiones cesen y evitar mas molestias, es necesario llevar el acta de defunción a tienda para que sea registrada. Que tenga un buen dia.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de su intención de turno para contactarnos en otra ocasión.",
+        "delivery": "say"
+      }
+    }
+  }
+}

@@ -1,0 +1,210 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿De cuánto es mi mensualidad? | ¿Cuánto tengo que cerrar la compra? | ¿Cuál es el monto pendiente?",
+    "answer": "Su mensualidad pendiente es de {producto_1_mensualidad_palabras}. Si me confirma una fecha, registramos su pedido de compra para que quede al corriente."
+  },
+  {
+    "question": "¿Cuál es mi importe total? | ¿Cuánto debo en total del crédito? | ¿Cuánto me falta por cerrar la compra de todo?",
+    "answer": "Su importe total adeudado registrado es de {saldo_total_palabras}. La mensualidad que está vencida en este momento es de {producto_1_mensualidad_palabras}, y es la que le ayudo a cerrar la oferta hoy."
+  },
+  {
+    "question": "¿Cuántos días de atraso tengo? | ¿Cuánto tiempo llevo en seguimiento comercial? | ¿Hace cuánto que no compra?",
+    "answer": "Su mensualidad lleva {producto_1_dias_mora_locucion} de atraso. Por eso le contactamos ahora, cuando todavía estamos a tiempo de resolverlo sin que genere intereses moratorios."
+  },
+  {
+    "question": "¿Cuándo es mi fecha de corte? | ¿Cuál es la fecha de corte de mi mensualidad? | ¿Qué día venció mi compra?",
+    "answer": "La fecha de corte de su mensualidad es el {fecha_corte_spoken}. Esa fecha está ligada a su tabla de pagos original y por eso no es posible modificarla."
+  },
+  {
+    "question": "¿Qué producto tengo? | ¿De qué crédito me habla? | ¿Es crédito o arrendamiento?",
+    "answer": "Su contrato corresponde a {producto_fuente} con Oxígeno Plus. Le contacto para apoyarle a poner al corriente su mensualidad de {producto_1_mensualidad_palabras}."
+  },
+  {
+    "question": "¿Cuántos contratos tengo? | ¿Tengo más de un crédito? | ¿Cuántas mensualidades vencidas tengo?",
+    "answer": "Usted tiene {total_productos_palabras} contratos con mensualidades vencidas, por un total de {deuda_total_palabras}. Si gusta los revisamos y vemos cómo regularizarlos."
+  },
+  {
+    "question": "¿Me puede dar el detalle de mis contratos? | ¿Cuáles son mis créditos? | Desglóseme lo que debo",
+    "answer": "Con gusto. {productos_detalle_text} ¿Le parece si buscamos una fecha para ponerlos al corriente?"
+  },
+  {
+    "question": "¿Cuánto debo del segundo contrato? | ¿Y el otro crédito de cuánto es? | ¿Cuál es la mensualidad de mi segundo contrato?",
+    "answer": "Su segundo contrato tiene una mensualidad de {producto_2_mensualidad_palabras}. Con gusto le ayudo a regularizarlo junto con el resto de sus contratos."
+  },
+  {
+    "question": "¿Cómo compra? | ¿Dónde puedo cerrar la compra? | ¿Cuáles son los medios de compra? | ¿Cómo realizo mi compra?",
+    "answer": "{kb_medios_pago}"
+  },
+  {
+    "question": "¿Tengo que hacer una transferencia? | ¿Es necesario que transfiera? | ¿Debo hacer un SPEI para cerrar la compra?",
+    "answer": "{kb_necesita_transferencia}"
+  },
+  {
+    "question": "Prefiero hacer una transferencia | Mejor le transfiero | Me acomoda más cerrar la compra por transferencia",
+    "answer": "{kb_prefiere_transferencia}"
+  },
+  {
+    "question": "¿Qué debo hacer para que funcione la domiciliación? | ¿Qué necesito para que pase el cobro automático? | ¿Cómo me aseguro de que se haga el cargo?",
+    "answer": "{kb_requisito_domiciliacion}"
+  },
+  {
+    "question": "Hay importe suficiente | Ya tengo importe | Ya hay importe | Hay importe en la cuenta | Pueden hacer la domiciliación | En este momento hay importe | Ya cuenta con importe suficiente",
+    "answer": "{kb_saldo_suficiente}"
+  },
+  {
+    "question": "¿Cuál es mi CLABE? | ¿Me da la cuenta para transferir? | ¿A qué cuenta deposito? | ¿Cuál es la CLABE STP?",
+    "answer": "{kb_clabe_respuesta}"
+  },
+  {
+    "question": "¿Cómo funciona la domiciliación? | ¿Cuándo me cobran automáticamente? | ¿Por qué no me han cobrado la domi?",
+    "answer": "La domiciliación realiza hasta cuatro intentos automáticos en días hábiles. El primer intento es a las doce del día de su fecha de corte y los reintentos a las dos de la tarde de los días siguientes. Le pedimos mantener importe disponible esos días. Solo funciona con bancos tradicionales como BBVA, Banamex, Santander, Banorte, HSBC o Scotiabank."
+  },
+  {
+    "question": "¿Puedo domiciliar mi cuenta de Nu, Klar o Mercado compra? | ¿Sirve una cuenta fintech para la domiciliación?",
+    "answer": "Aunque las cuentas de fintechs como Nu, Klar, Stori o Mercado compra tienen CLABE, técnicamente no aceptan cargos automáticos. Para la domiciliación necesita una cuenta en un banco tradicional como BBVA, Banamex, Santander, Banorte o HSBC. Mientras tanto, puede cerrar la compra por transferencia SPEI a su cuenta CLABE STP."
+  },
+  {
+    "question": "Me cobraron doble | Me hicieron un doble cargo | Pagué por transferencia y también me cobró la domi",
+    "answer": "Lamento la molestia y lo vamos a resolver. Le pido que comparta su comprobante de compra para escalarlo de inmediato con el equipo de pagos de Oxígeno Plus y que validen el cargo. También puede dar seguimiento al correo pagos arroba Oxígeno Plus punto m equis."
+  },
+  {
+    "question": "Me cobraron de una cuenta que no es | ¿Por qué me cobraron de otra cuenta? | Esa no es mi cuenta principal",
+    "answer": "Déjeme explicarle: en su contrato puede tener registradas varias cuentas bancarias, y el sistema está autorizado a realizar el cargo a cualquiera de ellas según los términos que se firmaron. Si prefiere que el cobro se haga siempre a una cuenta específica, podemos gestionar la actualización escribiendo a pagos arroba Oxígeno Plus punto m equis. ¿Cuál cuenta prefiere?"
+  },
+  {
+    "question": "Ya pagué | Ya hice el compra | Ya deposité hace días | ¿Por qué sigue apareciendo si ya pagué?",
+    "answer": "Gracias por informarme. Déjeme verificar si su compra ya está aplicado en el sistema. Si aún no se refleja, le pido que me comparta su comprobante para escalarlo y evitar cualquier cargo adicional."
+  },
+  {
+    "question": "¿Por qué me cobran intereses moratorios? | ¿Tengo intereses? | ¿Me van a cobrar moratorios?",
+    "answer": "Los intereses moratorios se generan de forma automática a partir del día siguiente a su fecha de compra cuando la mensualidad queda pendiente. La buena noticia es que, si pone su cuenta al corriente en los próximos días, podemos evitar que se generen."
+  },
+  {
+    "question": "¿Me pueden quitar los moratorios? | ¿Me hacen un descuento? | ¿Hay alguna rebaja o descuento de lanzamiento?",
+    "answer": "En este momento no contamos con una oferta de descuento ni descuento de lanzamiento para su cuenta. Lo que sí podemos hacer es apuntar un pedido de compra que evite que el importe siga acumulando cargos adicionales."
+  },
+  {
+    "question": "¿Qué pasa si no compra? | ¿Qué consecuencias hay? | ¿Y si no me pongo al corriente?",
+    "answer": "Si la cuenta sigue sin pagarse, con el tiempo se generan intereses moratorios, se reporta a Buró de Crédito y, si el atraso continúa, podría iniciarse un proceso de recuperación de la unidad. Por eso le contactamos ahora, cuando aún estamos a tiempo de evitar todo eso. ¿Le ayudo a resolverlo hoy?"
+  },
+  {
+    "question": "¿Ya me reportaron a Buró? | ¿Esto afecta mi historial crediticio? | ¿Me van a reportar?",
+    "answer": "Como su atraso es reciente, todavía está a tiempo: si pone su cuenta al corriente en los próximos días, podemos evitar que el reporte afecte su historial. Es una ventana que le conviene aprovechar."
+  },
+  {
+    "question": "Quedé a deber después de entregar el carro | ¿Por qué sigo debiendo si ya entregué el vehículo? | Ya devolví la unidad y me siguen cobrando",
+    "answer": "Entiendo que es frustrante. Lo que ocurrió es que el valor de venta de su vehículo no fue suficiente para cubrir el total de su adeudo, y la diferencia es lo que actualmente está registrado como cotización. Tiene la opción de liquidar ese importe; si no se liquida, permanecerá reportado en Buró de Crédito. ¿Quiere que revisemos opciones para resolverlo?"
+  },
+  {
+    "question": "Quiero cambiar mi fecha de compra | ¿Pueden moverme la fecha de compra? | ¿Me cambian el día de cobro?",
+    "answer": "Entiendo que le sería más cómodo otra fecha, pero la fecha de compra está ligada a su tabla de pagos original que se definió al firmar su contrato y no es posible modificarla. Lo que sí podemos hacer es que pague por transferencia los meses que lo necesite si su nómina cae unos días después."
+  },
+  {
+    "question": "Mi banco rechazó el cargo | Me rebotó la domi | No pasó la domiciliación | El cobro automático no se procesó",
+    "answer": "El cargo no se procesó, generalmente porque no había importe suficiente al momento del intento. Si mantiene fondos disponibles, el sistema intentará de nuevo al día siguiente hábil. También puede realizar su compra por transferencia a su cuenta STP si lo prefiere. Si su cuenta ya no está activa o la autorización fue cancelada, necesitamos dar de alta una cuenta nueva de un banco tradicional para reactivar la domiciliación."
+  },
+  {
+    "question": "Quiero reactivar mi domiciliación | ¿Cómo activo de nuevo el cargo automático? | Quiero dar de alta otra cuenta para el cobro",
+    "answer": "Con gusto gestionamos la reactivación con una cuenta de banco tradicional como BBVA, Banamex, Santander, Banorte o HSBC. Le recomiendo usar una cuenta nueva; comparta la CLABE y lo escalamos con el equipo correspondiente. Mientras queda activa, puede cerrar la compra por transferencia SPEI."
+  },
+  {
+    "question": "Quiero un plan de pagos | ¿Me pueden dar facilidades? | ¿Puedo cerrar la compra en partes?",
+    "answer": "Con gusto. Los pagos se asentan por mensualidades completas: puede cubrir la mensualidad de cada contrato por separado y el sistema reconoce cada compra automáticamente, aunque no es posible aceptar montos menores a una mensualidad. ¿Qué fecha le funciona para el primer compra?"
+  },
+  {
+    "question": "Quiero liquidar el carro | Quiero cerrar la compra todo el crédito | ¿Cómo liquido mi vehículo?",
+    "answer": "Para liquidar necesitamos generar una cotización con el monto exacto, que tiene una fecha de vigencia. Tome en cuenta que en los cinco días previos a su fecha de compra no se pueden generar cotizaciones. Le puedo referir con el área de Oxígeno Plus que prepara esa cotización."
+  },
+  {
+    "question": "Ya no puedo cerrar la compra y quiero devolver el carro | Quiero entregar el vehículo | Quiero cancelar el crédito",
+    "answer": "Entiendo la situación. Antes de tomar esa decisión, un especialista de Oxígeno Plus puede revisar las opciones disponibles para su caso. Le voy a referir con el área de seguimiento de venta para que le orienten directamente. Puede comunicarse al cinco cinco, siete nueve, dos nueve, dos seis, nueve tres, de lunes a viernes de ocho a cinco."
+  },
+  {
+    "question": "Ya me están hostigando | Dejen de llamarme | Ya me llamaron muchas veces | No me llamen más",
+    "answer": "Entiendo que puede ser incómodo y le ofrezco una disculpa si la frecuencia ha sido excesiva. Mi intención es apoyarle a resolverlo para que no continúen las llamadas. Si formalizamos un acuerdo de compra ahora, queda registrado y se detiene el contacto por este tema."
+  },
+  {
+    "question": "Un agente me trató mal | Fueron groseros conmigo | No voy a cerrar la compra hasta que me hablen bien",
+    "answer": "Lamento mucho que haya tenido esa experiencia; ese no es el trato que queremos darle, y merece un trato respetuoso. Yo estoy aquí para apoyarle a resolver su situación de la mejor manera. ¿Cómo le puedo ayudar hoy?"
+  },
+  {
+    "question": "Voy a demandarlos | Voy a ir a CONDUSEF | Voy a la PROFECO | Ya hablé con un abogado",
+    "answer": "Está en su derecho de acudir a la instancia que considere. Lo que le puedo comentar es que el adeudo sigue vigente mientras se resuelve cualquier proceso. Si lo prefiere, escalo su caso con el área correspondiente de Oxígeno Plus para que lo atiendan."
+  },
+  {
+    "question": "No sabía que debía | No me llegó ningún aviso | No reconozco la cotización",
+    "answer": "Entiendo. Su mensualidad por {producto_1_mensualidad_palabras} correspondiente al corte del {fecha_corte_spoken} no fue procesada con éxito y por eso aparece con {producto_1_dias_mora_locucion} de atraso. Le contactamos para que estemos en la misma página y podamos resolverlo antes de que genere complicaciones. ¿Le explico cómo ponerse al corriente hoy?"
+  },
+  {
+    "question": "¿Eres un robot? | ¿Eres una máquina? | ¿Eres humano? | ¿Esto es una grabación?",
+    "answer": "Soy un Agente con inteligencia artificial de Oxígeno Plus y le llamo para apoyarle a resolver su mensualidad pendiente. Con gusto le ayudo con lo que necesite."
+  },
+  {
+    "question": "¿Con quién hablo? | ¿Quién me llama? | ¿De parte de quién? | ¿Cuál es su nombre? | ¿Quién habla? | ¿De dónde me llaman?",
+    "answer": "Le habla el Agente AI de Oxígeno Plus respecto a su mensualidad."
+  },
+  {
+    "question": "¿Cuál es el teléfono de atención? | ¿Cómo contacto a Oxígeno Plus? | ¿Tienen un número de atención al comprador?",
+    "answer": "Puede comunicarse al número de atención al comprador de Oxígeno Plus {telefono_atencion_spelled}, de lunes a viernes de nueve de la mañana a siete de la tarde, o escribir a c ese arroba Oxígeno Plus punto m equis. Para temas de seguimiento de venta, al cinco cinco, siete nueve, dos nueve, dos seis, nueve tres, de lunes a viernes de ocho a cinco."
+  },
+  {
+    "question": "¿En qué moneda es? | ¿Es en pesos? | ¿Qué moneda se paga?",
+    "answer": "Todos los montos y pagos son en pesos mexicanos. Su mensualidad pendiente es de {producto_1_mensualidad_palabras}."
+  },
+  {
+    "question": "¿Qué es Oxígeno Plus? | ¿Quién es Oxígeno Plus? | ¿A qué se dedican?",
+    "answer": "Oxígeno Plus es una empresa mexicana de financiamiento y arrendamiento vehicular. Le contacto para apoyarle a poner al corriente su mensualidad y resolver su situación a tiempo."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "Oxígeno Plus puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

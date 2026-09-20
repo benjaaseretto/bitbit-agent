@@ -1,0 +1,878 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "pulse_line_flow",
+    "visible_name": "Pulse Line",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (17 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/pulse_line.json",
+      "company_id": "pulse_line-demo",
+      "description": "Base de conocimiento de Pulse Line."
+    },
+    "company_id": "pulse_line-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "bancaribe_flow_graph.json",
+      "node_count": 17,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Pulse Line",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": false,
+          "identity_pregunta": "Hola. ¿Hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Mi nombre es {nombre_agente}, soy asesor de Pulse Line."
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "dim_2",
+              "rules": [
+                {
+                  "op": "==",
+                  "value": 2,
+                  "goto": "intent.debt_presentation_vencida_y_por_vencer"
+                }
+              ],
+              "default": "intent.debt_presentation_dim1"
+            },
+            "express_route": true,
+            "express_route_next": "intent.debt_presentation_dim1",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.debt_presentation_dim1": {
+        "type": "intention",
+        "label": "Saludo + disclosure + motivo (1 cuota de financiamiento: Preventiva o Vigente)",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "agency",
+          "cases": {
+            "Preventiva": "Un gusto, te habla {nombre_agente} asesor de Pulse Line. Recuerda que esta llamada está siendo grabada y monitoreada para validar la calidad de mi servicio. Te llamo para informarte que se encuentra disponible tu factura para compra por un valor de {due_balance_palabras}, la cual vence el día {fecha_vencimiento_spoken}. Realizando tu compra a tiempo evitas posibles restricciones de cupo y bloqueo temporal de nuevas compras. ¿Te parece si lo dejamos listo ahora?",
+            "Vigente": "Un gusto, te habla {nombre_agente} asesor de Pulse Line. Recuerda que esta llamada está siendo grabada y monitoreada para validar la calidad de mi servicio. Te llamo para recordarte que actualmente tienes un atraso de {dias_mora} días en tu crédito; debido a esto, se aplica una penalización de cuatro dólares a tu importe pendiente. Ponte al día pagando el monto de {due_balance_palabras} para evitar posibles restricciones de cupo. ¿Te parece si lo ponemos al día ahora?"
+          },
+          "default": "Un gusto, te habla {nombre_agente} asesor de Pulse Line. Recuerda que esta llamada está siendo grabada y monitoreada para validar la calidad de mi servicio. Te llamo para revisar el estado de tu crédito de Pulse Line. ¿Te parece si lo vemos ahora?"
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "agency",
+              "cases": {
+                "Preventiva": "task.negotiation_preventiva",
+                "Vigente": "task.negotiation_vigente"
+              },
+              "default": "task.negotiation_vigente"
+            }
+          }
+        }
+      },
+      "intent.debt_presentation_vencida_y_por_vencer": {
+        "type": "intention",
+        "label": "Saludo + disclosure + motivo (Vencida y por Vencer)",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt": "Un gusto, te habla {nombre_agente} asesor de Pulse Line. Recuerda que esta llamada está siendo grabada y monitoreada para validar la calidad de mi servicio. Te llamo para recordarte que actualmente tu crédito presenta un atraso de {dias_mora} días. Por este motivo, se aplicó una penalización de cuatro dólares a tu importe vencido. Al día de hoy tienes un importe vencido por {due_balance_palabras} y un importe próximo a vencer por {invoiced_balance_palabras}. El total para dejar tu cuenta al corriente es de {total_balance_palabras}. Realizar el compra completo te ayuda a evitar mayores cargos y posibles restricciones de cupo. ¿Te parece si lo regularizamos ahora?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_vencida_y_por_vencer"
+          }
+        }
+      },
+      "task.negotiation_preventiva": {
+        "type": "task",
+        "label": "Negociación V2 (Preventiva - solo recordatorio)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "custom_instructions": "Al proponer o cerrar el acuerdo de compra, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el pedido, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. cerrar la compra a más tardar {fecha_limite} te ayuda a evitar restricciones de cupo y mantener tu cuenta al día sin penalizaciónes. ¿Podrías realizar el compra dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, podrían aplicarse penalizaciónes y restricciones de cupo. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el compra ese día?",
+          "max_dias": "{max_dias}",
+          "benefit_hints": [
+            "evitar restricciones de cupo",
+            "evitar bloqueo temporal de nuevas compras",
+            "mantener tu cuenta al día sin penalizaciones"
+          ],
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "modismos_pago_custom": {
+            "hoy": [
+              "compra hoy",
+              "hoy compra",
+              "hoy lo compra",
+              "hoy te compra",
+              "hoy mismo",
+              "hoy mismo compra",
+              "hoy mismo lo compra",
+              "de hoy no pasa",
+              "ahorita compra",
+              "ahorita lo compra",
+              "ahorita te compra",
+              "ahorita lo hago",
+              "ahorita mismo",
+              "ahorita mismo lo compra",
+              "ahoritica lo compra",
+              "ahora mismo",
+              "ahora compra",
+              "ya mismo",
+              "ya mismo lo compra",
+              "ya te compra",
+              "ya lo compra",
+              "ya lo hago",
+              "ya voy a cerrar la compra",
+              "en un rato",
+              "en un rato compra",
+              "en un ratico",
+              "al rato",
+              "al ratico",
+              "más tarde lo compra",
+              "compra en la tarde",
+              "en la tarde",
+              "en la tarde compra",
+              "en la tarde lo compra",
+              "esta tarde",
+              "esta tarde lo compra",
+              "en la tardecita",
+              "compra en la noche",
+              "en la noche",
+              "esta noche",
+              "esta noche lo compra",
+              "te echo el compra",
+              "te echo eso ahorita",
+              "ya te lo echo",
+              "te echo el compra móvil",
+              "te hago el compra móvil ahorita",
+              "hoy lo cancelo",
+              "lo cancelo hoy",
+              "te transfiero ahorita",
+              "te deposito ahorita"
+            ],
+            "mañana": [
+              "compra mañana",
+              "mañana compra",
+              "mañana lo compra",
+              "mañana te compra",
+              "mañana mismo",
+              "mañana sin falta",
+              "mañana temprano",
+              "mañana en la mañana",
+              "mañana te echo el compra",
+              "mañana lo cancelo",
+              "para mañana"
+            ],
+            "pasado_mañana": [
+              "pasado mañana",
+              "pasado mañana compra",
+              "pasado mañana lo compra",
+              "en dos días",
+              "en dos días lo compra",
+              "dentro de dos días"
+            ]
+          },
+          "objection_handlers": [
+            {
+              "objection": "No tengo dinero | Estoy limpio | Estoy pelando | No tengo ni medio | La cosa está fuerte | Ahorita no hay | Ando corto | Estoy apretado",
+              "answer": "Entiendo que la situación está difícil. Solo te dejo el recordatorio: pagando antes de la fecha de vigencia de oferta evitas la penalización fija de cuatro dólares por cuota de financiamiento y posibles restricciones de cupo. Cualquier cosa, estamos para apoyarte."
+            },
+            {
+              "objection": "No me ha caído el compra | Aún no me han pagado el sueldo | Estoy esperando que me paguen | Te compra apenas cobre",
+              "answer": "Comprendo. Considera que cuentas hasta tu fecha de vigencia de oferta para realizar el compra sin penalización; si lo haces a tiempo no se generan intereses ni cargos."
+            },
+            {
+              "objection": "Después compra | Más adelante lo veo | Yo me organizo | Lo reviso después | Después hablamos | Llámame luego",
+              "answer": "Perfecto. Es solo un recordatorio amable: realiza tu compra antes del vigencia de oferta para evitar la penalización de cuatro dólares por cuota de financiamiento y mantener tu cupo activo."
+            },
+            {
+              "objection": "Mándamelo por WhatsApp | Pásame los datos por mensaje | Mándame la información",
+              "answer": "Es solo un recordatorio: tienes una cuota de financiamiento próxima a vencer; pagando a tiempo evitas penalizaciones y bloqueo temporal de nuevas compras."
+            },
+            {
+              "objection": "Ya pagué | Ya hice la transferencia | Ya resolví | Te paso el capture | Ya hice el compra",
+              "answer": "Perfecto, gracias por avisar. Ten en cuenta que el compra puede tardar un poco en reflejarse en el sistema; mantén tu comprobante a mano por cualquier verificación."
+            },
+            {
+              "objection": "Eso no me cuadra | No reconozco esa cotización | No es mía esa cuota de financiamiento | No estoy de acuerdo",
+              "answer": "Entiendo tu inquietud. La información proviene directamente de Pulse Line. Si necesitas validar detalles puedes llamar al cero cinco cero cero, dos dos seis dos dos siete cuatro, de lunes a viernes de ocho de la mañana a cuatro de la tarde."
+            },
+            {
+              "objection": "Quiero hablar con un asesor humano | Pásame con un ejecutivo | Quiero hablar con una persona | Quiero un humano",
+              "answer": "Entiendo. Para atención directa puedes comunicarte al cero cinco cero cero, dos dos seis dos dos siete cuatro, de lunes a viernes de ocho de la mañana a cuatro de la tarde."
+            },
+            {
+              "objection": "¿Eres un robot? | ¿Eres una máquina? | ¿Eres humano? | ¿Eres una IA? | ¿Eres una persona? | ¿Eres real? | ¿Estoy hablando con un robot? | ¿Esto es una grabación?",
+              "answer": "Soy asesor de Pulse Line y estoy aquí para apoyarte con la gestión de tu crédito de Compra a cuota de financiamiento."
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "task.negotiation_vigente": {
+        "type": "task",
+        "label": "Negociación V2 (Vigente)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "custom_instructions": "Al proponer o cerrar el acuerdo de compra, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el pedido, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. cerrar la compra a más tardar {fecha_limite} te ayuda a evitar la penalización adicional por cuota de financiamiento y las restricciones de cupo. ¿Podrías realizar el compra dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, se aplicaria la penalización adicional por cuota de financiamiento. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el compra ese día?",
+          "max_dias": "{max_dias}",
+          "benefit_hints": [
+            "evitar penalización adicional de cuatro dólares por cuota de financiamiento",
+            "evitar restricciones de cupo y bloqueo de nuevas compras",
+            "mantener buen historial para seguir usando tu cupo"
+          ],
+          "max_attempts": 2,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "modismos_pago_custom": {
+            "hoy": [
+              "compra hoy",
+              "hoy compra",
+              "hoy lo compra",
+              "hoy te compra",
+              "hoy mismo",
+              "hoy mismo compra",
+              "hoy mismo lo compra",
+              "de hoy no pasa",
+              "ahorita compra",
+              "ahorita lo compra",
+              "ahorita te compra",
+              "ahorita lo hago",
+              "ahorita mismo",
+              "ahorita mismo lo compra",
+              "ahoritica lo compra",
+              "ahora mismo",
+              "ahora compra",
+              "ya mismo",
+              "ya mismo lo compra",
+              "ya te compra",
+              "ya lo compra",
+              "ya lo hago",
+              "ya voy a cerrar la compra",
+              "en un rato",
+              "en un rato compra",
+              "en un ratico",
+              "al rato",
+              "al ratico",
+              "más tarde lo compra",
+              "compra en la tarde",
+              "en la tarde",
+              "en la tarde compra",
+              "en la tarde lo compra",
+              "esta tarde",
+              "esta tarde lo compra",
+              "en la tardecita",
+              "compra en la noche",
+              "en la noche",
+              "esta noche",
+              "esta noche lo compra",
+              "te echo el compra",
+              "te echo eso ahorita",
+              "ya te lo echo",
+              "te echo el compra móvil",
+              "te hago el compra móvil ahorita",
+              "hoy lo cancelo",
+              "lo cancelo hoy",
+              "te transfiero ahorita",
+              "te deposito ahorita"
+            ],
+            "mañana": [
+              "compra mañana",
+              "mañana compra",
+              "mañana lo compra",
+              "mañana te compra",
+              "mañana mismo",
+              "mañana sin falta",
+              "mañana temprano",
+              "mañana en la mañana",
+              "mañana te echo el compra",
+              "mañana lo cancelo",
+              "para mañana"
+            ],
+            "pasado_mañana": [
+              "pasado mañana",
+              "pasado mañana compra",
+              "pasado mañana lo compra",
+              "en dos días",
+              "en dos días lo compra",
+              "dentro de dos días"
+            ]
+          },
+          "objection_handlers": [
+            {
+              "objection": "No tengo dinero | Estoy limpio | Estoy pelando | No tengo ni medio | La cosa está fuerte | Ahorita no hay | Ando corto | Estoy apretado",
+              "answer": "Entiendo, sé que la situación está difícil. Pagando hoy o lo antes posible evitas que sigan acumulándose cargos de cuatro dólares por cuota de financiamiento y posibles restricciones de cupo. ¿Qué fecha cercana podrías comprometer para cerrar la oferta?"
+            },
+            {
+              "objection": "No me ha caído el compra | Aún no me han pagado el sueldo | Estoy esperando que me paguen | Te compra apenas cobre",
+              "answer": "Comprendo. Para evitar que se acumulen más cargos, ¿podemos acordar una fecha tentativa, justo después de que recibas tu compra, para dejar agendado tu pedido?"
+            },
+            {
+              "objection": "Dame chance | Espérame hasta | Déjame ver cómo hago | Necesito más tiempo | Estoy resolviendo | No he podido cuadrarme | Voy a cuadrarme",
+              "answer": "Por supuesto, estamos para apoyarte. Para dejar todo claro, dime una fecha concreta dentro de los próximos días en la que puedas hacer el compra y lo registramos."
+            },
+            {
+              "objection": "¿Me pueden refinanciar? | Quiero financiamiento | Hacer un acuerdo de compra distinto | Reestructurar la cotización | Bajarme las cuotas | ¿Cómo hacemos ahí?",
+              "answer": "Entiendo, en este momento Compra a cuota de financiamiento no permite modificar fechas ni cuotas. Lo más conveniente es agendar el compra para mantener tu cupo activo y evitar más penalizaciones. ¿Qué fecha cercana podrías comprometer?"
+            },
+            {
+              "objection": "Te abono algo | Puedo abonar una parte | compra parcial | Te doy un abono",
+              "answer": "Te agradezco la disposición. En este caso necesitamos el compra completo de la cuota de financiamiento para evitar que siga aplicándose la penalización de cuatro dólares y mantener tu cupo activo. ¿Podrías cubrir el monto total en los próximos días?"
+            },
+            {
+              "objection": "Después hablamos | Llámame luego | Ahorita estoy ocupado | No puedo hablar | Más tarde | Estoy en reunión | Después te contesto",
+              "answer": "Entiendo, solo necesito un momento. Si me confirmas hoy una fecha de compra, dejamos tu pedido agendado y evitamos volver a llamarte. ¿Qué día te queda mejor?"
+            },
+            {
+              "objection": "Mándamelo por WhatsApp | Mándame la información por mensaje | Pásame los datos por whatsapp | Yo reviso eso",
+              "answer": "Para que quede registrado tu pedido necesito agendarlo aquí mismo en la llamada. Solo dime una fecha tentativa para el compra y queda formalizado."
+            },
+            {
+              "objection": "Ya pagué | Ya hice la transferencia | Ya resolví | Te paso el capture | Ya hice el compra",
+              "answer": "Perfecto. Ten en cuenta que el compra puede tardar un poco en reflejarse en el sistema. Mantén tu comprobante a mano. ¿Confirmas que ya realizaste el compra completo?"
+            },
+            {
+              "objection": "Eso no me cuadra | No estoy de acuerdo | No reconozco esa cotización | Esa cotización no es mía",
+              "answer": "Entiendo tu preocupación. La información que tengo aquí proviene directamente de Pulse Line; si necesitas validar detalles puedes llamar al cero cinco cero cero, dos dos seis dos dos siete cuatro, de lunes a viernes de ocho de la mañana a cuatro de la tarde."
+            },
+            {
+              "objection": "Quiero hablar con un asesor humano | Pásame con un ejecutivo | Quiero hablar con una persona | Quiero un humano | Transfiéreme",
+              "answer": "Entiendo. Para atención directa puedes comunicarte al cero cinco cero cero, dos dos seis dos dos siete cuatro, de lunes a viernes de ocho de la mañana a cuatro de la tarde. Por aquí, lo que sí puedo hacer es ayudarte a agendar tu compra."
+            },
+            {
+              "objection": "¿Eres un robot? | ¿Eres una máquina? | ¿Eres humano? | ¿Eres una IA? | ¿Eres una persona? | ¿Eres real? | ¿Estoy hablando con un robot? | ¿Esto es una grabación?",
+              "answer": "Soy asesor de Pulse Line y estoy aquí para apoyarte con la regularización de tu cuenta. ¿Qué fecha cercana podrías comprometer para realizar tu compra?"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "task.negotiation_vencida_y_por_vencer": {
+        "type": "task",
+        "label": "Negociación V2 (Vencida y por Vencer - total_balance)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "custom_instructions": "Al proponer o cerrar el acuerdo de compra, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el pedido, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. cerrar la compra a más tardar {fecha_limite} te ayuda a dejar tu cuenta al corriente y evitar nuevas penalizaciónes. ¿Podrías realizar el compra dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, podrían sumarse mayores cargos y nuevas penalizaciónes. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el compra ese día?",
+          "max_dias": "{max_dias}",
+          "benefit_hints": [
+            "dejar tu cuenta totalmente al corriente",
+            "evitar mayores cargos y nuevas penalizaciones",
+            "evitar restricciones de cupo"
+          ],
+          "max_attempts": 2,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "monto_deuda": "{total_balance}",
+          "monto_deuda_palabras": "{total_balance_palabras}",
+          "modismos_pago_custom": {
+            "hoy": [
+              "compra hoy",
+              "hoy compra",
+              "hoy lo compra",
+              "hoy te compra",
+              "hoy mismo",
+              "hoy mismo compra",
+              "hoy mismo lo compra",
+              "de hoy no pasa",
+              "ahorita compra",
+              "ahorita lo compra",
+              "ahorita te compra",
+              "ahorita lo hago",
+              "ahorita mismo",
+              "ahorita mismo lo compra",
+              "ahoritica lo compra",
+              "ahora mismo",
+              "ahora compra",
+              "ya mismo",
+              "ya mismo lo compra",
+              "ya te compra",
+              "ya lo compra",
+              "ya lo hago",
+              "ya voy a cerrar la compra",
+              "en un rato",
+              "en un rato compra",
+              "en un ratico",
+              "al rato",
+              "al ratico",
+              "más tarde lo compra",
+              "compra en la tarde",
+              "en la tarde",
+              "en la tarde compra",
+              "en la tarde lo compra",
+              "esta tarde",
+              "esta tarde lo compra",
+              "en la tardecita",
+              "compra en la noche",
+              "en la noche",
+              "esta noche",
+              "esta noche lo compra",
+              "te echo el compra",
+              "te echo eso ahorita",
+              "ya te lo echo",
+              "te echo el compra móvil",
+              "te hago el compra móvil ahorita",
+              "hoy lo cancelo",
+              "lo cancelo hoy",
+              "te transfiero ahorita",
+              "te deposito ahorita"
+            ],
+            "mañana": [
+              "compra mañana",
+              "mañana compra",
+              "mañana lo compra",
+              "mañana te compra",
+              "mañana mismo",
+              "mañana sin falta",
+              "mañana temprano",
+              "mañana en la mañana",
+              "mañana te echo el compra",
+              "mañana lo cancelo",
+              "para mañana"
+            ],
+            "pasado_mañana": [
+              "pasado mañana",
+              "pasado mañana compra",
+              "pasado mañana lo compra",
+              "en dos días",
+              "en dos días lo compra",
+              "dentro de dos días"
+            ]
+          },
+          "objection_handlers": [
+            {
+              "objection": "No tengo dinero | Estoy limpio | Estoy pelando | No tengo ni medio | La cosa está fuerte | Ahorita no hay | Ando corto | Estoy apretado",
+              "answer": "Entiendo, sé que la situación está difícil. Realizar el compra completo te ayuda a evitar mayores cargos y restricciones de cupo. ¿Qué fecha cercana podrías comprometer?"
+            },
+            {
+              "objection": "No me ha caído el compra | Aún no me han pagado el sueldo | Estoy esperando que me paguen | Te compra apenas cobre",
+              "answer": "Comprendo. Para evitar que se acumulen más cargos, ¿podemos acordar una fecha tentativa, justo después de que recibas tu compra, para dejar agendado tu pedido?"
+            },
+            {
+              "objection": "Dame chance | Espérame hasta | Déjame ver cómo hago | Necesito más tiempo | Estoy resolviendo | No he podido cuadrarme",
+              "answer": "Por supuesto. Para dejar todo claro, dime una fecha concreta dentro de los próximos días en la que puedas hacer el compra y lo registramos."
+            },
+            {
+              "objection": "¿Me pueden refinanciar? | Quiero financiamiento | Reestructurar la cotización | Bajarme las cuotas | ¿Cómo hacemos ahí?",
+              "answer": "Entiendo. Compra a cuota de financiamiento no permite modificar fechas ni cuotas. Lo más conveniente es agendar el compra para cerrar la oferta tu cuenta. ¿Qué fecha cercana podrías comprometer?"
+            },
+            {
+              "objection": "Después hablamos | Llámame luego | Ahorita estoy ocupado | No puedo hablar | Más tarde | Estoy en reunión",
+              "answer": "Entiendo, solo necesito un momento. Si me confirmas hoy una fecha de compra, dejamos tu pedido agendado y evitamos volver a llamarte. ¿Qué día te queda mejor?"
+            },
+            {
+              "objection": "Mándamelo por WhatsApp | Pásame los datos por whatsapp | Yo reviso eso",
+              "answer": "Para que quede registrado tu pedido necesito agendarlo aquí mismo en la llamada. Solo dime una fecha tentativa y queda formalizado."
+            },
+            {
+              "objection": "Ya pagué | Ya hice la transferencia | Ya resolví | Te paso el capture | Ya hice el compra",
+              "answer": "Perfecto. Ten en cuenta que el compra puede tardar un poco en reflejarse en el sistema. Mantén tu comprobante a mano. ¿Confirmas que ya realizaste el compra completo?"
+            },
+            {
+              "objection": "Eso no me cuadra | No estoy de acuerdo | No reconozco esa cotización | Esa cotización no es mía",
+              "answer": "Entiendo tu preocupación. La información que tengo aquí proviene directamente de Pulse Line; si necesitas validar detalles puedes llamar al cero cinco cero cero, dos dos seis dos dos siete cuatro, de lunes a viernes de ocho de la mañana a cuatro de la tarde."
+            },
+            {
+              "objection": "Quiero hablar con un asesor humano | Pásame con un ejecutivo | Quiero hablar con una persona | Quiero un humano | Transfiéreme",
+              "answer": "Entiendo. Para atención directa puedes comunicarte al cero cinco cero cero, dos dos seis dos dos siete cuatro, de lunes a viernes de ocho de la mañana a cuatro de la tarde. Por aquí, lo que sí puedo hacer es ayudarte a agendar tu compra."
+            },
+            {
+              "objection": "¿Eres un robot? | ¿Eres una máquina? | ¿Eres humano? | ¿Eres una IA? | ¿Eres una persona? | ¿Eres real? | ¿Estoy hablando con un robot? | ¿Esto es una grabación?",
+              "answer": "Soy asesor de Pulse Line y estoy aquí para apoyarte con la regularización de tu cuenta. ¿Qué fecha cercana podrías comprometer para realizar tu compra?"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.fallback_due_balance_only"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.fallback_due_balance_only": {
+        "type": "intention",
+        "label": "Fallback: ofrecer solo el importe vencido",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo tu situación. Para ayudarte a cerrar la oferta tu cuenta, podemos realizar el compra del importe vencido; el monto es de {due_balance_palabras}.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_due_balance_fallback"
+          }
+        }
+      },
+      "task.negotiation_due_balance_fallback": {
+        "type": "task",
+        "label": "Negociación V2 (Fallback - solo importe vencido)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "custom_instructions": "MONTO DE ESTA GESTIÓN (ESTRICTO): el único monto a mencionar, confirmar y registrar es el importe vencido de {due_balance_palabras}. No uses el importe total ni el importe por vencer. Si el comprador pregunta cuánto debe cerrar la compra, responde con {due_balance_palabras}. Al proponer o cerrar el acuerdo de compra, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el pedido, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. cerrar la compra a más tardar {fecha_limite} te ayuda a cerrar la oferta tu cuenta y evitar restricciones de cupo. ¿Podrías realizar el compra dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, podrían sumarse mayores cargos sobre tu importe. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el compra ese día?",
+          "max_dias": "{max_dias}",
+          "benefit_hints": [
+            "cerrar la oferta tu cuenta y detener mayores cargos",
+            "evitar restricciones de cupo",
+            "mantener buen historial"
+          ],
+          "max_attempts": 2,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "modismos_pago_custom": {
+            "hoy": [
+              "compra hoy",
+              "hoy compra",
+              "hoy lo compra",
+              "hoy te compra",
+              "hoy mismo",
+              "hoy mismo compra",
+              "hoy mismo lo compra",
+              "de hoy no pasa",
+              "ahorita compra",
+              "ahorita lo compra",
+              "ahorita te compra",
+              "ahorita lo hago",
+              "ahorita mismo",
+              "ahorita mismo lo compra",
+              "ahoritica lo compra",
+              "ahora mismo",
+              "ahora compra",
+              "ya mismo",
+              "ya mismo lo compra",
+              "ya te compra",
+              "ya lo compra",
+              "ya lo hago",
+              "ya voy a cerrar la compra",
+              "en un rato",
+              "en un rato compra",
+              "en un ratico",
+              "al rato",
+              "al ratico",
+              "más tarde lo compra",
+              "compra en la tarde",
+              "en la tarde",
+              "en la tarde compra",
+              "en la tarde lo compra",
+              "esta tarde",
+              "esta tarde lo compra",
+              "en la tardecita",
+              "compra en la noche",
+              "en la noche",
+              "esta noche",
+              "esta noche lo compra",
+              "te echo el compra",
+              "te echo eso ahorita",
+              "ya te lo echo",
+              "te echo el compra móvil",
+              "te hago el compra móvil ahorita",
+              "hoy lo cancelo",
+              "lo cancelo hoy",
+              "te transfiero ahorita",
+              "te deposito ahorita"
+            ],
+            "mañana": [
+              "compra mañana",
+              "mañana compra",
+              "mañana lo compra",
+              "mañana te compra",
+              "mañana mismo",
+              "mañana sin falta",
+              "mañana temprano",
+              "mañana en la mañana",
+              "mañana te echo el compra",
+              "mañana lo cancelo",
+              "para mañana"
+            ],
+            "pasado_mañana": [
+              "pasado mañana",
+              "pasado mañana compra",
+              "pasado mañana lo compra",
+              "en dos días",
+              "en dos días lo compra",
+              "dentro de dos días"
+            ]
+          },
+          "objection_handlers": [
+            {
+              "objection": "No tengo dinero | Estoy limpio | Estoy pelando | No tengo ni medio | La cosa está fuerte | Ahorita no hay | Ando corto | Estoy apretado",
+              "answer": "Entiendo, sé que la situación está difícil. Aun así, cubrir el importe vencido te ayuda a detener mayores cargos y mantener tu cupo activo. ¿Qué fecha cercana podrías comprometer?"
+            },
+            {
+              "objection": "No me ha caído el compra | Aún no me han pagado el sueldo | Te compra apenas cobre",
+              "answer": "Comprendo. Para evitar más cargos, ¿podemos acordar una fecha tentativa justo después de que recibas tu compra, y dejamos agendado tu pedido?"
+            },
+            {
+              "objection": "Dame chance | Espérame hasta | Déjame ver cómo hago | Necesito más tiempo | Estoy resolviendo",
+              "answer": "Por supuesto. Para dejar todo claro, dime una fecha concreta dentro de los próximos días en la que puedas cerrar la compra el importe vencido y lo registramos."
+            },
+            {
+              "objection": "Te abono algo | Puedo abonar una parte | compra parcial | Te doy un abono",
+              "answer": "Te agradezco la disposición. Para cerrar la oferta el importe vencido necesitamos cubrirlo en su totalidad. ¿Podrías cubrir ese monto en los próximos días?"
+            },
+            {
+              "objection": "¿Me pueden refinanciar? | Reestructurar la cotización | Bajarme las cuotas",
+              "answer": "Entiendo. Compra a cuota de financiamiento no permite modificar fechas ni cuotas. Lo más conveniente es agendar el compra del importe vencido para evitar mayores cargos."
+            },
+            {
+              "objection": "Después hablamos | Llámame luego | Ahorita estoy ocupado | No puedo hablar | Más tarde | Mándamelo por WhatsApp",
+              "answer": "Entiendo, solo necesito un momento. Si me confirmas hoy una fecha de compra, dejamos tu pedido agendado y evitamos volver a llamarte. ¿Qué día te queda mejor?"
+            },
+            {
+              "objection": "Ya pagué | Ya hice la transferencia | Ya resolví | Te paso el capture",
+              "answer": "Perfecto. Ten en cuenta que el compra puede tardar un poco en reflejarse en el sistema. Mantén tu comprobante a mano. ¿Confirmas que ya realizaste el compra?"
+            },
+            {
+              "objection": "Eso no me cuadra | No reconozco esa cotización | Esa cotización no es mía",
+              "answer": "Entiendo tu preocupación. La información proviene directamente de Pulse Line; si necesitas validar detalles puedes llamar al cero cinco cero cero, dos dos seis dos dos siete cuatro, de lunes a viernes de ocho de la mañana a cuatro de la tarde."
+            },
+            {
+              "objection": "Quiero hablar con un asesor humano | Pásame con un ejecutivo | Quiero hablar con una persona | Transfiéreme",
+              "answer": "Entiendo. Para atención directa puedes comunicarte al cero cinco cero cero, dos dos seis dos dos siete cuatro, de lunes a viernes de ocho de la mañana a cuatro de la tarde. Por aquí, lo que sí puedo hacer es ayudarte a agendar tu compra."
+            },
+            {
+              "objection": "¿Eres un robot? | ¿Eres una máquina? | ¿Eres humano? | ¿Eres una IA? | ¿Eres una persona? | ¿Eres real? | ¿Estoy hablando con un robot? | ¿Esto es una grabación?",
+              "answer": "Soy asesor de Pulse Line y estoy aquí para apoyarte a cerrar la oferta tu cuenta. ¿Qué fecha cercana podrías comprometer para cerrar la compra el importe vencido?"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Confirmación explícita del pedido",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El pedido de compra YA está agendado; este paso solo lo confirma. NUNCA vuelvas a agendar, renegociar ni preguntar por la fecha de compra. Si el comprador hace una pregunta que esté en la sección de preguntas frecuentes, respóndela de forma breve tal cual está, sin inventar, y luego avanza. Si el comprador NO hace ninguna pregunta, dice que está todo claro, se despide, responde 'no', 'nada más', 'ok', 'gracias' o algo equivalente, elige continuar y avanza de inmediato. No repreguntes, no repitas la información ni agregues comentarios, saludos o agradecimientos extra.",
+        "prompt": "Perfecto, entonces confirmamos tu pedido de compra por un valor de {payment_amount_palabras} para el día {commitment_date_spoken}, ¿Tienes alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin pedido)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo. Lamento que en esta ocasión no llegamos a un acuerdo. Te contactaremos en otra oportunidad.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "{nombre_deudor}, gracias por tu atención. Recuerda que te habló {nombre_agente} de Pulse Line. ¡Hasta pronto!",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "{nombre_deudor}, gracias por tu atención. Recuerda que te habló {nombre_agente} de Pulse Line. ¡Hasta pronto!",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "{nombre_deudor}, gracias por tu atención. Recuerda que te habló {nombre_agente} de Pulse Line. ¡Hasta pronto!",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "{nombre_deudor}, gracias por tu atención. Recuerda que te habló {nombre_agente} de Pulse Line. ¡Hasta pronto!",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpa la molestia. Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comunícale al titular que desde Pulse Line intentamos ponernos en contacto. ¡Hasta pronto!",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias por tu tiempo.",
+        "delivery": "say"
+      }
+    }
+  }
+}

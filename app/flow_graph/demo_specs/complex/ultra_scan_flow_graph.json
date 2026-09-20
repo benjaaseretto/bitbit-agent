@@ -1,0 +1,462 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "ultra_scan_flow",
+    "visible_name": "UltraScan",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (18 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/ultra_scan.json",
+      "company_id": "ultra_scan-demo",
+      "description": "Base de conocimiento de UltraScan."
+    },
+    "company_id": "ultra_scan-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "rapicredit_rapiplazo_novacion_mora_flow_graph.json",
+      "node_count": 18,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "UltraScan",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_identificacion_breve": "Te habla {nombre_agente}, Agente AI de Rapicredit. Te informo que esta llamada está siendo grabada y monitoreada para efectos de calidad.",
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "cuentame",
+            "cuéntame",
+            "si habla",
+            "sí habla",
+            "si señor",
+            "sí señor",
+            "si senor",
+            "si señora",
+            "sí señora",
+            "si senora",
+            "dime",
+            "ajá",
+            "aja",
+            "ajá dime",
+            "aja dime",
+            "ajá cuentame",
+            "ajá cuéntame",
+            "aja cuentame",
+            "aja cuéntame",
+            "de una",
+            "listo",
+            "hágale",
+            "hagale",
+            "sí claro",
+            "si claro"
+          ],
+          "invalid_confirmation_identification": [
+            "no me interesa",
+            "no gracias",
+            "ahí veo",
+            "ahi veo",
+            "déjelo así",
+            "dejelo asi",
+            "deje de llamar",
+            "ya le dije que no",
+            "no me fastidie",
+            "qué intensidad",
+            "que intensidad",
+            "cómo así",
+            "como asi",
+            "no entendí",
+            "no entendi",
+            "de qué me habla",
+            "de que me habla",
+            "cuál cotización",
+            "cual cotización"
+          ]
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.offer_rapiplazo_novacion",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "fast_commitment": true,
+            "fast_commitment_next": "intent.confirm_commitment"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.offer_rapiplazo_novacion": {
+        "type": "intention",
+        "label": "Oferta Rapiplazo - Novacion seguimiento comercial",
+        "delivery": "say",
+        "decision": "No agregues comentarios, explicaciones ni preguntas adicionales; espera la respuesta y clasifica. Solo responde brevemente si el comprador hace una pregunta explícita. Elige 'No interesado' solo si rechaza de forma explícita y clara. En cualquier otro caso (sea una negativa, o una intención de compra) no negocies, aclares, informes, preguntes o comentes nada, solo elige 'Interesado' y avanza sin decir nada.",
+        "prompt": "Hola {nombre_deudor}, te contactamos de Rapicredit para recordarte que tienes un crédito activo con {info_1_cuotas_text} en tu plan de pagos, {saldo_total_frase}. El día de hoy cuentas con un beneficio especial que te permitirá ponerte al día. Accediendo a la novación podrás obtener treinta días adicionales de plazo para tu crédito, realizando únicamente {pago_novacion_frase}, que debe realizarse hoy mismo. De esta manera, regularizas el importe que actualmente se encuentra en seguimiento comercial desde el {due_date_spoken} y dispones de más tiempo para cerrar la compra el importe restante de tu crédito. ¿Te interesa esta alternativa?",
+        "on": {
+          "Interesado": {
+            "goto": "task.negotiation_novacion"
+          },
+          "No interesado": {
+            "goto": "intent.rebuttal_rapiplazo_novacion"
+          }
+        }
+      },
+      "intent.rebuttal_rapiplazo_novacion": {
+        "type": "intention",
+        "label": "Refuerzo de beneficio (tras no)",
+        "delivery": "say",
+        "decision": "Si tras el refuerzo el comprador muestra apertura, acepta, duda o hace preguntas, elige 'Interesado'. Elige 'No interesado' solo si mantiene un rechazo claro y explícito.",
+        "prompt": "Entiendo, {nombre_deudor}. Ten en cuenta que con esta novación evitas recargos adicionales, congelas tu importe a capital y extiendes el plazo treinta días más {insistencia_pago_frase}. ¿Podríamos contar con tu compra el día de hoy para activar este beneficio?",
+        "on": {
+          "Interesado": {
+            "goto": "task.negotiation_novacion"
+          },
+          "No interesado": {
+            "goto": "intent.collect_full_due"
+          }
+        }
+      },
+      "task.negotiation_novacion": {
+        "type": "task",
+        "label": "Negociación V2 (Rapiplazo novación)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "1",
+          "max_attempts": 2,
+          "allow_partial_payments": false,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "require_acceptance": true,
+          "acceptance_label": "{acceptance_novacion_frase}",
+          "invalid_date_message": "Entiendo. Sin embargo, esa fecha queda fuera del plazo disponible. Pagando dentro del plazo obtienes los treinta días adicionales y evitas que el atraso siga avanzando. ¿Podrías hacerlo dentro de ese plazo?",
+          "custom_instructions": "El plazo para este compra es únicamente el día de hoy. NO preguntes '¿para qué día?', '¿cuándo podrías?' ni ofrezcas fechas alternativas; la novación requiere compra hoy. Si el comprador confirma que puede cerrar la compra hoy, avanza a pedido. Si el comprador no puede cerrar la compra hoy (mañana, otro día, o rechaza hoy), no cierres como intención de compra; explica que la novación requiere compra hoy y termina como Sin pedido para que el flujo continúe al cobro del total. Si el comprador ya confirmó que pagará el TOTAL del crédito en una fecha cercana, no vuelvas a insistir con la novación; confirma el compra total y continúa hacia esa opción. IMPORTANTE control de montos: si invoiced_balance o total_balance son cero, vacíos o nulos, NUNCA digas 'cero pesos' ni ceros; si el comprador pregunta explícitamente el valor exacto del monto o importe en ese caso, responde: 'En este momento no cuento con el monto exacto actualizado en el sistema. Le sugiero comunicarse a nuestra línea de atención al comprador al seis, cero, uno, tres, nueve, cero, dos, seis, siete, cero o revisar directamente en la plataforma rapicredit punto com para confirmar el valor al día.'",
+          "benefit_hints": [
+            "Agregar treinta días más para cerrar la compra tu crédito",
+            "Normalizar el importe en seguimiento comercial",
+            "Evitar que el atraso siga avanzando",
+            "Congelar tu importe a capital pagando solo intereses"
+          ],
+          "monto_deuda": "{invoiced_balance}",
+          "objection_handlers": [
+            {
+              "objection": "Quiero hablar con un asesor | Pásame con un asesor | Hablar con un asesor | Quiero un asesor | Conectame con un asesor | Conéctame con un asesor | Quiero hablar con una persona | Pásame con una persona | Hablar con alguien | Atención humana | Agente humano | Asesor humano | Quiero que me transfieran | Transfiérame",
+              "answer": "En esta llamada no puedo transferirte con un asesor, pero sí puedo seguir ayudándote. Si necesitas hablar con el equipo, puedes comunicarte a la línea de cartera al sesenta, uno, siete, cuatro, cuatro, ocho, dos, cero, dos. O tambien puedes llamar al servicio al comprador al sesenta, uno, tres, nueve, cero, dos, seis, siete, cero. Mientras tanto, ¿te parece si avanzamos con la novación?"
+            },
+            {
+              "objection": "Ya pagué | Ya cancelé | Ya realicé el compra | Ya pagué y no aparece | No se refleja el compra | Ya renové | Ya nové",
+              "answer": "Gracias por avisarme. En este momento no veo ese compra o novación reflejado en el sistema. Si ya lo hiciste, envía el comprobante a ayuda arroba rapicredit punto com o al WhatsApp de cartera para que lo validen.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya compró"
+            },
+            {
+              "objection": "Envíame por WhatsApp | Mándame un WhatsApp | Envíame la información | Mándame un mensaje | Envíame un correo | Mándame un mail",
+              "answer": "Desde esta llamada no puedo enviarte mensajes. Si te quedan dudas, puedes escribir o llamar a la línea de cartera al sesenta, uno, siete, cuatro, cuatro, ocho, dos, cero, dos. O tambien puedes llamar al servicio al comprador al sesenta, uno, tres, nueve, cero, dos, seis, siete, cero. Mientras tanto, ¿te parece si avanzamos con la novación?"
+            },
+            {
+              "objection": "Estoy manejando | Voy conduciendo | Estoy en el hospital | Estoy en una cita médica | Estoy en reunión | Estoy en horario laboral | No puedo hablar ahora | Llámame después | Llámeme más tarde | Me llama luego | Ahorita no puedo | En un rato | Llámame al rato | En quince minutos | Mañana puedo | Más tarde sí puedo | Estoy ocupado | Estoy ocupada | Estoy en clase | Estoy con un comprador | Estoy en una emergencia | No es buen momento | Puede ser en otro momento | Reagendemos la llamada",
+              "answer": "Entiendo. En ese caso, intentaremos comunicarnos nuevamente en otro momento. Muchas gracias.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Reagendar"
+            }
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy mismo",
+              "ahora",
+              "ya mismo",
+              "más tarde",
+              "en un rato",
+              "ahorita",
+              "ya lo hago",
+              "ahorita lo hago",
+              "esta tarde",
+              "en la tarde",
+              "esta noche",
+              "en la noche"
+            ],
+            "mañana": [
+              "mañana sin falta",
+              "mañana mismo",
+              "para mañana",
+              "mañana a primera hora",
+              "mañana temprano"
+            ],
+            "pasado_mañana": [
+              "pasado mañana",
+              "en dos días",
+              "dentro de dos días"
+            ]
+          }
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "substatus": "Novacion",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.collect_full_due"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar pedido y medios de compra",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, entonces confirmamos {pago_confirmacion_frase} para el {commitment_date_spoken}. Puedes cerrar la compra por PSE, Banco Davivienda, Bancolombia, Efecty, Nequi o SuSuerte si estás en Caldas. Si pagas por Nequi, Daviplata, consignación bancaria o por Sucursal Virtual Bancolombia, recuerda enviar el comprobante a ayuda arroba rapicredit punto com o al WhatsApp de cartera. Los pagos por PSE y Efecty se aplican automáticamente.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.collect_full_due": {
+        "type": "intention",
+        "label": "Cobro de importe total (reenganche)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo. En ese caso, para dejar tu obligación totalmente al día y {cobro_total_frase}, ¿podemos coordinar tu pedido de compra total para realizarlo dentro de los próximos tres días?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_due"
+          }
+        }
+      },
+      "task.negotiation_due": {
+        "type": "task",
+        "label": "Negociación V2 (compra total reenganche)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "3",
+          "max_attempts": 2,
+          "allow_partial_payments": false,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "require_confirmation": false,
+          "monto_deuda": "{total_balance}",
+          "invalid_date_message": "Déjame confirmar si es posible esa fecha. Lamentablemente no podemos registrar compromisos con fecha posterior a los próximos tres días. ¿Podrías realizar el compra total dentro de ese plazo?",
+          "invalid_date_retry_message": "Te comprendo. El plazo máximo para registrar el pedido de compra total es de tres días desde hoy. Además, pagando a tiempo podrías acceder al crédito Rapiflex Ya con intereses menores. ¿Qué día dentro de esa ventana te funciona?",
+          "custom_instructions": "IMPORTANTE control de montos: si total_balance es cero, vacío o nulo, NUNCA digas 'cero pesos' ni ceros; si el comprador pregunta explícitamente el valor exacto del monto o importe en ese caso, responde: 'En este momento no cuento con el monto exacto actualizado en el sistema. Le sugiero comunicarse a nuestra línea de atención al comprador al seis, cero, uno, tres, nueve, cero, dos, seis, siete, cero o revisar directamente en la plataforma rapicredit punto com para confirmar el valor al día.'",
+          "benefit_hints": [
+            "cancelar tu crédito por completo",
+            "evitar que se generen recargos",
+            "mantener buen historial crediticio",
+            "Acceder a un crédito Rapiflex Ya con intereses menores después del compra"
+          ],
+          "objection_handlers": [
+            {
+              "objection": "Quiero hablar con un asesor | Pásame con un asesor | Hablar con un asesor | Quiero un asesor | Conectame con un asesor | Conéctame con un asesor | Quiero hablar con una persona | Pásame con una persona | Hablar con alguien | Atención humana | Agente humano | Asesor humano | Quiero que me transfieran | Transfiérame",
+              "answer": "En esta llamada no puedo transferirte con un asesor, pero sí puedo seguir ayudándote. Si necesitas hablar con el equipo, puedes comunicarte a la línea de cartera al sesenta, uno, siete, cuatro, cuatro, ocho, dos, cero, dos. O tambien puedes llamar al servicio al comprador al sesenta, uno, tres, nueve, cero, dos, seis, siete, cero. Mientras tanto, ¿te parece si acordamos una fecha de compra?"
+            },
+            {
+              "objection": "Ya pagué | Ya cancelé | Ya realicé el compra | Ya pagué y no aparece | No se refleja el compra",
+              "answer": "Gracias por avisarme. En este momento no veo ese compra reflejado en el sistema. Si ya lo hiciste, envía el comprobante a ayuda arroba rapicredit punto com o al WhatsApp de cartera para que lo validen.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya compró"
+            },
+            {
+              "objection": "Envíame por WhatsApp | Mándame un WhatsApp | Envíame la información | Mándame un mensaje | Envíame un correo | Mándame un mail",
+              "answer": "Desde esta llamada no puedo enviarte mensajes. Si te quedan dudas, puedes escribir o llamar a la línea de cartera al sesenta, uno, siete, cuatro, cuatro, ocho, dos, cero, dos. O tambien puedes llamar al servicio al comprador al sesenta, uno, tres, nueve, cero, dos, seis, siete, cero. Mientras tanto, ¿te parece si acordamos una fecha de compra?"
+            },
+            {
+              "objection": "Estoy manejando | Voy conduciendo | Estoy en el hospital | Estoy en una cita médica | Estoy en reunión | Estoy en horario laboral | No puedo hablar ahora | Llámame después | Llámeme más tarde | Me llama luego | Ahorita no puedo | En un rato | Llámame al rato | En quince minutos | Mañana puedo | Más tarde sí puedo | Estoy ocupado | Estoy ocupada | Estoy en clase | Estoy con un comprador | Estoy en una emergencia | No es buen momento | Puede ser en otro momento | Reagendemos la llamada",
+              "answer": "Entiendo. En ese caso, intentaremos comunicarnos nuevamente en otro momento. Muchas gracias.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Reagendar"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "substatus": "pago_total_aceptado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.rapiflex_ya_offer"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.rapiflex_ya_offer": {
+        "type": "intention",
+        "label": "Oferta Rapiflex YA",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, muchas gracias por confirmarlo. Teniendo en cuenta que vas a cerrar la compra el total de tu cotización, Rapicredit puede ofrecerte un beneficio adicional: después de que se registre el compra, vas a poder acceder a un nuevo crédito Rapiflex Ya con descuento en intereses. Para conocer los detalles de estos descuentos y validarlo, ingresa a nuestra página y revisa la información.",
+        "on": {
+          "always": {
+            "goto": "intent.payment_instructions_pago_total"
+          }
+        }
+      },
+      "intent.payment_instructions_pago_total": {
+        "type": "intention",
+        "label": "Instrucciones de compra (total)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Debes esperar la respuesta del comprador. Si el comprador realiza cualquier pregunta, respóndela de forma breve, precisa y únicamente con la información disponible en la base de conocimiento, sin inventar ni agregar información. Una vez respondida, pregunta si tiene alguna otra consulta utilizando una variación natural para no sonar repetitivo, por ejemplo: '¿Hay algo más en lo que te pueda ayudar?', '¿Tienes alguna otra duda?' o '¿Hay alguna otra consulta que quieras hacerme?'. Si el comprador realiza otra pregunta, respóndela de la misma manera y vuelve a preguntar utilizando una variación distinta. Si el comprador indica que no tiene más consultas o responde de forma equivalente (por ejemplo 'no', 'nada más', 'estamos bien'), agradece brevemente y continúa inmediatamente con el siguiente paso del flujo. Si el comprador no realiza ninguna pregunta y solo confirma que entendió (por ejemplo 'sí', 'claro', 'entendido', 'de acuerdo', 'todo claro', 'listo'), avanza de inmediato con el flujo, sin hacer comentarios, aclaraciones, explicaciones ni agregar información adicional.",
+        "prompt": "Para cerrar la compra el total, entra a rapicredit punto com, inicia sesión y desde tu crédito activo realiza el compra. Si pagas por Nequi, Daviplata, consignación bancaria o por Sucursal Virtual Bancolombia, recuerda enviar el comprobante a ayuda arroba rapicredit punto com o al WhatsApp de cartera. Los pagos por PSE y Efecty se aplican automáticamente. ¿Todo claro?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment_total"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin pedido)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Gracias por tu tiempo. Si más adelante te sirve, aquí estamos para ayudarte.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment_total": {
+        "type": "final",
+        "label": "Despedida (pedido compra total)",
+        "prompt": "Ya quedó registrado tu pedido {compromiso_total_frase} para el {commitment_date_spoken}. Gracias por tu pedido, buen día.",
+        "delivery": "say"
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Muchas gracias por tu tiempo, que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Gracias por conversar conmigo. Mantendremos el contacto. Que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intención de compra para contactarnos en otra ocasión.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo. Que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpa la molestia. Buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor cuéntale al titular que intentamos contactarlo desde Rapicredit.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

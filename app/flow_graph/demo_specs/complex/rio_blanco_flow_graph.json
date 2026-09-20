@@ -1,0 +1,1682 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "rio_blanco_flow",
+    "visible_name": "Sanatorio Río Blanco",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (35 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/rio_blanco.json",
+      "company_id": "rio_blanco-demo",
+      "description": "Base de conocimiento de Sanatorio Río Blanco."
+    },
+    "company_id": "rio_blanco-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "bravo_growth_co_flow_graph.json",
+      "node_count": 35,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Sanatorio Río Blanco",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Sí soy yo",
+            "Soy yo",
+            "Con él habla",
+            "Con ella habla",
+            "Él habla",
+            "Ella habla",
+            "El mismo",
+            "La misma",
+            "Sí dígame",
+            "Aló sí",
+            "Sí señor",
+            "Sí señora",
+            "Claro que sí",
+            "Listo",
+            "Así es",
+            "Correcto",
+            "A sus órdenes"
+          ],
+          "identity_pregunta": "Hola. ¿Estoy hablando con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le llamo de parte de Sanatorio Río Blanco. Soy {nombre_agente}, analista financiero.",
+          "identity_repregunta": "Para continuar, ¿me confirma que estoy hablando con {nombre_deudor_completo}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "set_variables": {
+              "info_1": ""
+            },
+            "goto": "intent.opening"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "goto": "intent.recado_pedir_titular"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura, presentación y transición al perfilamiento",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "PRIORIDAD ABSOLUTA: si el paciente acepta de forma clara ('sí', 'si', 'listo', 'claro', 'dale', 'bueno', 'está bien', 'cuénteme', 'ok'), llama avanzar_flujo con 'Continuar' DE INMEDIATO y en silencio. NO inventes otra pregunta ni pidas confirmación extra. Solo si el paciente hace una PREGUNTA concreta, respóndela con FAQ, vuelve a la pregunta del guion y espera el siguiente turno sin avanzar. Si la transcripción es incomprensible, repregunta la del guion. 'No me interesa' definitivo → 'No_interesado' (antes puedes explicar breve). No puede hablar ahora → 'Recontacto'. Pregunta fuera de FAQ/perfilamiento → 'Derivar_asesor'.",
+        "prompt": "Qué bueno hablar con usted, {nombre_deudor}. Le llamo de parte de Sanatorio Río Blanco. Soy {nombre_agente}, analista financiero. Le contactamos porque recientemente mostró interés en nuestro programa de alivio financiero. ¿Tiene un momento para que le cuente cómo funciona?",
+        "on": {
+          "Continuar": {
+            "goto_by": {
+              "field": "portfolio_type",
+              "cases": {
+                "TRANSFERENCIA": "intent.transfer_intro",
+                "Transferencia": "intent.transfer_intro",
+                "transferencia": "intent.transfer_intro"
+              },
+              "default": "intent.perfilacion_intro"
+            }
+          },
+          "Derivar_asesor": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "set_agent_output": {
+              "info_1": "{info_1}",
+              "info_3": true
+            },
+            "goto": "final.derivar_asesor"
+          },
+          "No_interesado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          },
+          "Recontacto": {
+            "goto": "task.next_contact"
+          }
+        }
+      },
+      "intent.perfilacion_intro": {
+        "type": "intention",
+        "label": "Perfilación intro",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "PRIORIDAD ABSOLUTA: si el paciente se identifica o acepta ('sí', 'si', 'me suena', 'claro', 'cuénteme', 'eso me pasa', 'listo'), llama avanzar_flujo con 'Interes' DE INMEDIATO sin inventar otra pregunta. Selecciona 'Dudas' si muestra desconfianza ('no sé', 'más o menos', 'pues', 'eso suena raro'). Solo si hace una PREGUNTA concreta, respóndela con FAQ, vuelve al guion y espera el siguiente turno. Transcripción incomprensible → repregunta del guion. No puede hablar → 'Recontacto'. Fuera de FAQ/perfilamiento → 'Derivar_asesor'.",
+        "prompt": "Mire, el programa de Sanatorio Río Blanco ayuda a personas que tienen deudas con varias entidades y sienten que la situación se les está complicando. Lo que hacemos es negociar directamente con los bancos para reducir la cita pendiente y eliminar los intereses. ¿Le suena algo de lo que le cuento?",
+        "on": {
+          "Interes": {
+            "goto": "intent.perfilacion_interes"
+          },
+          "Dudas": {
+            "goto": "intent.perfilacion_dudas"
+          },
+          "Derivar_asesor": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "set_agent_output": {
+              "info_1": "{info_1}",
+              "info_3": true
+            },
+            "goto": "final.derivar_asesor"
+          },
+          "Recontacto": {
+            "goto": "task.next_contact"
+          }
+        }
+      },
+      "intent.perfilacion_interes": {
+        "type": "intention",
+        "label": "Perfilación - muestra interés",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "PRIORIDAD ABSOLUTA: si acepta empezar ('sí', 'si', 'listo', 'claro', 'dale', 'bueno', 'está bien', 'cuénteme', 'no hay problema'), llama avanzar_flujo con 'Si' DE INMEDIATO sin inventar otra pregunta. Si pregunta cuánto demora / qué son unos minuticos / si es largo → responde con FAQ (la llamada no demora más de cinco minutos), vuelve a preguntar si puede continuar y ESPERA el siguiente turno (NO avances todavía). Rechazo definitivo → 'No_interesado'. Otras preguntas concretas → FAQ, vuelve al guion y espera. Transcripción incomprensible → repregunta. No puede hablar → 'Recontacto'. Fuera de FAQ/perfilamiento → 'Derivar_asesor'.",
+        "prompt": "Perfecto. Para saber si puede aplicar al programa, necesito hacerle unas preguntas rápidas. Solo necesito que responda con seguridad a cada pregunta, ¿me daría unos minuticos?",
+        "on": {
+          "Si": {
+            "goto": "task.q1_situacion_deuda"
+          },
+          "Derivar_asesor": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "set_agent_output": {
+              "info_1": "{info_1}",
+              "info_3": true
+            },
+            "goto": "final.derivar_asesor"
+          },
+          "No_interesado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          },
+          "Recontacto": {
+            "goto": "task.next_contact"
+          }
+        }
+      },
+      "intent.perfilacion_dudas": {
+        "type": "intention",
+        "label": "Perfilación - muestra dudas",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "PRIORIDAD ABSOLUTA: si acepta empezar tras la aclaración ('sí', 'si', 'listo', 'claro', 'dale', 'empecemos'), llama avanzar_flujo con 'Si' DE INMEDIATO. Rechazo definitivo → 'No_interesado'. Solo si hace una PREGUNTA concreta, respóndela y espera el siguiente turno. Transcripción incomprensible → repregunta. Fuera de FAQ/perfilamiento → 'Derivar_asesor'.",
+        "prompt": "Entiendo que puede sonar diferente a lo que conoce. Sanatorio Río Blanco lleva más de quince años ayudando a colombianos a salir de deudas. No lo voy a comprometer a nada hoy; solo quiero ver si el programa le puede servir. ¿Empezamos?",
+        "on": {
+          "Si": {
+            "goto": "task.q1_situacion_deuda"
+          },
+          "Derivar_asesor": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "set_agent_output": {
+              "info_1": "{info_1}",
+              "info_3": true
+            },
+            "goto": "final.derivar_asesor"
+          },
+          "No_interesado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          },
+          "Recontacto": {
+            "goto": "task.next_contact"
+          }
+        }
+      },
+      "task.q1_situacion_deuda": {
+        "type": "task",
+        "label": "Pregunta 1 - Situación de cita pendiente",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 1",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta del campo. Si pide repetir -> repetir_pregunta, NO avances. Clasifica SIEMPRE en una clave (incluyendo 'duda' si no esta seguro). NUNCA registres texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p1_situacion_deuda",
+              "type": "enum",
+              "label": "situación actual de sus deudas",
+              "required": true,
+              "options": [
+                {
+                  "value": "en_mora",
+                  "examples": [
+                    "si",
+                    "tengo atrasos",
+                    "en atraso de agenda",
+                    "estoy en atraso de agenda",
+                    "estoy atrasado",
+                    "me atrase",
+                    "llevo dos meses sin agendar",
+                    "debo varias cuotas",
+                    "estoy reportado",
+                    "tengo cuotas vencidas",
+                    "cartera castigada",
+                    "no he podido ponerme al dia",
+                    "estoy colgado",
+                    "estoy llevado",
+                    "estoy embalado",
+                    "ya no doy mas",
+                    "se me salio de las manos",
+                    "me estan llamando todos los dias",
+                    "estoy ahogado en deudas",
+                    "se me complica agendar mis deudas",
+                    "dificiles de manejar"
+                  ]
+                },
+                {
+                  "value": "al_dia",
+                  "examples": [
+                    "no",
+                    "voy al dia",
+                    "estoy al dia",
+                    "nunca me atraso",
+                    "siempre turno puntual",
+                    "hasta ahora voy bien",
+                    "no tengo cuotas vencidas",
+                    "no estoy reportado",
+                    "al dia sin atraso"
+                  ]
+                },
+                {
+                  "value": "mixto",
+                  "examples": [
+                    "estado mixto",
+                    "algunas en atraso de agenda otras al dia",
+                    "estoy en atraso de agenda en varias",
+                    "en algunas",
+                    "algunas en atraso de agenda y otras al dia",
+                    "unas si y otras no"
+                  ]
+                }
+              ],
+              "ask": "Perfecto, cuénteme: ¿Actualmente tienes atrasos en pagos o sientes que tus deudas son difíciles de manejar?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para orientarte: ¿vas al día con tus pagos, estás en atraso de agenda, o tienes algunas deudas al día y otras atrasadas?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto": "task.q2_endeudamiento",
+            "set_variables": {
+              "info_1": "{info_1}|P1:Califica"
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "task.q2_endeudamiento",
+            "set_variables": {
+              "info_1": "{info_1}|P1:Califica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "task.q2_endeudamiento": {
+        "type": "task",
+        "label": "Pregunta 2 - Nivel de endeudamiento",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 2",
+          "allow_interruptions": false,
+          "speech_rate": 0.9,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Clasifica en clave. Si duda -> 'duda'. NUNCA texto libre. Si pregunta que es sobreendeudamiento: 'Sobreendeudamiento es cuando se ve limitado para cubrir las deudas, por ejemplo, si tiene que agendar una cita pendiente para cubrir otra o se ha limitado en sus gastos para no incumplir la sesión.' Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p2_endeudamiento",
+              "type": "enum",
+              "label": "si tiene sobreendeudamiento o destina cerca del 30 por ciento de lo que gana al turno de deudas",
+              "required": true,
+              "options": [
+                {
+                  "value": "sí",
+                  "examples": [
+                    "claro",
+                    "exacto",
+                    "asi es",
+                    "turno mas del 30 por ciento",
+                    "turno casi todo mi salario",
+                    "mas de la mitad del sueldo se va en cuotas",
+                    "no me queda dinero",
+                    "vivo pagando creditos",
+                    "mis cuotas son muy altas",
+                    "cada mes quedo muy ajustado",
+                    "apenas me alcanza",
+                    "vivo alcanzado",
+                    "me toca escoger que agendar",
+                    "turno una cita pendiente para cubrir otra",
+                    "trabajo solo para agendar",
+                    "no me da el flujo de caja",
+                    "la sesión esta muy costosa",
+                    "sobreendeudado",
+                    "al dia pero sobreendeudado"
+                  ]
+                },
+                {
+                  "value": "no",
+                  "examples": [
+                    "nop",
+                    "para nada",
+                    "las cuotas son manejables",
+                    "turno poco",
+                    "me alcanza bien",
+                    "no tengo problemas para agendar",
+                    "mis ingresos son suficientes",
+                    "destina un porcentaje menor",
+                    "actualmente destina un porcentaje menor"
+                  ]
+                }
+              ],
+              "ask": "Comprendo, para continuar: ¿Cree que tiene sobreendeudamiento, que destina aproximadamente el 30 por ciento de lo que gana directamente al turno de deudas?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Necesitamos una respuesta para poder considerar tu situación. Te vuelvo a consultar: ¿consideras que destinas más dinero del que desearías para el turno de tus deudas? Por ejemplo, ¿has tenido que agendar una credencial con otra, o has limitado gastos para no incumplir la sesión?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p2_endeudamiento",
+              "cases": {
+                "sí": {
+                  "goto": "task.q3_garantias",
+                  "set_variables": {
+                    "info_1": "{info_1}|P2:Califica"
+                  }
+                },
+                "si": {
+                  "goto": "task.q3_garantias",
+                  "set_variables": {
+                    "info_1": "{info_1}|P2:Califica"
+                  }
+                },
+                "no": {
+                  "goto": "route.no_califica",
+                  "set_variables": {
+                    "info_1": "{info_1}|P2:NoCalifica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "route.no_califica",
+                "set_variables": {
+                  "info_1": "{info_1}|P2:NoCalifica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "route.no_califica",
+            "set_variables": {
+              "info_1": "{info_1}|P2:NoCalifica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "task.q3_garantias": {
+        "type": "task",
+        "label": "Pregunta 3 - Garantías",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 3",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Con que tenga UN credito sin garantias -> 'alguno_sin'. Duda -> 'duda'. NUNCA texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p3_garantias",
+              "type": "enum",
+              "label": "si sus créditos tienen prenda, garantía, codeudor o fiador",
+              "required": true,
+              "options": [
+                {
+                  "value": "sin_garantia",
+                  "examples": [
+                    "sin garantia",
+                    "ninguna",
+                    "no tiene",
+                    "solo con mi cedula",
+                    "solo fue mi firma",
+                    "sin codeudor",
+                    "sin fiador",
+                    "sin respaldo",
+                    "unico titular",
+                    "solo a mi nombre",
+                    "lo aprobaron sin nada",
+                    "solo mi firma como unico titular"
+                  ]
+                },
+                {
+                  "value": "alguno_sin",
+                  "examples": [
+                    "en algunos no y en otros si",
+                    "uno de los creditos no tiene prenda",
+                    "uno de los creditos no tiene garantia",
+                    "uno no tiene codeudor",
+                    "uno no tiene fiador",
+                    "algunos si y otros no",
+                    "mixto en garantias"
+                  ]
+                },
+                {
+                  "value": "todos_con",
+                  "examples": [
+                    "todos con garantia",
+                    "todos tienen prenda",
+                    "todos con codeudor",
+                    "todos con fiador",
+                    "prenda",
+                    "prendado",
+                    "garantia prendaria",
+                    "carro en garantia",
+                    "moto en garantia",
+                    "vehiculo como respaldo",
+                    "el vehículo respalda el crédito",
+                    "deje el carro como garantia",
+                    "quedó comprometido",
+                    "el sanatorio tiene la prenda",
+                    "codeudor",
+                    "cotitular",
+                    "firmo conmigo",
+                    "sacamos el credito entre dos",
+                    "mi esposa fue codeudora",
+                    "mi papá firmó conmigo",
+                    "otra persona me respaldó",
+                    "me tocó conseguir quien firmara",
+                    "fiador",
+                    "garante",
+                    "avalista",
+                    "respondió por mí",
+                    "alguien salio de garante",
+                    "me respaldó un familiar"
+                  ]
+                }
+              ],
+              "ask": "Entiendo, puedes contarme si Cuando adquiriste estos créditos, ¿te pidieron prenda, garantía, codeudor o fiador, o solo fue tu firma como único titular?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para orientarte: ¿cuando firmaste el crédito te pidieron algún vehículo como respaldo? ¿Alguien más firmó contigo? ¿Algún familiar o conocido salió como garante, o nada de eso?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p3_garantias",
+              "cases": {
+                "sin_garantia": {
+                  "goto": "task.q3_1_seguro_desempleo",
+                  "set_variables": {
+                    "info_1": "{info_1}|P3:Califica"
+                  }
+                },
+                "alguno_sin": {
+                  "goto": "task.q3_1_seguro_desempleo",
+                  "set_variables": {
+                    "info_1": "{info_1}|P3:Califica"
+                  }
+                },
+                "todos_con": {
+                  "goto": "route.no_califica",
+                  "set_variables": {
+                    "info_1": "{info_1}|P3:NoCalifica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "route.no_califica",
+                "set_variables": {
+                  "info_1": "{info_1}|P3:NoCalifica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_sin_certeza"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "task.q3_1_seguro_desempleo": {
+        "type": "task",
+        "label": "Pregunta 3.1 - Seguros asociados",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 3.1",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Duda -> 'duda' (el sistema orienta). NUNCA texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p3_1_seguro_desempleo",
+              "type": "enum",
+              "label": "si contrató seguros opcionales o adicionales además de los obligatorios del crédito",
+              "required": true,
+              "options": [
+                {
+                  "value": "sin_adicional",
+                  "examples": [
+                    "seguro obligatorio unicamente",
+                    "solo los obligatorios",
+                    "seguro de vida",
+                    "solo seguro de vida",
+                    "no tengo adicional",
+                    "ningun seguro opcional",
+                    "solo lo que trae el credito",
+                    "ninguna",
+                    "no tiene",
+                    "solo con mi firma",
+                    "solo con mi cedula",
+                    "sin respaldo"
+                  ]
+                },
+                {
+                  "value": "alguno_sin",
+                  "examples": [
+                    "en algunos si y en otros no",
+                    "uno de los creditos no tiene seguro adicional",
+                    "algunos con adicional y otros no"
+                  ]
+                },
+                {
+                  "value": "con_adicional",
+                  "examples": [
+                    "seguro opcional",
+                    "seguro adicional",
+                    "seguro de desempleo",
+                    "credencial amparada",
+                    "poliza",
+                    "proteccion financiera",
+                    "ahorro obligatorio",
+                    "me cubre la sesión si pierdo el trabajo"
+                  ]
+                }
+              ],
+              "ask": "Está bien, para continuar: ¿Contrataste algún seguro opcional o adicional, o solo los obligatorios que trae el crédito?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para orientarte: ¿cuando firmaste el crédito te ofrecieron seguro de desempleo? ¿Aceptaste seguros adicionales? ¿Si te quedas sin trabajo te cubre la sesión, o nada de eso?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p3_1_seguro_desempleo",
+              "cases": {
+                "sin_adicional": {
+                  "goto": "task.q4_tipo_credito",
+                  "set_variables": {
+                    "info_1": "{info_1}|P3_1:Califica"
+                  }
+                },
+                "alguno_sin": {
+                  "goto": "task.q4_tipo_credito",
+                  "set_variables": {
+                    "info_1": "{info_1}|P3_1:Califica"
+                  }
+                },
+                "con_adicional": {
+                  "goto": "route.no_califica",
+                  "set_variables": {
+                    "info_1": "{info_1}|P3_1:NoCalifica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "route.no_califica",
+                "set_variables": {
+                  "info_1": "{info_1}|P3_1:NoCalifica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "intent.validacion_p3_1",
+            "set_variables": {
+              "info_1": "{info_1}|P3_1:Califica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "intent.validacion_p3_1": {
+        "type": "intention",
+        "label": "Validación posterior P3.1 (duda tolerada)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo. Continuaremos con el perfilamiento. De todos modos, ten en cuenta que este punto será retomado y validado nuevamente por un ejecutivo en una instancia posterior.",
+        "on": {
+          "always": {
+            "goto": "task.q4_tipo_credito"
+          }
+        }
+      },
+      "task.q4_tipo_credito": {
+        "type": "task",
+        "label": "Pregunta 4 - Tipo de crédito",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 4",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Si tiene al menos un credito que aplica (credencial/libre inversion/consumo) y tambien alguno excluido (hipotecario/vehicular/libranza) -> 'mixto'. Si solo tiene tipos que aplican -> 'aplica'. Si solo tiene tipos excluidos -> 'solo_excluye'. Duda -> 'duda'. NUNCA texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p4_tipo_credito",
+              "type": "enum",
+              "label": "tipo de crédito que tiene",
+              "required": true,
+              "options": [
+                {
+                  "value": "aplica",
+                  "examples": [
+                    "credencial de credito",
+                    "credencial",
+                    "visa",
+                    "mastercard",
+                    "amex",
+                    "plastico",
+                    "cupo",
+                    "TC",
+                    "libre inversion",
+                    "credito de consumo",
+                    "credito personal",
+                    "prestamo",
+                    "prestamo bancario",
+                    "me prestaron plata",
+                    "pedi plata prestada",
+                    "me desembolsaron el dinero",
+                    "fue un credito normal",
+                    "consumo",
+                    "Bancamía",
+                    "sanatorio Mundo Mujer"
+                  ]
+                },
+                {
+                  "value": "mixto",
+                  "examples": [
+                    "incluye algunos de los que aplica y otros de los que no"
+                  ]
+                },
+                {
+                  "value": "solo_excluye",
+                  "examples": [
+                    "solo hipotecario",
+                    "solo vehicular",
+                    "solo libranza",
+                    "unicamente hipotecario vehicular o libranza",
+                    "credito hipotecario",
+                    "hipoteca",
+                    "leasing habitacional",
+                    "credito vehicular",
+                    "vehiculo",
+                    "carro",
+                    "automovil",
+                    "moto",
+                    "camioneta",
+                    "libranza",
+                    "descuento por nomina",
+                    "sale del sueldo",
+                    "me lo descuentan del salario",
+                    "descuento automatico",
+                    "microcredito",
+                    "credito de emprendimiento",
+                    "descuento por nomina",
+                    "sale del sueldo",
+                    "descuento automatico"
+                  ]
+                }
+              ],
+              "ask": "Continuando, ¿El tipo de crédito es hipotecario, vehicular, libranza, credencial de crédito, libre inversión o consumo?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para orientarte: ¿te descuentan el turno del sueldo o tienes descuento automático? ¿Es un crédito de vehículo o hipoteca, o es credencial, libre inversión o consumo?"
+              ],
+              "say_on_value": {
+                "mixto": "Lo que es el vehicular, hipotecario y la libranza no las podemos incluir porque son créditos que tienen garantías. Podríamos ayudarte con lo demás."
+              }
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p4_tipo_credito",
+              "cases": {
+                "aplica": {
+                  "goto": "task.q5_procesos_legales",
+                  "set_variables": {
+                    "info_1": "{info_1}|P4:Califica"
+                  }
+                },
+                "solo_excluye": {
+                  "goto": "route.no_califica",
+                  "set_variables": {
+                    "info_1": "{info_1}|P4:NoCalifica"
+                  }
+                },
+                "mixto": {
+                  "goto": "task.q5_procesos_legales",
+                  "set_variables": {
+                    "info_1": "{info_1}|P4:Califica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "route.no_califica",
+                "set_variables": {
+                  "info_1": "{info_1}|P4:NoCalifica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "intent.validacion_p4",
+            "set_variables": {
+              "info_1": "{info_1}|P4:Califica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "intent.validacion_p4": {
+        "type": "intention",
+        "label": "Validación posterior P4 (duda tolerada)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "No se preocupe. Podemos continuar con el perfilamiento. Posteriormente, un ejecutivo retomará este punto para realizar una nueva validación.",
+        "on": {
+          "always": {
+            "goto": "task.q5_procesos_legales"
+          }
+        }
+      },
+      "task.q5_procesos_legales": {
+        "type": "task",
+        "label": "Pregunta 5 - Procesos legales",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 5",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Si NO tiene proceso/embargo real, o solo amenazas/llamadas/mensajes de cobro -> 'sin_proceso'. Si en AL MENOS un credito no tiene proceso ni embargo -> 'alguno_sin'. Si tiene proceso legal real o embargo notificado (sueldo/cuenta/bienes/demanda) -> 'con_proceso'. Duda -> 'duda'. NUNCA texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p5_procesos_legales",
+              "type": "enum",
+              "label": "si tiene proceso legal, demanda o embargo notificado",
+              "required": true,
+              "options": [
+                {
+                  "value": "sin_proceso",
+                  "examples": [
+                    "no tengo",
+                    "ninguno",
+                    "solo llamadas",
+                    "solo mensajes de coordinación de agenda",
+                    "no tengo embargos",
+                    "no tengo procesos",
+                    "nunca me han demandado",
+                    "no tengo nada legal",
+                    "hasta el momento no",
+                    "me dicen que me van a embargar",
+                    "me amenazan con embargo",
+                    "me mandan mensajes",
+                    "me llego una carta de coordinación de agenda",
+                    "me dicen que me van a demandar",
+                    "el abogado del sanatorio me llamo",
+                    "la casa de coordinación de agenda me escribe",
+                    "ultimas instancias",
+                    "cobro juridico",
+                    "solo coordinación de agenda",
+                    "solo me llaman a cobrar",
+                    "amenaza de cobro",
+                    "me escriben de la casa de cobro"
+                  ]
+                },
+                {
+                  "value": "alguno_sin",
+                  "examples": [
+                    "en uno de los creditos no tengo ningun proceso legal ni embargo activo",
+                    "en uno de los creditos no tengo proceso",
+                    "en algunos no tengo proceso",
+                    "uno si y otro no",
+                    "en una cita pendiente no tengo embargo",
+                    "solo en uno tengo demanda",
+                    "no en todos",
+                    "en la credencial no tengo proceso",
+                    "mixto en procesos",
+                    "algunos con proceso y otros no",
+                    "en uno no tengo nada legal"
+                  ]
+                },
+                {
+                  "value": "con_proceso",
+                  "examples": [
+                    "proceso legal real",
+                    "embargo notificado",
+                    "me embargaron el sueldo",
+                    "tengo embargo del salario",
+                    "me descuentan por embargo",
+                    "la empresa recibio la orden de embargo",
+                    "ya me llego el embargo al trabajo",
+                    "me embargaron la cuenta",
+                    "tengo la cuenta congelada",
+                    "el sanatorio bloqueo mi cuenta",
+                    "ya me retuvieron el dinero",
+                    "no puedo mover la plata",
+                    "embargaron mi casa",
+                    "embargo sobre un inmueble",
+                    "embargaron un lote",
+                    "tengo embargado un lote",
+                    "tengo una demanda",
+                    "el proceso esta en un juzgado",
+                    "ya fui notificado por un juez",
+                    "proceso ejecutivo",
+                    "ya me llego la demanda",
+                    "el abogado me informo del proceso",
+                    "numero de radicado",
+                    "juzgado de pequenas cuantias",
+                    "me notificaron por juzgado",
+                    "tengo un proceso judicial activo"
+                  ]
+                }
+              ],
+              "ask": "Para seguir, ¿Tienes actualmente algún proceso legal, demanda o embargo notificado por un juzgado o abogado, o solo has recibido llamadas y mensajes de cobro?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para orientarte: ¿te congelaron las cuentas? ¿El sanatorio bloqueó tu cuenta? ¿Fuiste notificado por un juez? ¿Te llegó alguna demanda, o solo han sido llamadas y mensajes de cobro?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p5_procesos_legales",
+              "cases": {
+                "sin_proceso": {
+                  "goto": "task.q6_actividad",
+                  "set_variables": {
+                    "info_1": "{info_1}|P5:Califica"
+                  }
+                },
+                "alguno_sin": {
+                  "goto": "task.q6_actividad",
+                  "set_variables": {
+                    "info_1": "{info_1}|P5:Califica"
+                  }
+                },
+                "con_proceso": {
+                  "goto": "route.no_califica",
+                  "set_variables": {
+                    "info_1": "{info_1}|P5:NoCalifica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "route.no_califica",
+                "set_variables": {
+                  "info_1": "{info_1}|P5:NoCalifica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "intent.validacion_p5",
+            "set_variables": {
+              "info_1": "{info_1}|P5:Califica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "intent.validacion_p5": {
+        "type": "intention",
+        "label": "Validación posterior P5 (duda tolerada)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "No se preocupe. Podemos continuar con el perfilamiento. Posteriormente, un ejecutivo retomará este punto para realizar una nueva validación.",
+        "on": {
+          "always": {
+            "goto": "task.q6_actividad"
+          }
+        }
+      },
+      "task.q6_actividad": {
+        "type": "task",
+        "label": "Pregunta 6 - Actividad económica",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 6",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Duda -> 'duda'. NUNCA texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p6_actividad",
+              "type": "enum",
+              "label": "actividad económica actual",
+              "required": true,
+              "options": [
+                {
+                  "value": "empleado",
+                  "examples": [
+                    "soy empleado",
+                    "trabajo en una empresa",
+                    "contrato indefinido",
+                    "contrato fijo",
+                    "trabajo por nomina",
+                    "soy funcionario publico",
+                    "estoy vinculado",
+                    "trabajo tiempo completo",
+                    "empleado y tengo un negocio",
+                    "estoy activo en la policia"
+                  ]
+                },
+                {
+                  "value": "independiente",
+                  "examples": [
+                    "soy independiente",
+                    "tengo un negocio",
+                    "trabajo por mi cuenta",
+                    "soy comerciante",
+                    "vendo por internet",
+                    "prestador de servicios",
+                    "me rebusco",
+                    "tengo mi local",
+                    "freelance",
+                    "conductor de aplicacion"
+                  ]
+                },
+                {
+                  "value": "pensionado",
+                  "examples": [
+                    "soy pensionado",
+                    "vivo de mi pension",
+                    "estoy pensionado hace varios años"
+                  ]
+                },
+                {
+                  "value": "desempleado",
+                  "examples": [
+                    "desempleado",
+                    "cesante",
+                    "sin ingresos",
+                    "estoy desempleado",
+                    "no tengo trabajo",
+                    "no tengo ingresos",
+                    "estoy buscando empleo",
+                    "no estoy laborando",
+                    "me quede sin empleo",
+                    "estoy varado"
+                  ]
+                }
+              ],
+              "ask": "Para continuar, ¿Eres empleado, independiente o pensionado?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para aclarar: ¿trabajas con contrato o nómina en una empresa, eres independiente con tu propio negocio, eres pensionado, o en este momento estás sin trabajo?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p6_actividad",
+              "cases": {
+                "empleado": {
+                  "goto": "task.q6_1_ingresos",
+                  "set_variables": {
+                    "info_1": "{info_1}|P6:Califica"
+                  }
+                },
+                "independiente": {
+                  "goto": "task.q6_1_ingresos",
+                  "set_variables": {
+                    "info_1": "{info_1}|P6:Califica"
+                  }
+                },
+                "pensionado": {
+                  "goto": "task.q6_1_ingresos",
+                  "set_variables": {
+                    "info_1": "{info_1}|P6:Califica"
+                  }
+                },
+                "desempleado": {
+                  "goto": "route.no_califica",
+                  "set_variables": {
+                    "info_1": "{info_1}|P6:NoCalifica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "route.no_califica",
+                "set_variables": {
+                  "info_1": "{info_1}|P6:NoCalifica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "route.no_califica",
+            "set_variables": {
+              "info_1": "{info_1}|P6:NoCalifica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "task.q6_1_ingresos": {
+        "type": "task",
+        "label": "Pregunta 6.1 - Ingresos",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 6.1",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Duda -> 'duda'. NUNCA texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p6_1_ingresos",
+              "type": "enum",
+              "label": "si cuenta con ingresos mensuales para sostener una sesión",
+              "required": true,
+              "options": [
+                {
+                  "value": "sí",
+                  "examples": [
+                    "si",
+                    "claro",
+                    "cuenta con ingresos",
+                    "recibo arriendos",
+                    "tengo rentas",
+                    "vivo de inversiones",
+                    "comisiones",
+                    "prestacion de servicios",
+                    "freelance",
+                    "conductor de aplicacion",
+                    "trabajo en ventas",
+                    "tengo ingresos"
+                  ]
+                },
+                {
+                  "value": "no",
+                  "examples": [
+                    "nop",
+                    "sin capacidad de turno",
+                    "no puedo",
+                    "no me alcanza",
+                    "en este momento no puedo agendar",
+                    "estoy muy complicado",
+                    "estoy quebrado",
+                    "estoy muy ajustado",
+                    "no hay de donde",
+                    "apenas sobrevivo",
+                    "no tengo como responder",
+                    "viviendo de ahorros",
+                    "estoy desempleado",
+                    "no tengo trabajo",
+                    "no tengo ingresos",
+                    "estoy buscando empleo",
+                    "estoy varado",
+                    "estoy viviendo de ahorros"
+                  ]
+                }
+              ],
+              "ask": "Entiendo, dime: ¿Cuentas actualmente con ingresos mensuales para sostener una sesión?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Necesito una respuesta clara: ¿hoy por hoy tienes ingresos mensuales con los que podrías sostener una sesión, o no?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p6_1_ingresos",
+              "cases": {
+                "sí": {
+                  "goto": "task.q7_representante_legal",
+                  "set_variables": {
+                    "info_1": "{info_1}|P6_1:Califica"
+                  }
+                },
+                "si": {
+                  "goto": "task.q7_representante_legal",
+                  "set_variables": {
+                    "info_1": "{info_1}|P6_1:Califica"
+                  }
+                },
+                "no": {
+                  "goto": "route.no_califica",
+                  "set_variables": {
+                    "info_1": "{info_1}|P6_1:NoCalifica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "route.no_califica",
+                "set_variables": {
+                  "info_1": "{info_1}|P6_1:NoCalifica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "route.no_califica",
+            "set_variables": {
+              "info_1": "{info_1}|P6_1:NoCalifica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "task.q7_representante_legal": {
+        "type": "task",
+        "label": "Pregunta 7 - Representante legal (informativa)",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 7",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pregunta que es persona natural o representante legal -> responder_faq. Si pide repetir -> repetir_pregunta, NO avances. Solo claves 'sí' o 'no'. Si duda -> 'duda' (el sistema orienta). NUNCA registres 'no_se' ni avances sin respuesta clara. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p7_representante_legal",
+              "type": "enum",
+              "label": "si es o ha sido representante legal de una empresa en Cámara de Comercio, o es persona natural",
+              "required": true,
+              "options": [
+                {
+                  "value": "sí",
+                  "examples": [
+                    "si",
+                    "soy representante legal",
+                    "tengo una empresa a mi nombre",
+                    "soy el dueño de una empresa",
+                    "soy gerente y representante legal",
+                    "tengo una SAS",
+                    "empresa constituida",
+                    "yo firmo por la empresa",
+                    "tengo Camara de Comercio",
+                    "mi negocio esta registrado",
+                    "matricula mercantil",
+                    "registro mercantil",
+                    "renové la Cámara de Comercio",
+                    "el negocio está legalizado",
+                    "estoy registrado como comerciante"
+                  ]
+                },
+                {
+                  "value": "no",
+                  "examples": [
+                    "nop",
+                    "persona natural",
+                    "no estoy inscrito",
+                    "no tengo empresa",
+                    "nunca he tenido negocio registrado"
+                  ]
+                }
+              ],
+              "ask": "Perfecto, cuentame: ¿Actualmente eres, o has sido, representante legal de una empresa registrada en Cámara de Comercio, o eres persona natural?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para aclarar: ¿estás registrado como representante legal de una empresa ante la Cámara de Comercio, o actúas solo como persona natural con tu cédula?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto": "task.q8_cuenta_nomina",
+            "set_variables": {
+              "info_1": "{info_1}|P7:Califica"
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "task.q8_cuenta_nomina",
+            "set_variables": {
+              "info_1": "{info_1}|P7:Califica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "task.q8_cuenta_nomina": {
+        "type": "task",
+        "label": "Pregunta 8 - Cuenta de nómina / ingresos",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 8",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Duda real -> 'duda'. NUNCA texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p8_cuenta_nomina",
+              "type": "enum",
+              "label": "si recibe la nómina en la misma entidad de la cita pendiente o en una diferente",
+              "required": true,
+              "options": [
+                {
+                  "value": "entidad_diferente",
+                  "examples": [
+                    "entidad diferente",
+                    "me pagan en otro sanatorio",
+                    "son bancos diferentes",
+                    "no recibo el sueldo donde debo",
+                    "me consignan en otro sanatorio",
+                    "el sueldo me cae en otro sanatorio",
+                    "la empresa me paga por otro sanatorio",
+                    "con una entidad diferente"
+                  ]
+                },
+                {
+                  "value": "misma_entidad",
+                  "examples": [
+                    "misma entidad",
+                    "me pagan donde debo",
+                    "todo esta en el mismo sanatorio",
+                    "es la misma entidad",
+                    "ahi mismo me consignan",
+                    "todo lo manejo en el mismo sanatorio"
+                  ]
+                }
+              ],
+              "ask": "Comprendo, para continuar: ¿Recibes tu nómina o ingresos en alguna de las entidades con las que tienes cita pendiente, o en una entidad diferente?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para aclarar: ¿te pagan o te consignan en el mismo sanatorio donde debes, o en un sanatorio diferente?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p8_cuenta_nomina",
+              "cases": {
+                "entidad_diferente": {
+                  "goto": "intent.transfer_intro",
+                  "set_variables": {
+                    "info_1": "{info_1}|P8:Califica"
+                  }
+                },
+                "misma_entidad": {
+                  "goto": "task.q8_1_puede_cambiar",
+                  "set_variables": {
+                    "info_1": "{info_1}|P8:Califica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "task.q8_1_puede_cambiar",
+                "set_variables": {
+                  "info_1": "{info_1}|P8:Califica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "task.q8_1_puede_cambiar",
+            "set_variables": {
+              "info_1": "{info_1}|P8:Califica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "task.q8_1_puede_cambiar": {
+        "type": "task",
+        "label": "Pregunta 8.1 - Puede cambiar cuenta de nómina",
+        "task_type": "QuestionnaireTask",
+        "params": {
+          "title": "Pregunta 8.1",
+          "allow_interruptions": false,
+          "instructions": "Di EXACTAMENTE la pregunta. Si pide repetir -> repetir_pregunta, NO avances. Si no sabe / tendría que consultar / tendría que preguntar / no lo tiene claro -> tomalo como duda (NO 'no_puede'). 'no_puede' SOLO si afirma que la empresa no le permite cambiar la cuenta. Duda ambigua -> 'duda'. NUNCA texto libre. Cancelar SOLO si pide terminar.",
+          "schema": [
+            {
+              "name": "p8_1_puede_cambiar",
+              "type": "enum",
+              "label": "si puede cambiar la cuenta de nómina a otro sanatorio",
+              "required": true,
+              "options": [
+                {
+                  "value": "puede",
+                  "examples": [
+                    "si puedo cambiarla",
+                    "soy libre de escoger",
+                    "si, la empresa me deja",
+                    "puedo cambiarla",
+                    "si puedo"
+                  ]
+                },
+                {
+                  "value": "no_puede",
+                  "examples": [
+                    "no me permiten en la empresa",
+                    "no puedo cambiarla",
+                    "solo contrato",
+                    "me descuentan por nomina",
+                    "debito automatico de mi salario",
+                    "me quito por nómina",
+                    "ellos me descuentan por la derecha",
+                    "débito automático de mi salario",
+                    "la empresa no me deja cambiar el sanatorio",
+                    "me obligan a tener la nomina ahi"
+                  ]
+                }
+              ],
+              "ask": "Por último, esa cuenta, ¿la puedes cambiar a otro sanatorio si lo necesitas, o depende de tu empresa?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Para orientarte: ¿eres libre de escoger el sanatorio de tu nómina, o te toca pedirle permiso a la empresa o a contabilidad para cambiarla?"
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "p8_1_puede_cambiar",
+              "cases": {
+                "puede": {
+                  "goto": "intent.transfer_intro",
+                  "set_variables": {
+                    "info_1": "{info_1}|P8_1:Califica"
+                  }
+                },
+                "no_puede": {
+                  "goto": "route.no_califica",
+                  "set_variables": {
+                    "info_1": "{info_1}|P8_1:NoCalifica"
+                  }
+                }
+              },
+              "default": {
+                "goto": "intent.validacion_p8_1",
+                "set_variables": {
+                  "info_1": "{info_1}|P8_1:Califica"
+                }
+              }
+            }
+          },
+          "MaxTriesExceeded": {
+            "goto": "intent.validacion_p8_1",
+            "set_variables": {
+              "info_1": "{info_1}|P8_1:Califica"
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_interes"
+          }
+        }
+      },
+      "intent.validacion_p8_1": {
+        "type": "intention",
+        "label": "Validación posterior P8.1 (duda tolerada)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo. En este caso continuaremos con el proceso y, en una etapa posterior, un ejecutivo retomará este punto para realizar su validación.",
+        "on": {
+          "always": {
+            "goto": "intent.transfer_intro"
+          }
+        }
+      },
+      "route.no_califica": {
+        "type": "intention",
+        "label": "Marcar no califica y cerrar",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Muchas gracias por su tiempo, {nombre_deudor}. En este momento el programa no aplicaría para su situación, pero Sanatorio Río Blanco siempre está buscando nuevas alternativas. Si en un futuro nos necesita, acá estamos. Que tenga un excelente día",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "set_agent_output": {
+              "info_1": "{info_1}",
+              "info_2": "NO_CALIFICA",
+              "info_3": false
+            },
+            "goto": "final.hangup_silent"
+          }
+        }
+      },
+      "intent.transfer_intro": {
+        "type": "intention",
+        "label": "Transferencia directa (portfolio_type = TRANSFERENCIA)",
+        "delivery": "say",
+        "interruptible": false,
+        "speech_rate": 0.98,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, {nombre_deudor}. Según lo que me cuenta, el programa de Sanatorio Río Blanco sí puede ayudarle. Lo que voy a hacer ahorita es comunicarlo directamente con uno de nuestros asesores financieros, que es quien le va a explicar exactamente cómo funciona y cuánto podría ahorrar. Quédese en la línea, un momento por favor.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "set_agent_output": {
+              "info_1": "{info_1}",
+              "info_2": "CALIFICA",
+              "info_3": true
+            },
+            "goto": "final.transfer"
+          }
+        }
+      },
+      "intent.recado_pedir_titular": {
+        "type": "intention",
+        "label": "Recado conocido - pedir hablar con el titular",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "La persona no es el titular pero lo conoce. Selecciona 'Si' si indica que sí es posible comunicar o pasar al titular ahora (por ejemplo 'sí', 'claro', 'ya lo llamo', 'un momento', 'permítame', 'se lo paso'). Selecciona 'Recontacto' si dice que sí pero pide que llamen a otra hora o a otra persona más tarde, o da un horario. Selecciona 'No' si indica que no es posible, que no se encuentra o que no puede pasarlo. NO inventes preguntas sobre deudas; limítate a este nodo.",
+        "prompt": "Entendido, ¿sería posible hablar con {nombre_deudor}?",
+        "on": {
+          "Si": {
+            "goto": "task.identity_verification"
+          },
+          "Recontacto": {
+            "goto": "intent.recado_horario"
+          },
+          "No": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          }
+        }
+      },
+      "intent.recado_horario": {
+        "type": "intention",
+        "label": "Recado - pedir horario de recontacto",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El tercero pidió que llamen en otro momento. Si da un horario o acepta agendar → 'Agendar'. Si rechaza → 'No'.",
+        "prompt": "¿A qué hora sería un buen momento para contactarlo?",
+        "on": {
+          "Agendar": {
+            "goto": "task.next_contact"
+          },
+          "No": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          }
+        }
+      },
+      "task.next_contact": {
+        "type": "task",
+        "label": "Agendar próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "time_windows": [
+            "mañana",
+            "tarde",
+            "noche",
+            "indistinto"
+          ],
+          "require_hour": true,
+          "ask_phone": false
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_callback_scheduled"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_recontacto"
+          }
+        }
+      },
+      "final.end_callback_scheduled": {
+        "type": "final",
+        "label": "Cierre (recontacto agendado)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Listo, {nombre_deudor}, quedó agendado para {next_contact_date_natural}. Muchas gracias por su tiempo. Que tenga un excelente día"
+      },
+      "final.transfer": {
+        "type": "final",
+        "label": "Transferencia en caliente al asesor financiero",
+        "delivery": "say",
+        "interruptible": false,
+        "speech_rate": 0.98,
+        "prompt": "Le comunico ahora con su asesor financiero de Sanatorio Río Blanco.",
+        "transfer": true,
+        "transfer_reason": "Lead calificado para el programa de alivio de deudas de Sanatorio Río Blanco. Transferencia en caliente al asesor financiero. RESULTADO_PERFIL=CALIFICA TRANSFERENCIA=true"
+      },
+      "final.derivar_asesor": {
+        "type": "final",
+        "label": "Derivación al asesor financiero (consulta fuera de alcance)",
+        "delivery": "say",
+        "interruptible": false,
+        "speech_rate": 0.98,
+        "prompt": "Entiendo su inquietud. Eso lo resuelve mejor un asesor financiero de Sanatorio Río Blanco, así que le comunico con uno de ellos. Quédese en la línea, un momento por favor.",
+        "transfer": true,
+        "transfer_reason": "Consulta fuera del FAQ y del perfilamiento. Derivación al asesor financiero de Sanatorio Río Blanco."
+      },
+      "final.end_sin_certeza": {
+        "type": "final",
+        "label": "Cierre por respuesta dudosa / sin certeza",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "De acuerdo {nombre_deudor}. Como no tiene certeza sobre la respuesta, no podremos continuar con las preguntas en este momento. De todas formas, muchas gracias por su tiempo. Que tenga un excelente día"
+      },
+      "final.hangup_silent": {
+        "type": "final",
+        "label": "Cierre silencioso (mensaje ya dicho en nodo anterior)",
+        "delivery": "say",
+        "prompt": ""
+      },
+      "final.end_no_interes": {
+        "type": "final",
+        "label": "Cierre por no interés",
+        "delivery": "say",
+        "prompt": "Entiendo perfectamente. Muchas gracias por recibirme la llamada. Si en algún momento necesita información sobre el programa, puede encontrarnos en triple doble u punto bravo crédito punto co. Hasta luego"
+      },
+      "final.end_recontacto": {
+        "type": "final",
+        "label": "Cierre con recontacto",
+        "delivery": "say",
+        "prompt": "Con gusto, {nombre_deudor}. Le contactaremos en otro momento que le quede mejor. Muchas gracias por su tiempo. Que tenga un excelente día"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "delivery": "say",
+        "prompt": "Entiendo, disculpa la molestia. Por protección de datos no puedo compartir información. Que tenga un buen día."
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "delivery": "say",
+        "prompt": "Gracias por atender la llamada. Por privacidad solo podemos hablar directamente con el titular. Hasta luego."
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "delivery": "say",
+        "prompt": "Gracias. Hasta luego."
+      }
+    }
+  }
+}

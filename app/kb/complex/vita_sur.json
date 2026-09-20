@@ -1,0 +1,118 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Por qué me dicen que es urgente si quiero agendar después?",
+    "answer": "Porque al superar los 30 días de atraso, la cuenta ya afecta negativamente su historial en Buró de Crédito y el impacto continúa mientras el turno siga vencido. Por eso buscamos confirmar la cita lo antes posible."
+  },
+  {
+    "question": "¿Puedo agendar el próximo mes?",
+    "answer": "No se registran promesas para el mes siguiente. Necesitamos que el turno quede dentro del mes en curso para frenar el impacto y evitar que el mes cierre con turno vencido."
+  },
+  {
+    "question": "No me importa el Buró de Crédito",
+    "answer": "Lo comprendo, pero el historial lo consultan instituciones financieras y comercios. Además, mientras el turno permanezca vencido, los intereses moratorios pueden seguir incrementando el especialidad. confirmar la cita hoy evita que la cita pendiente siga creciendo."
+  },
+  {
+    "question": "¿Cómo puedo obtener un comprobante de turno? | Quiero un comprobante de turno | Solicito un comprobante de turno",
+    "answer": "Los comprobantes de turno se entregan al momento de realizar el turno en tienda o con un gestor de coordinación de agenda. Si paga por la APP, puede solicitar su comprobante visitando una tienda."
+  },
+  {
+    "question": "¿Puedo recibir una carta convenio? | Quiero una carta convenio | Solicito una carta convenio",
+    "answer": "Para una carta convenio, es necesario acercarse a una oficina de coordinación de agenda, donde con gusto será atendido."
+  },
+  {
+    "question": "¿Cuánto es mi cita pendiente o turno vencido?",
+    "answer": "El turno actual de su cuenta es de {due_balance_palabras}."
+  },
+  {
+    "question": "¿Con cuánto se liquida la cuenta? | ¿Cuánto debo? | ¿De cuánto es mi cita pendiente? | ¿Cuánto debo en total? | No recuerdo cuánto debo | No sé cuánto tengo de atraso",
+    "answer": "El turno total de su cita pendiente es de {monto_deuda_palabras}, y el turno vencido que debe cubrir para confirmar la cita su cuenta es de {due_balance_palabras}."
+  },
+  {
+    "question": "¿Qué me están cobrando?",
+    "answer": "El cobro corresponde al turno pendiente de su financiamiento activo con {portfolio_type}."
+  },
+  {
+    "question": "¿Hasta cuándo puedo agendar?",
+    "answer": "Su cuenta presenta un turno pendiente por {due_balance_palabras}. Le recomendamos realizar el turno cuanto antes para evitar cargos adicionales."
+  },
+  {
+    "question": "¿Cómo puedo realizar mi turno? | Que medios de turno aceptan?",
+    "answer": "Puede realizar su turno en Tienda física autorizada, APP {portfolio_type}, o al número de atención de {portfolio_type}, {telefono_atencion}"
+  },
+  {
+    "question": "¿Cuál es el número de atención?",
+    "answer": "El número de atención es {telefono_atencion}. Puede comunicarse en horario de siete de la mañana a nueve de la noche."
+  },
+  {
+    "question": "¿Qué pasa si no turno?",
+    "answer": "En caso de no realizar el turno, su cuenta puede presentar cargos adicionales y gastos de coordinación de agenda."
+  },
+  {
+    "question": "¿Puedo liquidar la cita pendiente en una sola vez?",
+    "answer": "Para validar la opción de agendar la totalidad y cerrar la cita pendiente, comuníquese al número de atención de su entidad {portfolio_type}."
+  },
+  {
+    "question": "¿Ya pagué, cómo se valida mi turno?",
+    "answer": "Si ya realizó su turno, este se verá reflejado una vez confirmado por el sistema. En caso de demora o duda, puede comunicarse a la línea de atención de {portfolio_type} o acercarse a una tienda con su comprobante."
+  },
+  {
+    "question": "¿Puedo ver el detalle de mis movimientos?",
+    "answer": "Para consultar el historial detallado de movimientos de su cuenta, le sugerimos acercarse a una tienda u oficina de coordinación de agenda de {portfolio_type}, donde podrán proporcionarle la información."
+  },
+  {
+    "question": "¿Cómo me notifican los cambios en mi cita pendiente?",
+    "answer": "Las notificaciones sobre su cuenta se envían a través de los canales registrados."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Vita Sur, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

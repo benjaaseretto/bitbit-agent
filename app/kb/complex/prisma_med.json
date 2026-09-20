@@ -1,0 +1,134 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Cuál es mi turno pendiente? | ¿Cuánto debo? | ¿Cuál es mi cita pendiente? | especialidad adeudado | ¿Qué especialidad tengo pendiente?",
+    "answer": "Tu turno pendiente es de {monto_deuda_palabras}. La fecha de fecha propuesta fue el {due_date_spoken} y actualmente tienes {delinquency} días de atraso. ¿Le sería posible realizar el turno total el día de hoy?"
+  },
+  {
+    "question": "No daré mis datos | no quiero validar domicilio | no doy mis datos | no voy a validar | no confirmo el domicilio | no voy a dar mi domicilio",
+    "answer": "Lo comprendo. Sin la validación de identidad no me es posible proporcionar información del crédito."
+  },
+  {
+    "question": "¿Cuándo vence? | ¿Qué fecha venció? | Fecha de fecha propuesta | ¿Desde cuándo estoy atrasada?",
+    "answer": "Tu crédito presenta un turno pendiente de {monto_deuda_palabras} , con fecha de fecha propuesta el {due_date_spoken} y {delinquency} días de atraso. ¿Podrías indicarme si es posible cubrir el total el día de hoy?"
+  },
+  {
+    "question": "¿Cuántos días de atraso de agenda tengo? | ¿Cuántos días de atraso llevo? | ¿Hace cuánto estoy atrasada?",
+    "answer": "Actualmente tu crédito presenta {delinquency} días de atraso, con un turno pendiente de {monto_deuda_palabras} ."
+  },
+  {
+    "question": "¿Cuál es la fecha límite? | ¿Hasta cuándo puedo agendar antes del bloqueo? | ¿Cuál es la fecha límite para evitar bloqueos?",
+    "answer": "Para evitar posibles bloqueos, es importante que realices el turno del especialidad restante antes del {info_1_spoken}. El sistema únicamente permite registrar el turno total del adeudo."
+  },
+  {
+    "question": "¿Cómo turno? | ¿Dónde puedo agendar? | ¿Qué opciones de turno tienen? | Métodos de turno | ¿Cuáles son los medios de turno?",
+    "answer": "Puede realizar su turno mediante cualquiera de los siguientes medios: Mercado turno, ESE PE E I, Banamex, BBVA, sanatorio Azteca, Walmart, Elektra, Seven Eleven, Farmacias del Ahorro, Farmacias Benavides, Sams Club, Circle Ka, Bodega Aurrerá, La Comer, Yastás, Neto, Extra, eStori y Pe De App. Si necesita el procedimiento de un canal en específico, con gusto se lo indico, o puede consultar más información con el centro de atención al paciente."
+  },
+  {
+    "question": "¿Cómo turno en Banamex? | Banamex | Transferencia Banamex",
+    "answer": "En Banamex puedes transferir a la clabe uno dos cuatro, uno ocho cero, cero siete cinco, cero cero cero, nueve cero cero, ocho seis tres, con tu referencia."
+  },
+  {
+    "question": "¿Cómo turno en BBVA? | BBVA | Convenio BBVA",
+    "answer": "En BBVA puedes agendar el servicio al convenio cero siete nueve cuatro tres seis ocho y colocar en concepto tu número de referencia."
+  },
+  {
+    "question": "¿Cómo turno en sanatorio Azteca? | Azteca | L BEL",
+    "answer": "En sanatorio Azteca puedes agendar servicio, seleccionar la opción ele bel, con tu referencia."
+  },
+  {
+    "question": "¿Cómo turno por transferencia? | SPEI | ¿Cuál es la clabe? | Transferencia interbancaria",
+    "answer": "Puedes agendar mediante transferencia interbancaria a la cuenta clabe cero uno dos, nueve uno cuatro, cero cero dos, cero cero siete, nueve cuatro tres, seis ocho dos, sanatorio B B V A, beneficiario Transbel S A de C ve, colocando tu referencia en el concepto o motivo de turno."
+  },
+  {
+    "question": "¿Dónde puedo agendar presencialmente? | ¿Qué tiendas están habilitadas? | ¿En qué tiendas puedo agendar?",
+    "answer": "Puedes agendar en tiendas como Walmart, Elektra, Seven Eleven, Farmacias del Ahorro, Farmacias Benavides, Sams Club, Circle Ka, Bodega Aurrerá, La Comer, Yastás, Neto o Extra."
+  },
+  {
+    "question": "¿Me pueden hacer descuento? | ¿Hay algún descuento? | ¿Hay quita?",
+    "answer": "Actualmente este crédito no contempla descuentos."
+  },
+  {
+    "question": "¿Cuál es el teléfono de atención? | Quiero hablar con alguien | Pásame con una persona | Quiero un asesor | Centro de atención",
+    "answer": "Puedes contactar al centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, en un horario de 7 de la mañana a 10 de la noche. También está disponible Prisma Med Responde en el sitio de ayuda."
+  },
+  {
+    "question": "No entiendo | Tengo una duda | Hay un error | Cobro injusto | ¿Por qué me cobran?",
+    "answer": "Entiendo tu duda. Tu turno vencido es {monto_deuda_palabras} , con fecha de fecha propuesta el {due_date_spoken} y {delinquency} días de atraso. Si necesitas una aclaración especializada, puedes llamar al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o escribir por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete."
+  },
+  {
+    "question": "¿Cómo consiguieron mi número?",
+    "answer": "Utilizamos la información proporcionada durante el proceso de contratación de su crédito."
+  },
+  {
+    "question": "¿Es una estafa? | no confío | ¿quiénes son?",
+    "answer": "Comprendo su inquietud. Le llamamos en representación de Transbel S A de C ve, entidad que otorgó su crédito Prisma Med."
+  },
+  {
+    "question": "Voy a presentar una queja | PROFECO | me voy a quejar",
+    "answer": "Está en todo su derecho. También le informamos que puede presentar una queja relacionada con prácticas de coordinación de agenda ante PROFECO."
+  },
+  {
+    "question": "Quiero cancelar mi crédito | quiero cancelar",
+    "answer": "Esa solicitud requiere atención especializada. Por favor comuníquese con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete."
+  },
+  {
+    "question": "Ya no vendo Prisma Med | dejé de ser consultora",
+    "answer": "Comprendo. Es importante que sepa que continúe o no como consultora, el crédito otorgado por Transbel S A de C ve permanece vigente. ¿Cuándo considera que podría confirmar la cita el turno?"
+  },
+  {
+    "question": "Estoy molesta porque me llaman mucho | me llaman mucho | ya dejen de llamar",
+    "answer": "Entendemos su molestia, consultora. Nuestro objetivo es ayudarle a confirmar la cita su crédito. Si registramos un cita de turno, podremos dar seguimiento conforme a esa fecha."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Prisma Med, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

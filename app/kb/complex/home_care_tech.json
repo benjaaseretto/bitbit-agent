@@ -1,0 +1,134 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "comprador pregunta su importe o monto adeudado | ¿Cuánto debo? | ¿Cuál es mi importe? | Confírmame el importe | ¿De cuánto es la cotización? | ¿Cuál es el monto que debo cerrar la compra?",
+    "answer": "Tu importe pendiente es de {monto_deuda_palabras}. Si cubrimos el importe pendiente en los próximos {max_dias} días evitaríamos gestiones y cargos adicionales."
+  },
+  {
+    "question": "comprador pregunta sobre métodos de compra | ¿Cómo puedo cerrar la compra? | Explícame cómo hacer el compra | ¿Por dónde hago el compra? | ¿Dónde puedo cerrar la compra?",
+    "answer": "Para tu comodidad, la vía prioritaria es el compra en línea: ingresa a HomeCare Tech punto m x, da clic en Mi cuenta, inicia sesión con tu usuario y contraseña, ve a tu estado de cuenta, da clic en cerrar la compra ahora, ingresa los datos de tu tarjeta y confirma el compra. Como opción secundaria, también puedes cerrar la compra por banca electrónica en banco autorizado usando tu número de referencia."
+  },
+  {
+    "question": "comprador no puede cerrar la compra por la página web | No puedo cerrar la compra por la web | La página no me deja cerrar la compra | No me da permiso de hacerlo por línea | La web no me funciona | El sitio no me deja completar el compra",
+    "answer": "Lamento la situación. Te sugiero entrar a HomeCare Tech punto m x, dar clic en Mi cuenta, iniciar sesión con tu usuario y contraseña, ir a tu estado de cuenta y elegir cerrar la compra ahora con tarjeta de crédito o débito. Si la página continúa sin permitirte cerrar la compra, también puedes usar tu número de referencia para cerrar la compra por banca electrónica en BBVA, Banorte, Santander, Citibanamex, Scotiabank o HSBC. ¿Podremos contar con tu compra?"
+  },
+  {
+    "question": "comprador no ha podido ir a cerrar la compra o tiene inconveniente para cerrar la compra físicamente | No he podido ir a cerrar la compra | No me da tiempo de ir a la sucursal | El sistema del banco falló | No pude cerrar la compra en sucursal | Pido más tiempo por un inconveniente personal",
+    "answer": "Comprendo lo que me comentas. Recuerda que para tu comodidad siempre puedes realizar tu compra en línea. Sabiendo esto, ¿podremos contar con tu compra a más tardar en los próximos {max_dias} días y así evitar la suspensión del servicio?"
+  },
+  {
+    "question": "comprador necesita su factura para tramitar el compra | Necesito mi factura | Mándame la factura | Sin factura no puedo cerrar la compra | ¿Dónde descargo mi factura?",
+    "answer": "Entiendo. Puedes consultar y descargar tu factura directamente desde nuestro portal en línea en HomeCare Tech punto m x, en la sección Mi cuenta. Para evitar la suspensión del servicio, ¿podremos contar con tu compra a más tardar en los próximos {max_dias} días?"
+  },
+  {
+    "question": "comprador pregunta sobre compra por banca electrónica o número de cuenta | Solicita cuenta bancaria | ¿Tienen una cuenta bancaria? | ¿Me das una cuenta para depositar? | ¿En qué banco puedo cerrar la compra?",
+    "answer": "Puedes cerrar la compra por banca electrónica desde la app o portal de tu banco: identifica la opción de cerrar la compra servicios, selecciona HomeCare Tech, ingresa tu número de referencia y confirma los datos solicitados. Los bancos autorizados son BBVA, Banorte, Santander, Citibanamex, Scotiabank y HSBC. Recuerda que el compra en línea es la vía más rápida."
+  },
+  {
+    "question": "comprador pregunta por su número de referencia para cerrar la compra | ¿Cuál es mi referencia de compra? | No tengo la referencia | Necesito mi referencia",
+    "answer": "Tu número de referencia lo encuentras en tu estado de cuenta dentro de HomeCare Tech punto m x, en la sección Mi cuenta. Si tienes problemas con la aplicación o con tu tarjeta, puedes solicitarlo en la línea de servicio al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero."
+  },
+  {
+    "question": "comprador tiene problemas con la app o con su tarjeta | La app de HomeCare Tech no me da acceso a mi tarjeta | La aplicación no me deja | No me aparece la tarjeta en la app | La app no carga | Tengo problemas con la app",
+    "answer": "Lamento el inconveniente con la aplicación. Mientras se resuelve, puedes cerrar la compra directamente desde la página web HomeCare Tech punto m x con tu tarjeta de crédito o débito, o usar tu número de referencia para cerrar la compra por banca electrónica en BBVA, Banorte, Santander, Citibanamex, Scotiabank o HSBC. Si necesitas más ayuda con la app, puedes llamar a la línea de servicio al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero."
+  },
+  {
+    "question": "comprador solicita compra automático o domiciliación | Quiero compra automático | ¿Cómo activo el compra automático? | Domiciliación | Quiero que me lo cobren automático",
+    "answer": "Para solicitar la domiciliación o compra automático debes comunicarte a la línea de servicio al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero. Mientras tanto, ¿podremos contar con tu compra para cerrar la oferta el importe actual?"
+  },
+  {
+    "question": "comprador quiere devolver equipos o cancelar el servicio | Quiero devolver los equipos | Quiero devolver los teléfonos | Voy a cancelar el servicio | Ya no quiero el servicio | Quiero entregar los equipos",
+    "answer": "Para gestionar la devolución de equipos o la baja del servicio debes comunicarte a la línea de servicio al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero. Para que puedas tramitarlo es importante cerrar la oferta primero el importe pendiente. ¿Podremos contar con tu compra?"
+  },
+  {
+    "question": "comprador dice que ya compró | Ya está pagado | Eso ya lo pagué | Acabo de hacer un compra | Ya hice el compra | Ya quedó pagado | Lo pagué hace poco",
+    "answer": "Muchas gracias por confirmarlo. Recuerda que tu compra se verá reflejado al siguiente día hábil."
+  },
+  {
+    "question": "comprador pregunta si el compra se refleja de inmediato | ¿Cuándo se verá reflejado mi compra? | ¿Cuánto tarda en aplicarse? | ¿En cuánto tiempo se ve el compra?",
+    "answer": "Recuerda que tu compra se verá reflejado al siguiente día hábil. Los pagos por banco autorizado tardan hasta un día hábil en verse reflejados; el compra en línea es la vía más rápida para evitar la suspensión."
+  },
+  {
+    "question": "comprador pregunta quién habla con él | ¿Quién habla conmigo? | ¿Quién me llama? | ¿Quién pregunta? | ¿Con quién tengo el gusto?",
+    "answer": "Te habla {nombre_agente}, Agente IA de HomeCare Tech Negocios."
+  },
+  {
+    "question": "comprador pregunta titular de qué | ¿A nombre de quién está el crédito? | ¿Para qué me buscan? | ¿Titular de qué?",
+    "answer": "Le llamamos de HomeCare Tech Negocios, necesitamos confirmar si es el titular de la cotización. ¿Es {nombre_deudor_completo}?"
+  },
+  {
+    "question": "comprador no reconoce la empresa o servicio | No somos esa empresa | No tengo HomeCare Tech | Cuenta de empresa equivocada",
+    "answer": "Entiendo. Para validar correctamente, le sugiero comunicarse a la línea oficial de HomeCare Tech al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero para aclarar la información."
+  },
+  {
+    "question": "Persona indica que trabaja en la empresa pero no es el encargado de pagos | Soy de bodega | No estoy en la oficina | No soy quien paga | No sé de eso, soy empleado | Hay que hablar con la secretaria | Hay que hablar con el encargado",
+    "answer": "Entiendo. Por favor, dígale al encargado de pagos que desde HomeCare Tech Negocios necesitamos hablar con él para cerrar la oferta la cuenta y que nos contacte al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero."
+  },
+  {
+    "question": "comprador pide ejecutivo o persona | Transferir a pagos | Quiero hablar con un humano | Páseme con pagos | Quiero hablar con un asesor",
+    "answer": "Por el momento, solo puedo atenderle a través de este canal digital. Mi objetivo es ayudarle a resolver su importe de forma rápida ahora mismo. Si lo prefiere, puede comunicarse a la línea de servicio al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero. ¿Podremos contar con tu compra?"
+  },
+  {
+    "question": "comprador pide números de atención al comprador | ¿Cuál es su número de atención al comprador? | ¿Cuál es el teléfono de HomeCare Tech? | ¿Cuál es el correo electrónico? | ¿Tienen WhatsApp?",
+    "answer": "Puedes comunicarte con HomeCare Tech al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero."
+  },
+  {
+    "question": "comprador pide confirmación o repetición del pedido | ¿Para cuándo es el pedido? | Repíteme la fecha | ¿Cuándo dijiste que compra?",
+    "answer": "Tu pedido quedó registrado para el {commitment_date_spoken}. Si necesitas ajustarlo, dime una fecha dentro de los próximos {max_dias} días."
+  },
+  {
+    "question": "comprador pregunta cómo realizar el compra o si hay dudas del proceso | ¿Cómo hago el compra? | ¿Está todo claro? | Tengo dudas de cómo cerrar la compra",
+    "answer": "La forma más rápida es el compra en línea en HomeCare Tech punto m x, entrando a Mi cuenta y eligiendo cerrar la compra ahora. También puedes cerrar la compra por banca electrónica con tu número de referencia en banco autorizado. ¿Tienes dudas en cómo realizar tu compra?"
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "HomeCare Tech puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

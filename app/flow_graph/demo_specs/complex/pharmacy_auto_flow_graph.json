@@ -1,0 +1,419 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "pharmacy_auto_flow",
+    "visible_name": "Pharmacy Auto",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (18 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/pharmacy_auto.json",
+      "company_id": "pharmacy_auto-demo",
+      "description": "Base de conocimiento de Pharmacy Auto."
+    },
+    "company_id": "pharmacy_auto-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "bravo_es_vigente_flow_graph.json",
+      "node_count": 18,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Pharmacy Auto",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "wait_for_account_holder": true,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí, dígame",
+            "sí dígame",
+            "sí, soy yo",
+            "sí soy yo",
+            "sí, le escucho",
+            "sí le escucho",
+            "sí, correcto",
+            "sí correcto"
+          ],
+          "identity_pregunta": "{saludo_por_horario} mi nombre es {nombre_agente} agente virtual de Pharmacy Auto, ¿Podría confirmar si hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Soy {nombre_agente}, Agente Virtual de Pharmacy Auto. Te llamo por una gestión informativa sobre tu cuenta y solo necesito confirmar si hablo con el titular.",
+          "identity_repregunta": "¿Hablo con {nombre_deudor_completo}?",
+          "double_verification": {
+            "enabled": true,
+            "max_attempts_total": 3,
+            "fields": [
+              {
+                "id": "dni_last_char",
+                "source": {
+                  "kind": "metadata",
+                  "key": "info_1"
+                },
+                "label": "la última letra o carácter de tu DNI",
+                "prompt": "Para proteger tu información necesito validar tu identidad. ¿Me podrías confirmar la letra que aparece al final de tu DNI?",
+                "type": "string",
+                "normalization": {
+                  "uppercase": true,
+                  "remove_accents": true,
+                  "keep_alnum_only": true
+                },
+                "comparison": {
+                  "mode": "exact"
+                },
+                "max_attempts": 2,
+                "required": true
+              },
+              {
+                "id": "birth_date",
+                "source": {
+                  "kind": "metadata",
+                  "key": "info_3"
+                },
+                "label": "tu fecha de nacimiento",
+                "prompt": "Gracias. Como validación alternativa, ¿me podrías confirmar tu fecha de nacimiento?",
+                "type": "date",
+                "comparison": {
+                  "mode": "date_equivalent"
+                },
+                "max_attempts": 1,
+                "required": false
+              }
+            ]
+          }
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening_vigente",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "fast_commitment": true,
+            "fast_commitment_next": "intent.confirm_commitment_vigente"
+          },
+          "No Autenticado": {
+            "goto": "final.end_auth_failed"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_third_party"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening_vigente": {
+        "type": "intention",
+        "label": "Apertura vigente",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt": "Gracias, confirmamos tu identidad. Hola {nombre_deudor}, espero que te encuentres bien el día de hoy. Te comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. Te contactamos porque registramos una cuota de financiamiento pendiente de tu crédito por {due_balance_palabras}, con {dias_atraso_texto}. Si quieres, podemos revisar juntos las opciones disponibles para cerrar la oferta tu cuenta.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_vigente"
+          }
+        }
+      },
+      "task.negotiation_vigente": {
+        "type": "task",
+        "label": "Negociación vigente",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. cerrar la compra a más tardar {fecha_limite} te ayuda a evitar que el atraso siga creciendo y cerrar este tema con tranquilidad. ¿Podrías realizar el compra dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, el atraso podría seguir creciendo. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el compra ese día?",
+          "max_dias": "{max_dias}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "benefit_hints": [
+            "cerrar la oferta ahora puede ayudarte a evitar que el atraso siga creciendo",
+            "dejar el compra resuelto cuanto antes puede evitar gestiones posteriores",
+            "mantener tu cuenta al día te permite cerrar este tema con tranquilidad"
+          ],
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": true,
+          "collect_payment_method": false,
+          "custom_instructions": "Entiende como aceptación frases como 'vale', 'de acuerdo', 'perfecto', 'sí, claro'. Entiende como negación frases como 'no me interesa', 'paso', 'no gracias', 'déjalo así', 'vale pero no quiero' Al proponer o cerrar el acuerdo de compra, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el pedido, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "objection_handlers": [
+            {
+              "objection": "comprador molesto, fastidiado o pide que no le llamen más (deja de llamar, ya te he dicho que no, no me molestes, vaya pesadez)",
+              "answer": "Te pido disculpas si no es un buen momento, no es mi intención molestarte. Mi objetivo es ayudarte a encontrar la solución más sencilla para tu cuenta. ¿Cuándo podrías comprometerte a realizar el compra?"
+            },
+            {
+              "objection": "comprador confundido o no entiende de qué le hablan (cómo dice, no entiendo, de qué me hablas, qué recibo es ese)",
+              "answer": "Con mucho gusto te explico. Te llamo de Pharmacy Auto porque tienes una cuota de financiamiento pendiente en tu crédito y quiero ayudarte a resolver esto de la forma más sencilla posible. ¿Cuándo podrías comprometerte a realizar el compra?"
+            },
+            {
+              "objection": "comprador solicita plan de compra, facilidades o quiere refinanciar (necesito un plan, ¿pueden darme facilidades?, ¿puedo cerrar la compra en cuotas?, quiero refinanciar)",
+              "answer": "Entendemos que puedas necesitar facilidades. Podemos ofrecerte un plan de compra a medida. ¿Te gustaría conocer las opciones? Por favor comunícate al WhatsApp tres, cuatro, nueve, uno, nueve, nueve, siete, nueve, seis, tres, seis."
+            },
+            {
+              "objection": "comprador solicita el enlace o link de compra (mándame el link, ¿me pasas el enlace de compra?, quiero el link para cerrar la compra, envíame el enlace, ¿dónde está el link?)",
+              "answer": "El enlace de compra se gestiona a través de nuestros canales oficiales de Atención al comprador. Por favor comunícate al WhatsApp tres, cuatro, nueve, uno, nueve, nueve, siete, nueve, seis, tres, seis, donde te ayudarán a generar tu enlace de compra."
+            },
+            {
+              "objection": "comprador dice que no puede cerrar la compra, que no tiene dinero o que está pasando por una mala situación económica (no tengo dinero, no puedo cerrar la compra, estoy sin trabajo, no me alcanza)",
+              "answer": "Lamentamos escuchar eso, {nombre_deudor}. Podemos analizar opciones para que regularices tu cuenta sin afectar tu historial. ¿Te gustaría conocerlas? Por favor comunícate al WhatsApp tres, cuatro, nueve, uno, nueve, nueve, siete, nueve, seis, tres, seis."
+            },
+            {
+              "objection": "comprador menciona de forma espontánea que su compra está domiciliado o que se cobra por domiciliación / débito automático bancario (lo tengo domiciliado, me lo cobráis por el banco, está domiciliado, tengo domiciliación bancaria, me lo pasáis al recibo del banco, se me carga automáticamente)",
+              "answer": "Perfecto, gracias por confirmarlo. Si tu compra está domiciliado, el cargo se realizará de forma automática; solo te recomiendo mantener importe suficiente en tu cuenta para que el compra se aplique correctamente.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "compra domiciliado"
+            },
+            {
+              "objection": "comprador indica que está de viaje o fuera | estoy de viaje | ando de viaje | estoy fuera de la ciudad",
+              "answer": "De acuerdo, gracias por avisarme que estás de viaje.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment_vigente"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Pago domiciliado": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intention"
+          }
+        }
+      },
+      "task.payment_intention_date": {
+        "type": "task",
+        "label": "Fecha tentativa de compra",
+        "task_type": "PaymentIntentionDateTask",
+        "params": {
+          "max_retries": 1
+        },
+        "on": {
+          "Fecha tentativa capturada": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "payment_intention_date": "result.tentative_date",
+            "payment_intention_raw": "result.raw_text",
+            "set_payment_intention": true,
+            "goto": "intent.close_intention"
+          },
+          "Sin fecha": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.offer_callback_next_day_no_agreement"
+          }
+        }
+      },
+      "intent.close_intention": {
+        "type": "intention",
+        "label": "Cierre intención de compra",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "Perfecto, queda registrada tu intención de compra. Recuerda que si necesitas apoyo para completar el compra, puedes comunicarte al WhatsApp.",
+        "on": {
+          "always": {
+            "goto": "final.end_intention"
+          }
+        }
+      },
+      "intent.offer_callback_next_day_no_agreement": {
+        "type": "intention",
+        "label": "Oferta agendar llamada",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "Podemos agendar una llamada para que un asesor revise tu caso. ¿Te parece bien?",
+        "on": {
+          "Acepta": {
+            "goto": "task.next_contact"
+          },
+          "Rechaza": {
+            "goto": "final.end_no_callback"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "task.next_contact": {
+        "type": "task",
+        "label": "Próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "time_windows": [
+            "mañana",
+            "tarde",
+            "noche",
+            "indistinto"
+          ],
+          "require_day": true,
+          "default_to_tomorrow": false,
+          "require_hour": true,
+          "ask_phone": false
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_callback_scheduled"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_callback"
+          }
+        }
+      },
+      "intent.confirm_commitment_vigente": {
+        "type": "intention",
+        "label": "Información de compra",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, entonces ya quedó registrado tu pedido de compra por {payment_amount_palabras} para el {commitment_date_spoken}. Recuerda que puedes cerrar la compra por tarjeta o transferencia y enviar el comprobante de compra al WhatsApp.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida pedido",
+        "prompt": "Que pases un excelente día. Recuerda que habló contigo {nombre_agente}, Agente Virtual de Pharmacy Auto.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida sin pedido",
+        "prompt": "Entiendo. Si necesitas revisar opciones de compra, puedes comunicarte al WhatsApp. Que pases un excelente día. Recuerda que habló contigo {nombre_agente}, Agente Virtual de Pharmacy Auto.",
+        "delivery": "say"
+      },
+      "final.end_intention": {
+        "type": "final",
+        "label": "Despedida intención de compra",
+        "prompt": "Agradezco tu tiempo. Que pases un excelente día. Recuerda que habló contigo {nombre_agente}, Agente Virtual de Pharmacy Auto.",
+        "delivery": "say"
+      },
+      "final.end_callback_scheduled": {
+        "type": "final",
+        "label": "Despedida llamada agendada",
+        "prompt": "Correcto, ya quedó agendado para {next_contact_date_natural}. Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_no_callback": {
+        "type": "final",
+        "label": "Despedida sin agendar",
+        "prompt": "Entiendo. Si necesitas revisar opciones de compra, puedes comunicarte al WhatsApp. Que pases un excelente día. Recuerda que habló contigo {nombre_agente}, Agente Virtual de Pharmacy Auto.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida pagado",
+        "prompt": "Perfecto, gracias por la información. Recuerda enviar tu comprobante de compra al WhatsApp si aún no lo has hecho. Que pases un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_auth_failed": {
+        "type": "final",
+        "label": "Despedida por validación fallida",
+        "prompt": "Gracias por tu tiempo. Por protección de datos no puedo continuar sin validar la identidad. Que pases un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida equivocado",
+        "prompt": "Gracias por informarlo. Por protección de datos no puedo compartir información con terceros. Procederemos a actualizar nuestros registros para evitar nuevas comunicaciones. Lamentamos las molestias, que pases un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_third_party": {
+        "type": "final",
+        "label": "Despedida tercero",
+        "prompt": "Gracias por informarlo. Por protección de datos no puedo compartir información con terceros, intentaremos comunicarnos nuevamente en otro momento.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida buzón",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

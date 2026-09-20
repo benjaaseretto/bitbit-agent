@@ -1,0 +1,867 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "andes_care_flow",
+    "visible_name": "Andes Care",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (36 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/andes_care.json",
+      "company_id": "andes_care-demo",
+      "description": "Base de conocimiento de Andes Care."
+    },
+    "company_id": "andes_care-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "calidda_flow_graph.json",
+      "node_count": 36,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Andes Care",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "decision": "Si el interlocutor indica que el titular falleció, murió o está fallecido (por ejemplo: 'falleció', 'está fallecido', 'la persona que buscan falleció', 'murió', 'ya no vive'), usa registrar_resultado_identidad con resultado='titular_fallecido' de inmediato. NO uses 'recado' ni 'persona_equivocada' en esos casos.",
+        "params": {
+          "max_retries": 2,
+          "enable_titular_fallecido": true,
+          "identity_pregunta": "{saludo_por_horario} ¿Hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le saluda {nombre_agente}, agente virtual de Colektia. Lo llamamos por encargo de cálida.",
+          "identity_repregunta": "Para continuar, necesito confirmar que me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?",
+          "solo_rechazar_negacion_explicita": true,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Sí soy yo",
+            "Sí, soy yo",
+            "Dije que si",
+            "Si, dije que sí",
+            "Soy yo",
+            "Con el",
+            "Con ella",
+            "Con el mismo",
+            "Con la misma",
+            "Con él habla",
+            "Con ella habla",
+            "Él habla",
+            "Ella habla",
+            "El mismo",
+            "La misma",
+            "Sí señor",
+            "Sí señora",
+            "Habla con él",
+            "Habla con ella",
+            "si, soy yo, quien habla",
+            "si, dije que si, soy yo, quien habla"
+          ]
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "express_route": true,
+            "express_route_next": "task.negotiation",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "intent.consultar_dudas_paid"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          },
+          "Fallecido": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "substatus": "Fallecido",
+            "goto": "intent.fallecido_responsable"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura (saludo + divulgación)",
+        "interruptible": false,
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "prompt": "Le saluda {nombre_agente}, agente virtual de Colektia. Lo llamamos por encargo de cálida Gas Natural de Lima y Callao. Por seguridad, le informamos que esta comunicación puede ser grabada y monitoreada.",
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "dim_1",
+              "cases": {
+                "COND-REF": "task.offer_selection",
+                "COND": "task.offer_selection",
+                "REF": "intent.context_refinanciamiento_opening",
+                "Tradicional": "intent.tradicional"
+              },
+              "default": "task.negotiation"
+            }
+          }
+        }
+      },
+      "intent.context_refinanciamiento_opening": {
+        "type": "intention",
+        "label": "Contexto reprogramación (apertura, solo REF)",
+        "interruptible": false,
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "prompt": "Le informamos que su cuenta registra una cita pendiente total pendiente de {total_balance_palabras} con {dias_mora} días de atraso de agenda.",
+        "on": {
+          "always": {
+            "goto": "task.offer_selection"
+          }
+        }
+      },
+      "task.offer_selection": {
+        "type": "task",
+        "label": "Selección de alternativa de turno",
+        "task_type": "OfferSelectionTask",
+        "params": {
+          "allow_interruptions": true,
+          "offers": [
+            {
+              "id": "paquete preventivo",
+              "label": "paquete preventivo",
+              "available_when": {
+                "field": "dim_1",
+                "in": [
+                  "COND-REF",
+                  "COND"
+                ]
+              },
+              "pitch": "Nos comunicamos porque su cuenta registra una cita pendiente total de {total_balance_palabras} con {dias_mora} días de atraso de agenda. Como paciente de cálida, usted ha sido preseleccionado para una paquete preventivo: un descuento del {dim_7_palabras} sobre el total adeudado y un turno único de solo {condonacion_pagar_palabras}, válido hasta el {dim_8_fecha_humano}.",
+              "detail": "Con la paquete preventivo obtiene un descuento del {dim_7_palabras} sobre su cita pendiente total de {total_balance_palabras}, quedando un turno único de {condonacion_pagar_palabras} que debe realizar antes del {dim_8_fecha_humano} para confirmar la cita su situación.",
+              "on_reject": {
+                "probe_reason": true,
+                "retry_once": true
+              },
+              "reject_reason_var": "motivo_rechazo_condonacion"
+            },
+            {
+              "id": "reprogramación",
+              "label": "reprogramación",
+              "available_when": {
+                "field": "dim_1",
+                "in": [
+                  "COND-REF",
+                  "REF"
+                ]
+              },
+              "pitch": "Con el objetivo de ayudarle a confirmar la cita su situación, cálida pone a su disposición un reprogramación especial: puede reactivar su servicio sin sesión inicial, reorganizando su cita pendiente en cuotas mensuales según la alternativa que elija.",
+              "on_reject": {
+                "probe_reason": true,
+                "retry_once": false
+              },
+              "reject_reason_var": "motivo_rechazo_refinanciamiento",
+              "sub_options": [
+                {
+                  "id": "1",
+                  "monto": "{valor_cuotas_ref_opcion1_palabras}",
+                  "highlight": "consumo a {ref1_consumo_cuotas_1_palabras} cuotas",
+                  "detail": "{condiciones_op1}"
+                },
+                {
+                  "id": "2",
+                  "monto": "{valor_cuotas_ref_opcion2_palabras}",
+                  "highlight": "consumo a {ref1_consumo_cuotas_2_palabras} cuotas",
+                  "detail": "{condiciones_op2}"
+                },
+                {
+                  "id": "3",
+                  "monto": "{valor_cuotas_ref_opcion3_palabras}",
+                  "highlight": "consumo a {ref1_consumo_cuotas_3_palabras} cuotas",
+                  "detail": "{condiciones_op3}"
+                }
+              ]
+            }
+          ]
+        },
+        "on": {
+          "Seleccion": {
+            "goto_by": {
+              "field": "offer_id",
+              "cases": {
+                "condonacion": "intent.confirma_condonacion",
+                "refinanciamiento": "intent.contrato_intro"
+              },
+              "default": "intent.fallo_alternativas"
+            }
+          }
+        }
+      },
+      "intent.confirma_condonacion": {
+        "type": "intention",
+        "label": "Confirmación explícita de aceptación - paquete preventivo",
+        "interruptible": false,
+        "delivery": "say",
+        "decision": "Si el paciente confirma usa 'confirma la paquete preventivo'. Si rechaza o se arrepiente usa 'rechaza la confirmación'. Si pregunta hasta cuándo puede agendar o cuál es la fecha límite, respóndele de forma breve: 'Una vez aceptada la alternativa de paquete preventivo, su fecha límite de turno para aprovechar esta opción es el {dim_8_fecha_humano}.' y repite '¿Confirma la aceptación del beneficio, sí o no?'. Si es ambiguo, repregunta una vez: '¿Confirma la aceptación del beneficio, sí o no?'. No agregues comentarios adicionales o agradecimientos.",
+        "prompt": "Perfecto, confirmamos la aceptación de la alternativa por paquete preventivo por un especialidad de {condonacion_pagar_palabras} para realizar el turno antes del {dim_8_fecha_humano}. ¿Está de acuerdo?",
+        "on": {
+          "confirma el plan": {
+            "goto": "task.collect_email_condonacion"
+          },
+          "rechaza la confirmación": {
+            "goto": "intent.fallo_alternativas"
+          }
+        }
+      },
+      "task.collect_email_condonacion": {
+        "type": "task",
+        "label": "Confirmar o pedir email (paquete preventivo)",
+        "task_type": "FormTask",
+        "params": {
+          "title": "Correo electrónico para envío del documento de descuento",
+          "allow_interruptions": false,
+          "instructions": "Si el sistema leyó un correo ya registrado y preguntó si es correcto: espera. Si confirma, llama confirmar_campo(nombre='email_cliente'). Si dice que no / no es correcto / ese no, SIN dictar otro, llama de INMEDIATO confirmar_campo_existente(campos=[{\"nombre\": \"email_cliente\", \"es_correcto\": false}]) — el sistema ofrecerá el siguiente o pedirá uno nuevo. PROHIBIDO omitir_campo y PROHIBIDO preguntar si prefiere no dar otro o confirmar la negación. Si dicta un correo distinto, llama registrar_email(nombre='email_cliente', email='local@dominio'). Tras registrar un correo NUEVO, el sistema lo leerá para confirmar: si confirma, confirmar_campo; si corrige, registrar_email con el correo completo corregido y espera esa confirmación (no salgas a KB). omitir_campo(nombre='email_cliente') SOLO si ya se le pidió un correo nuevo (o no había ninguno en sistema) y se niega, no tiene, no recuerda o pide saltar.",
+          "schema": [
+            {
+              "name": "email_cliente",
+              "type": "email",
+              "label": "su correo electrónico",
+              "required": false,
+              "require_confirmation": true,
+              "confirm_question": "Para confirmar, el correo que hemos registrado es [[valor]], ¿es correcto?",
+              "registered_values": [
+                "{email_email_1}",
+                "{email_email_2}"
+              ],
+              "confirm_registered": {
+                "intro": "A continuación, le indicaré el correo electrónico que tenemos registrado. Una vez realizado y confirmado el turno, enviaremos a ese correo el documento que respalda el descuento aplicado.",
+                "question": "El correo que tenemos registrado es [[valor]]. ¿Es correcto?",
+                "next_question": "Entiendo. Tengo en sistema un segundo correo electrónico. Es [[valor]]. ¿Es correcto?",
+                "ask_update": "En ese caso por favor indíqueme su correo electrónico para actualizarlo.",
+                "ask_update_single": "Entiendo. Por favor, indíqueme su correo electrónico para actualizarlo.",
+                "ask_empty": "A continuación, le pediremos su correo electrónico. Una vez realizado y confirmado el turno, enviaremos a ese correo el documento que respalda el descuento aplicado."
+              }
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "set_agent_output": {
+              "email_cliente": "{email_cliente}"
+            },
+            "goto": "intent.condonacion_medios_pago"
+          },
+          "Cancelado": {
+            "goto": "intent.condonacion_medios_pago"
+          }
+        }
+      },
+      "intent.condonacion_medios_pago": {
+        "type": "intention",
+        "label": "Consulta medio de turno - paquete preventivo",
+        "interruptible": false,
+        "delivery": "say",
+        "decision": "Espera la respuesta del paciente sobre el medio de turno. Clasifica SOLO en una de estas claves según el medio que indique (aunque lo diga con rodeos como 'por yape', 'creo que banca móvil', 'posiblemente con credencial'): 'Yape', 'credencial de débito', 'credencial de crédito', 'Banca Móvil'. Centros de Servicio al paciente NO es un medio de turno: si menciona agendar ahí o solo dice 'credencial' sin especificar, repregunta brevemente si será credencial de débito o de crédito. Si pregunta hasta cuándo puede agendar o cuál es la fecha límite, respóndele de forma breve: 'Una vez aceptada la alternativa de paquete preventivo, su fecha límite de turno para aprovechar esta opción es el {dim_8_fecha_humano}.' y vuelve a preguntar '¿Por cuál de estos medios realizará el turno?'. Si el paciente hace otra pregunta, respóndela de forma breve y vuelve a preguntar '¿Por cuál de estos medios realizará el turno?', sin avanzar. No avances sin una de las cuatro claves. No inventes información. No agregues comentarios adicionales o agradecimientos.",
+        "prompt": "Perfecto. Puede realizar su turno de forma rápida y segura mediante Yape, sin comisión, o si lo prefiere, con credencial de débito o crédito en nuestros Centros de Servicio al paciente o mediante Banca Móvil. ¿Por cuál de estos medios realizará el turno?",
+        "on": {
+          "Yape": {
+            "set_agent_output": {
+              "medio_pago_cliente": "Yape"
+            },
+            "goto": "intent.condonacion_final"
+          },
+          "tarjeta de débito": {
+            "set_agent_output": {
+              "medio_pago_cliente": "credencial de débito"
+            },
+            "goto": "intent.condonacion_final"
+          },
+          "tarjeta de crédito": {
+            "set_agent_output": {
+              "medio_pago_cliente": "credencial de crédito"
+            },
+            "goto": "intent.condonacion_final"
+          },
+          "Banca Móvil": {
+            "set_agent_output": {
+              "medio_pago_cliente": "Banca Móvil"
+            },
+            "goto": "intent.condonacion_final"
+          }
+        }
+      },
+      "intent.condonacion_final": {
+        "type": "intention",
+        "label": "paquete preventivo (final)",
+        "interruptible": false,
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "prompt": "Gracias por la información. Recibirá un mensaje por WhatsApp con los medios de turno y las instrucciones para enviar su comprobante de turno. Compartir el comprobante es importante para registrar el descuento aplicado y gestionar la reconexión de su suministro. Recuerde que la negociación incluye el turno de los valores totales acordados.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "substatus": "cita alternativa",
+            "goto": "intent.consultar_dudas"
+          }
+        }
+      },
+      "intent.contrato_intro": {
+        "type": "intention",
+        "label": "Contrato telefónico (introducción)",
+        "interruptible": true,
+        "delivery": "say",
+        "decision": "Si acepta iniciar la grabación usa 'acepta iniciar la grabación'. Si se niega usa 'rechaza iniciar la grabación'. Si el paciente pide otra opción, cambiar la elegida o elegir otro especialidad (p. ej. '¿puedo elegir la opción uno?', 'quiero otra', 'mejor la otra', 'quiero cambiar'), usa 'cambiar opción' de inmediato, sin ofrecerla ni preguntar cuál; no es un rechazo. Si tiene una última duda, respóndela de forma breve con la información disponible y vuelve a preguntar si podemos comenzar con la grabación. Si es ambiguo, repregunta una vez si podemos comenzar con la grabación (sí o no). No agregues comentarios adicionales o agradecimientos.",
+        "prompt": "Le agradezco su tiempo; sé que fue bastante información. A partir de aquí, para formalizar su reprogramación, iniciaremos un contrato telefónico que queda grabado y monitoreado. El formato es de preguntas puntuales en las que solo necesito su respuesta clara: se le pedirá mencionar los tres últimos dígitos de su documento de identidad, uno por uno, y al finalizar la lectura del acuerdo se le consultará si está conforme con las condiciones y si acepta formalmente el cita de turno, donde deberá responder con un sí claro y firme. Por eso este es el momento de resolver cualquier duda: una vez que iniciemos, el registro va de corrido, sin pausas, y en cada punto solo necesito su respuesta; si le surge una consulta adicional, con gusto se la resuelvo al terminar. Entonces, ¿tiene alguna última duda antes de comenzar? Si está todo claro, ¿empezamos con la grabación?",
+        "on": {
+          "acepta iniciar la grabación": {
+            "goto_by": {
+              "field": "contrato_validado",
+              "cases": {
+                "true": "intent.lectura_condiciones"
+              },
+              "default": "task.form"
+            }
+          },
+          "cambiar opción": {
+            "goto": "task.offer_selection"
+          },
+          "rechaza iniciar la grabación": {
+            "goto": "intent.fallo_alternativas"
+          }
+        }
+      },
+      "task.form": {
+        "type": "task",
+        "label": "Contrato - confirmar nombre y validar DNI",
+        "task_type": "FormTask",
+        "params": {
+          "title": "Validación contractual",
+          "allow_interruptions": false,
+          "instructions": "Recolecta los últimos tres números del DNI del paciente. Pide los TRES ÚLTIMOS dígitos del documento de identidad indicándole que los mencione dígito por dígito, y vuelve a ESPERAR su respuesta antes de continuar. REGLA CRÍTICA para el campo 'dni_ultimos_3': el paciente dirá los dígitos en palabras (por ejemplo 'dos tres cuatro' o 'cero, ocho, nueve'). ANTES de llamar a registrar_campo, CONVIERTE cada palabra a su dígito numérico ('cero/o'→0, 'uno'→1, 'dos'→2, 'tres'→3, 'cuatro'→4, 'cinco'→5, 'seis'→6, 'siete'→7, 'ocho'→8, 'nueve'→9) y pasa el resultado como una cadena de SOLO DÍGITOS sin espacios. Ejemplo: si dice 'dos tres cuatro' → registrar_campo(nombre='dni_ultimos_3', valor='234'). Conserva el orden en el que los mencionó el paciente; el sistema tolera variaciones de orden y pronunciación. Si da error apégate al último mensaje para no ser repetitivo",
+          "schema": [
+            {
+              "name": "dni_ultimos_3",
+              "type": "string",
+              "label": "los tres últimos dígitos de su documento de identidad",
+              "required": true,
+              "min_length": 3,
+              "max_length": 3,
+              "match": {
+                "variable": "info_6",
+                "normalize": "digits",
+                "ignore_order": true,
+                "max_tries": 2,
+                "custom_error_messages": [
+                  "Los dígitos que usted me indica no coinciden con el documento de identidad.",
+                  "Los dígitos indicados no coinciden con el documento de identidad, por seguridad no puedo brindarle la información del reprogramación, por favor comuníquese al whatsapp nueve, ocho, uno, cuatro, cuatro, cuatro, cuatro, cinco, cinco, cinco para que le brinden ayuda."
+                ]
+              }
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto": "intent.contrato_confirmacion_info"
+          },
+          "Cancelado": {
+            "goto": "intent.fallo_alternativas"
+          },
+          "MaxTriesExceeded": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.contrato_confirmacion_info": {
+        "type": "intention",
+        "label": "Contrato - confirmación y datos del reprogramación",
+        "interruptible": false,
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "prompt": "Gracias por la información brindada, {nombre_deudor}. Procederemos con el reprogramación de su cita pendiente total de {total_balance_palabras}, correspondiente al código de paciente {account_palabras}.",
+        "on": {
+          "always": {
+            "goto": "intent.lectura_condiciones"
+          }
+        }
+      },
+      "intent.lectura_condiciones": {
+        "type": "intention",
+        "label": "Lectura de condiciones del reprogramación",
+        "interruptible": false,
+        "delivery": "say",
+        "speech_rate": 0.9,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "opcion_elegida",
+          "cases": {
+            "op1": "{condiciones_op1}",
+            "op2": "{condiciones_op2}",
+            "op3": "{condiciones_op3}"
+          },
+          "default": "{condiciones_op1}"
+        },
+        "on": {
+          "always": {
+            "goto": "intent.acepta_condiciones"
+          }
+        }
+      },
+      "intent.acepta_condiciones": {
+        "type": "intention",
+        "label": "Aceptación de condiciones del reprogramación",
+        "interruptible": false,
+        "delivery": "say",
+        "kb_exclude_hint": "IMPORTANTE: si el paciente pregunta por la tasa, el interés, el plazo, el número o el especialidad de las cuotas, o cualquier detalle de las condiciones del reprogramación, elige EN SILENCIO la opción 'consulta condiciones' (no uses 'Pregunta', no hables, no respondas, no preguntes).",
+        "decision": "Pregunta únicamente si está de acuerdo; no agregues explicaciones ni agradecimientos. Elige SIEMPRE una acción de la lista según lo que diga el paciente: acepta explícitamente (sí, acepto, de acuerdo, estoy de acuerdo) → 'acepta las condiciones'; rechaza explícitamente → 'rechaza las condiciones' (una pregunta NO es un rechazo); pide otra opción, cambiar la elegida o elegir otro especialidad (p. ej. '¿puedo elegir la opción uno?', 'quiero otra', 'quiero cambiar') → 'cambiar opción'; pregunta por la tasa, el plazo, la cantidad de cuotas, el especialidad de la sesión o cualquier detalle de las condiciones, o pide oírlas de nuevo → 'consulta condiciones' (para estos temas NO uses 'Pregunta'). Para cualquier otra duda (comprobante, cuándo le cobran o vence la primera sesión o factura, corte del servicio, reconexión, intereses, datos de contacto, etc.) usa 'Pregunta'. Si no quedó claro, repregunta una sola vez la pregunta de aceptación. Sin un sí claro no uses 'acepta las condiciones'; sin un no claro no uses 'rechaza las condiciones'.",
+        "prompt": "¿Está usted de acuerdo con las condiciones del reprogramación y acepta formalmente el cita de turno bajo estas condiciones? Si está de acuerdo diga 'Sí, acepto'.",
+        "require_exact": {
+          "acepta las condiciones": {
+            "phrases": [
+              "sí, acepto",
+              "si acepto",
+              "sí acepto",
+              "si, acepto"
+            ],
+            "invalid_message": "Para formalizar el contrato necesito que responda exactamente: Sí, acepto."
+          }
+        },
+        "on": {
+          "acepta las condiciones": {
+            "action": "set_status",
+            "status": "Alternativa de turno",
+            "substatus": "Refinanciado",
+            "goto": "intent.informacion_condiciones"
+          },
+          "consulta condiciones": {
+            "goto": "intent.acepta_condiciones_repetir"
+          },
+          "cambiar opción": {
+            "set_variables": {
+              "contrato_validado": "true"
+            },
+            "goto": "task.offer_selection"
+          },
+          "rechaza las condiciones": {
+            "goto": "intent.fallo_alternativas"
+          }
+        }
+      },
+      "intent.acepta_condiciones_repetir": {
+        "type": "intention",
+        "label": "Ofrecer repetir condiciones del reprogramación",
+        "interruptible": false,
+        "delivery": "say",
+        "kb_exclude_hint": "IMPORTANTE: si el paciente pregunta por la tasa, el interés, el plazo, el número o el especialidad de las cuotas, o cualquier detalle de las condiciones del reprogramación, elige EN SILENCIO la opción 'repetir condiciones' (no uses 'Pregunta', no hables, no respondas, no preguntes).",
+        "decision": "Acabas de preguntar: '¿Quiere que le vuelva a mencionar las condiciones del reprogramación?'. Interpreta la respuesta EN EL CONTEXTO de esa pregunta; no leas tú las condiciones aquí. Elige SIEMPRE una acción de la lista: cualquier respuesta afirmativa simple (sí, claro, dale, bueno, ya, ajá, sí por favor, sí quiero, repítalas, escucharlas otra vez) SIGNIFICA que quiere que le repitas las condiciones → usa 'repetir condiciones'; también si pregunta por la tasa, el interés, el plazo, el número o el especialidad de las cuotas o cualquier detalle de las condiciones → 'repetir condiciones' (para estos temas NO uses 'Pregunta'). Responde que no o que ya no hace falta → 'volver'. Usa 'acepta las condiciones' SOLO si dice EXPLÍCITAMENTE que acepta el contrato o que está de acuerdo con las condiciones (p. ej. 'sí, acepto', 'acepto el contrato', 'estoy de acuerdo con las condiciones'); un 'sí' a secas aquí NO es aceptación, es pedir que las repitas. Usa 'rechaza las condiciones' solo si rechaza el contrato explícitamente. Pide otra opción o cambiar la elegida → 'cambiar opción'. Para cualquier otra duda (comprobante, corte del servicio, reconexión, intereses, datos de contacto, etc.) usa 'Pregunta'.",
+        "prompt": "¿Quiere que le vuelva a mencionar las condiciones del reprogramación?",
+        "require_exact": {
+          "acepta las condiciones": {
+            "phrases": [
+              "sí, acepto",
+              "si acepto",
+              "sí acepto",
+              "si, acepto"
+            ],
+            "invalid_message": "Para formalizar el contrato necesito que responda exactamente: Sí, acepto."
+          }
+        },
+        "on": {
+          "repetir condiciones": {
+            "goto": "intent.lectura_condiciones"
+          },
+          "volver": {
+            "goto": "intent.acepta_condiciones"
+          },
+          "acepta las condiciones": {
+            "action": "set_status",
+            "status": "Alternativa de turno",
+            "substatus": "Refinanciado",
+            "goto": "intent.informacion_condiciones"
+          },
+          "cambiar opción": {
+            "set_variables": {
+              "contrato_validado": "true"
+            },
+            "goto": "task.offer_selection"
+          },
+          "rechaza las condiciones": {
+            "goto": "intent.fallo_alternativas"
+          }
+        }
+      },
+      "intent.informacion_condiciones": {
+        "type": "intention",
+        "label": "Información post-aceptación del reprogramación",
+        "interruptible": false,
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto {nombre_deudor}. Hemos registrado su aceptación. A continuación, le brindamos información importante del proceso. Recuerde que la negociación incluye los valores totales. Las cuotas del reprogramación se incluirán en su recibo mensual de gas. Puede realizar pagos adelantados en cualquier momento, siempre que esté al día con sus cuotas. cálida programará la reconexión del suministro una vez que el reprogramación quede registrado en el sistema.",
+        "on": {
+          "always": {
+            "goto": "task.collect_email"
+          }
+        }
+      },
+      "task.collect_email": {
+        "type": "task",
+        "label": "Confirmar o pedir email (reprogramación)",
+        "task_type": "FormTask",
+        "params": {
+          "title": "Correo electrónico para envío del cronograma",
+          "allow_interruptions": false,
+          "instructions": "Si el sistema leyó un correo ya registrado y preguntó si es correcto: espera. Si confirma, llama confirmar_campo(nombre='email_cliente'). Si dice que no / no es correcto / ese no, SIN dictar otro, llama de INMEDIATO confirmar_campo_existente(campos=[{\"nombre\": \"email_cliente\", \"es_correcto\": false}]) — el sistema ofrecerá el siguiente o pedirá uno nuevo. PROHIBIDO omitir_campo y PROHIBIDO preguntar si prefiere no dar otro o confirmar la negación. Si dicta un correo distinto, llama registrar_email(nombre='email_cliente', email='local@dominio'). Tras registrar un correo NUEVO, el sistema lo leerá para confirmar: si confirma, confirmar_campo; si corrige, registrar_email con el correo completo corregido y espera esa confirmación (no salgas a KB). omitir_campo(nombre='email_cliente') SOLO si ya se le pidió un correo nuevo (o no había ninguno en sistema) y se niega, no tiene, no recuerda o pide saltar.",
+          "schema": [
+            {
+              "name": "email_cliente",
+              "type": "email",
+              "label": "su correo electrónico",
+              "required": false,
+              "require_confirmation": true,
+              "confirm_question": "Para confirmar, el correo electrónico que hemos registrado es [[valor]], ¿es correcto?",
+              "registered_values": [
+                "{email_email_1}",
+                "{email_email_2}"
+              ],
+              "confirm_registered": {
+                "intro": "Asimismo, le enviaremos su cronograma de pagos a su correo electrónico.",
+                "question": "El correo que tenemos registrado es [[valor]]. ¿Es correcto?",
+                "next_question": "Entiendo. Tengo en sistema un segundo correo electrónico. Es [[valor]]. ¿Es correcto?",
+                "ask_update": "En ese caso por favor indíqueme su correo electrónico para actualizarlo.",
+                "ask_empty": "Asimismo, le enviaremos su cronograma de pagos a su email, para esto me podría indicar cuál es su email por favor."
+              }
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "set_agent_output": {
+              "email_cliente": "{email_cliente}"
+            },
+            "goto": "intent.consultar_dudas"
+          },
+          "Cancelado": {
+            "goto": "intent.consultar_dudas"
+          }
+        }
+      },
+      "intent.fallo_alternativas": {
+        "type": "intention",
+        "label": "Fallo alternativas",
+        "interruptible": false,
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "prompt": "Entendemos que por el momento no desea acogerse a las alternativas ofrecidas. Sin embargo, le recordamos que mantiene una cita pendiente pendiente que requiere ser regularizada.",
+        "on": {
+          "always": {
+            "goto": "intent.tradicional"
+          }
+        }
+      },
+      "intent.tradicional": {
+        "type": "intention",
+        "label": "Alternativa tradicional",
+        "interruptible": false,
+        "delivery": "say",
+        "decision": "{instruccion_condonacion} {instruccion_refinanciamiento} Si acabas de ofrecer una alternativa y el paciente responde de forma afirmativa, esa aceptación se refiere a esa alternativa: usa 'pide la paquete preventivo' o 'pide el reprogramación' según cuál ofreciste. Usa 'Continuar' solo si el paciente acepta revisar el turno, rechaza, duda o responde de forma ambigua. No agregues comentarios adicionales o agradecimientos.",
+        "prompt": "Su recibo presenta un turno pendiente de {monto_deuda_palabras} correspondiente a su servicio, cuyo fecha propuesta fue el {due_date_spoken}. Para evitar mayores cargos o posibles restricciones en el servicio, es importante realizar el turno a la brevedad. ¿Quiere que lo veamos ahora?",
+        "on_by": {
+          "pide la condonación": {
+            "field": "dim_1",
+            "in": [
+              "COND-REF",
+              "COND"
+            ]
+          },
+          "pide el refinanciamiento": {
+            "field": "dim_1",
+            "in": [
+              "COND-REF",
+              "REF"
+            ]
+          }
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          },
+          "pide la condonación": {
+            "goto": "task.offer_selection"
+          },
+          "pide el refinanciamiento": {
+            "goto": "task.offer_selection"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación V2",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias}",
+          "max_attempts": 2,
+          "benefit_hints": [
+            "confirmar la cita tu cuenta y evitar que siga creciendo",
+            "mantener un buen historial crediticio",
+            "evitar gestiones adicionales"
+          ],
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "monto_deuda": "{due_balance}",
+          "custom_instructions": "Si el paciente se niega a agendar de forma clara y firme, NO insistas: cierra con la objeción 'Rechazo de turno'. No aplica si solo dice que no puede ahora o pide más tiempo; ahí sigue negociando una fecha.",
+          "objection_handlers": [
+            {
+              "objection": "El paciente expresa CLARAMENTE que NO quiere agendar, NO le interesa, NO va a agendar, no quiere ninguna alternativa, no quiere continuar, no quiere seguir hablando, pide que no lo llamen más, o se rehúsa de forma firme a cualquier opción de turno (ej: 'no voy a agendar', 'no me interesa', 'no quiero agendar', 'déjeme en paz', 'no me llamen más', 'no quiero ninguna opción'). NO aplica si solo dice 'no puedo ahora' o pide más tiempo.",
+              "answer": "Entiendo, respeto su decisión.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Rechazo de turno"
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "substatus": "cita alternativa",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.consultar_dudas_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.consultar_dudas_intencion"
+          },
+          "Rechazo de pago": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Rechazo explícito",
+            "goto": "intent.consultar_dudas_no_commitment"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, ya quedó registrado tu cita de turno para el {commitment_date_spoken} por un especialidad de {payment_amount_palabras}, muchas gracias.",
+        "on": {
+          "always": {
+            "goto": "intent.consultar_dudas"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Lamento que no llegamos a un acuerdo. Te contactaremos en otra ocasión.",
+        "on": {
+          "always": {
+            "goto": "intent.consultar_dudas_no_commitment"
+          }
+        }
+      },
+      "intent.consultar_dudas": {
+        "type": "intention",
+        "label": "Consultar dudas antes de finalizar (cita)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del paciente tras preguntar si han quedado dudas. Si responde que no tiene dudas, 'no', 'ninguna', 'gracias', 'todo claro', 'ok' o cualquier respuesta breve afirmativa o negativa sin pregunta, elige 'Continuar' en silencio, SIN despedirte ni resumir. Si hace una pregunta, respóndela de forma breve con la base de conocimiento o la información disponible y vuelve a preguntar '¿Ha quedado alguna otra duda?'. Solo elige 'Continuar' cuando ya no tenga más preguntas.",
+        "prompt": "Antes de finalizar, ¿ha quedado alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.consultar_dudas_no_commitment": {
+        "type": "intention",
+        "label": "Consultar dudas antes de finalizar (sin cita)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del paciente tras preguntar si han quedado dudas. Si responde que no tiene dudas, 'no', 'ninguna', 'gracias', 'todo claro', 'ok' o cualquier respuesta breve afirmativa o negativa sin pregunta, elige 'Continuar' en silencio, SIN despedirte ni resumir. Si hace una pregunta, respóndela de forma breve con la base de conocimiento o la información disponible y vuelve a preguntar '¿Ha quedado alguna otra duda?'. Solo elige 'Continuar' cuando ya no tenga más preguntas.",
+        "prompt": "Antes de finalizar, ¿ha quedado alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.consultar_dudas_intencion": {
+        "type": "intention",
+        "label": "Consultar dudas antes de finalizar (intención de turno)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del paciente tras preguntar si han quedado dudas. Si responde que no tiene dudas, 'no', 'ninguna', 'gracias', 'todo claro', 'ok' o cualquier respuesta breve afirmativa o negativa sin pregunta, elige 'Continuar' en silencio, SIN despedirte ni resumir. Si hace una pregunta, respóndela de forma breve con la base de conocimiento o la información disponible y vuelve a preguntar '¿Ha quedado alguna otra duda?'. Solo elige 'Continuar' cuando ya no tenga más preguntas.",
+        "prompt": "Antes de finalizar, ¿ha quedado alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.consultar_dudas_paid": {
+        "type": "intention",
+        "label": "Consultar dudas antes de finalizar (pagado)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del paciente tras preguntar si han quedado dudas. Si responde que no tiene dudas, 'no', 'ninguna', 'gracias', 'todo claro', 'ok' o cualquier respuesta breve afirmativa o negativa sin pregunta, elige 'Continuar' en silencio, SIN despedirte ni resumir. Si hace una pregunta, respóndela de forma breve con la base de conocimiento o la información disponible y vuelve a preguntar '¿Ha quedado alguna otra duda?'. Solo elige 'Continuar' cuando ya no tenga más preguntas.",
+        "prompt": "Antes de finalizar, ¿ha quedado alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.fallecido_responsable": {
+        "type": "intention",
+        "label": "Titular fallecido — responsable del turno o predio",
+        "interruptible": false,
+        "delivery": "say",
+        "decision": "Si responde afirmativamente (sí, yo, soy el responsable, yo me encargo del turno o del predio) → 'es responsable'. Si responde negativamente (no, no soy, no me encargo, es otra persona) → 'no es responsable'. Si es ambiguo, repregunta una vez la misma pregunta. No improvises un procedimiento de titularidad aquí.",
+        "prompt": "Entiendo. Para poder orientarle, ¿usted es la persona responsable del turno o del predio?",
+        "on": {
+          "es responsable": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "substatus": "Fallecido",
+            "goto": "final.end_fallecido_responsable"
+          },
+          "no es responsable": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "substatus": "Fallecido",
+            "goto": "final.end_fallecido_no_responsable"
+          }
+        }
+      },
+      "final.end_ocupado": {
+        "type": "final",
+        "label": "Cliente ocupado",
+        "prompt": "Está bien, lo contactaremos en otro momento. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_fallecido_responsable": {
+        "type": "final",
+        "label": "Despedida (titular fallecido — es responsable)",
+        "prompt": "En ese caso, para realizar el cambio de titularidad, deberá comunicarse con nuestra línea de atención al paciente o acercarse a un centro de atención. Allí le indicarán el procedimiento y deberá presentar el certificado de defunción. Cualquier duda que tenga, estamos para ayudarle. Muchas gracias por su tiempo",
+        "delivery": "say"
+      },
+      "final.end_fallecido_no_responsable": {
+        "type": "final",
+        "label": "Despedida (titular fallecido — no es responsable)",
+        "prompt": "Entiendo. En ese caso, deberá comunicarse con la persona responsable del turno o del predio para que pueda realizar la gestión correspondiente. Muchas gracias por su tiempo.",
+        "delivery": "say"
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "{nombre_deudor}, gracias por su tiempo y por confiar en cálida. Le deseamos un excelente día. Recuerda que te habló {nombre_agente} de Colektia, en representación de cálida.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intencion de turno para contactarnos en otra ocasión.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele que desde cálida intentamos ponernos en contacto con el titular.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

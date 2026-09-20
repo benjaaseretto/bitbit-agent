@@ -1,0 +1,186 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿De qué empresa me está llamando? | ¿De parte de quién me llama? | ¿A quién le debo? | ¿Quién me llama? | ¿Para qué entidad trabaja? | ¿De dónde me están llamando? | ¿Con quién hablo? | ¿Sí de parte? | ¿De parte?",
+    "answer": "Le habla {nombre_agente}, asesor de ImagenPro."
+  },
+  {
+    "question": "¿Es usted un robot? | ¿Es una grabación? | ¿Eres una inteligencia artificial? | ¿Estoy hablando con un humano? | ¿Eres una persona real?",
+    "answer": "Soy asesor de ImagenPro. Si gusta podemos continuar con la conversación."
+  },
+  {
+    "question": "¿Cuál es el horario de atención? | ¿A qué hora atienden? | ¿Cuándo puedo llamar? | ¿Cuáles son sus horarios?",
+    "answer": "Nuestros horarios de atención son de lunes a viernes de ocho de la mañana a cinco de la tarde, y los sábados de ocho de la mañana a doce del mediodía."
+  },
+  {
+    "question": "¿Cuál es el número de ImagenPro? | ¿A qué número los puedo llamar? | ¿Tienen línea de atención? | ¿Cómo me comunico con ustedes? | ¿Dónde puedo llamarlos? | ¿Me da el número de atención al comprador?",
+    "answer": "Usted puede comunicarse con nuestra línea de atención al comprador al seis, cero, uno, siete, cuatro, ocho, cinco, cero, dos, uno; o al tres, dos, cero, tres, cinco, cero, cuatro, cero, cero, cuatro, opción dos. La atención es de lunes a viernes de ocho de la mañana a cinco de la tarde, y los sábados de ocho de la mañana a doce del mediodía."
+  },
+  {
+    "question": "¿Cómo puedo cerrar la compra? | ¿Dónde compra? | ¿Cuáles son los medios de compra? | ¿Por dónde realizo el compra? | ¿Cómo abono? | ¿En cualquier Efecty puedo cerrar la compra? | ¿En cualquier Efecty? | ¿En cualquier Super Giro? | ¿En cualquier Super Giros? | ¿En cualquier punto Efecty? | ¿Puedo cerrar la compra en Efecty? | ¿Puedo cerrar la compra en Super Giros? | ¿Puedo cerrar la compra en Punto compra? | ¿Sirve cualquier Efecty? | ¿Sirve cualquier Super Giro?",
+    "answer": "Para facilitar el compra, recuerde que puede hacerlo a través del botón PSE o el botón Bancolombia en nuestra página web, también de forma presencial en nuestras oficinas o en corresponsales Bancolombia y Akí, y adicionalmente en Punto compra, Super Giros o en cualquier punto Efecty a nivel nacional."
+  },
+  {
+    "question": "¿Cómo compra en línea? | ¿Cuál es la página para cerrar la compra? | ¿En qué sitio web compra? | ¿Pueden enviarme el link de compra?",
+    "answer": "Puede cerrar la compra en línea a través del botón PSE o el botón Bancolombia en nuestra página web. Si lo prefiere, también puede acercarse a una oficina, a un corresponsal Bancolombia o Akí, o cerrar la compra en Punto compra, Super Giros o cualquier punto Efecty a nivel nacional."
+  },
+  {
+    "question": "¿Puedo cerrar la compra de forma presencial? | ¿Tienen oficinas? | ¿Dónde queda la sucursal? | ¿compra en oficina? | ¿compra en cualquier corresponsal?",
+    "answer": "Sí, usted puede cerrar la compra de forma presencial en nuestras oficinas, en corresponsales Bancolombia y Akí, y también en Punto compra, Super Giros o en cualquier punto Efecty a nivel nacional."
+  },
+  {
+    "question": "¿Cuánto debo de esta cuota de financiamiento? | ¿De cuánto es el compra? | ¿Cuál es el valor a cerrar la compra? | ¿Cuál es el valor de mi cuota de financiamiento? | ¿Cuánto es lo que tengo que cancelar?",
+    "answer": "El valor a cancelar de este crédito es de {due_balance_palabras}."
+  },
+  {
+    "question": "¿Cuánto debo en total? | ¿Cuál es el monto completo de mi cotización? | ¿De cuánto es la cotización total? | ¿Cuánto debo sumando todo?",
+    "answer": "Sumando todos sus créditos con ImagenPro, el monto total registrado es de {principal_balance_palabras}."
+  },
+  {
+    "question": "¿Cuántos créditos tengo con ImagenPro? | ¿Cuántas obligaciones tengo? | ¿Tengo más de un crédito? | ¿Cuántos productos tengo en total?",
+    "answer": "En su perfil registramos {creditos_totales_text} con ImagenPro."
+  },
+  {
+    "question": "¿Cuántos créditos me están gestionando? | ¿Cuántos créditos están en gestión? | ¿Por cuántos créditos me llaman? | ¿Cuántos créditos están atrasados?",
+    "answer": "En este momento estamos gestionando {creditos_gestionando_text} en su perfil."
+  },
+  {
+    "question": "¿Cuáles créditos me están gestionando? | ¿De qué créditos me hablan? | ¿Cuáles son los productos en gestión? | ¿Qué créditos están atrasados? | ¿Qué referencias están en gestión?",
+    "answer": "Los créditos que estamos gestionando con usted son los siguientes: {info_4_negociables_text}"
+  },
+  {
+    "question": "¿Y los otros créditos qué? | ¿Qué pasa con mis otros créditos? | ¿Qué información tienen de mis demás créditos? | ¿Qué pasa con los demás productos? | ¿Tengo créditos que no estén en gestión?",
+    "answer": "Sus demás créditos asociados, que no están en gestión hoy, son: {info_4_informativos_text} Estos los menciono solamente como información; en esta llamada únicamente podemos avanzar con los créditos en gestión."
+  },
+  {
+    "question": "¿Cuáles son todos mis créditos asociados? | ¿Me puede dar el listado completo de mis créditos? | ¿Qué productos tengo con ImagenPro? | ¿Cuál es el detalle de todos mis créditos? | ¿Cuánto debo del Prod 1? | ¿Cuánto debo del Prod 2? | ¿Cuánto debo del Prod 3? | ¿Cuánto debo de tal producto? | ¿Cuál es el importe del Prod 1? | ¿Cuándo vence el Prod 1? | ¿Cuándo vence el Prod 2? | ¿Cuándo vence el Prod 3? | ¿Cuál es la fecha de vigencia de oferta del producto X? | ¿Cuál es el número de obligación del Prod 1? | ¿Cuál es el número de obligación del Prod 2? | ¿Cuál es el número de obligación del Prod 3? | ¿Cuál es el número de mi crédito? | ¿Cuál es el código del producto?",
+    "answer": "De acuerdo a nuestros registros, sus créditos en gestión, con monto a cancelar, fecha de vigencia de oferta y número de obligación, son: {info_4_negociables_text} Y sus demás créditos asociados, solo a título informativo, son: {info_4_informativos_text} Si me indica el producto exacto, le confirmo el dato puntual."
+  },
+  {
+    "question": "¿Podemos pactar el Prod 1? | ¿Podemos pactar el Prod 2? | ¿Puedo cerrar la compra el otro crédito? | ¿Podemos negociar otro de mis créditos? | ¿Podemos arreglar otra obligación? | ¿Puedo pactar el Prod tal?",
+    "answer": "Los créditos que podemos gestionar con usted en esta llamada son: {info_4_negociables_text} Si el producto que menciona corresponde a esta lista, podemos definir la fecha de compra juntos. Sus demás créditos, solamente a título informativo, son: {info_4_informativos_text} Estos no están en gestión hoy y serán contactados en otra oportunidad."
+  },
+  {
+    "question": "¿De qué crédito me habla? | ¿Cuál es el número del crédito? | ¿Cuál es la referencia? | ¿De qué obligación me está hablando?",
+    "answer": "Le hablo del crédito identificado con la referencia {reference_spelled}, por un valor a cancelar de {due_balance_palabras}."
+  },
+  {
+    "question": "¿Cuándo vence la cuota de financiamiento? | ¿Para cuándo es el compra? | ¿Cuál es la fecha de vigencia de oferta? | ¿Cuándo tengo que cerrar la compra? | ¿Qué día se vence?",
+    "answer": "La cuota de financiamiento de este crédito vence el {due_date_spoken}. Recuerde que cerrar la compra a tiempo le ayuda a mantener un buen comportamiento crediticio."
+  },
+  {
+    "question": "¿Cuántos días llevo en seguimiento comercial? | ¿De cuántos días es el atraso? | ¿Hace cuánto estoy atrasado? | ¿Cuánto tiempo llevo sin cerrar la compra?",
+    "answer": "Su crédito presenta {dias_mora} días en seguimiento comercial. Por eso es importante regularizarlo lo antes posible para evitar cobros adicionales."
+  },
+  {
+    "question": "¿Qué pasa si no compra? | ¿Qué consecuencias hay si no abono? | ¿Y si no me pongo al día? | ¿Qué sucede si dejo de cerrar la compra?",
+    "answer": "Si no realiza el compra, pueden generarse cobros adicionales y afectar su comportamiento crediticio. Por eso le invitamos a ponerse al día y construir un buen historial que le brinde mejores oportunidades en el sistema financiero."
+  },
+  {
+    "question": "¿Puedo cambiar la fecha de compra? | ¿Puedo aplazar el compra? | ¿Me dan más tiempo? | ¿Puedo pasar la fecha?",
+    "answer": "Con gusto podemos registrar una fecha de compra dentro de los próximos {max_dias} días, ¿qué fecha le acomoda mejor?"
+  },
+  {
+    "question": "¿Aceptan abonos parciales? | ¿Puedo cerrar la compra una parte? | ¿Puedo cerrar la compra solo un poco? | ¿Es posible cerrar la compra en partes?",
+    "answer": "Para revisar opciones de pagos parciales, le sugiero comunicarse con nuestra línea de atención al comprador, donde podrán evaluar su caso y las alternativas disponibles."
+  },
+  {
+    "question": "¿Puedo refinanciar? | ¿Hay descuentos? | ¿Pueden bajarme la tasa? | ¿Se puede negociar la cotización? | ¿Puedo pedir una reestructuración?",
+    "answer": "Para evaluar opciones como refinanciación o descuentos especiales, le sugiero contactar a su asesor personal. Si necesita comunicarse con una de nuestras oficinas y no cuenta con el número de la extensión, puede consultarlo en ImagenPro en la opción Ubícanos, en la sección de oficinas; o también puede llamarnos a la línea de servicio al comprador al tres, dos, cero, tres, cinco, cero, cuatro, cero, cero, cuatro."
+  },
+  {
+    "question": "¿Dónde puedo consultar alternativas de compra? | ¿Dónde resuelvo dudas sobre mi crédito? | ¿Con quién puedo aclarar dudas? | ¿A quién acudo si tengo preguntas del crédito? | ¿Cómo encuentro mi oficina? | ¿Cómo ubico la oficina más cercana?",
+    "answer": "En este caso, le sugiero contactar a su asesor personal. Si necesita comunicarse con una de nuestras oficinas y no cuenta con el número de la extensión, puede consultarlo en ImagenPro en la opción Ubícanos, en la sección de oficinas; o también puede llamarnos a la línea de servicio al comprador al tres, dos, cero, tres, cinco, cero, cuatro, cero, cero, cuatro."
+  },
+  {
+    "question": "¿Cómo puedo dejar constancia del compra? | ¿Tengo que enviar el comprobante? | ¿A dónde envío el soporte de compra?",
+    "answer": "Una vez realice el compra, conserve su comprobante. Si necesita enviarlo o validar el compra, puede comunicarse con nuestra línea de atención al comprador."
+  },
+  {
+    "question": "¿Cuál es mi identificación de comprador? | ¿Cuál es mi código? | ¿Tienen un número interno mío?",
+    "answer": "Para confirmar datos internos como su identificación de comprador, le sugiero comunicarse con nuestra línea de atención al comprador, donde podrán validar su información de forma segura."
+  },
+  {
+    "question": "¿Me regalan unos días? | Espéreme hasta la quincena | Déjeme organizarme | ¿Cómo hacemos? | Les puedo abonar algo | Podemos llegar a un acuerdo | Voy a ponerme al día | Apenas me paguen | Estoy cuadrando | Colabóreme",
+    "answer": "Con gusto le ayudamos a organizarse, {nombre_deudor}. ¿Para qué fecha podría realizar el compra? Recuerde que puede cerrar la compra de forma fácil por PSE, botón Bancolombia, en nuestras oficinas, en corresponsales Bancolombia y Akí, o en Punto compra, Super Giros o Efecty."
+  },
+  {
+    "question": "Hoy realizo el compra | Ya hice la transferencia | Ya quedó compra | Les envío el soporte | En un rato compra | Mañana sin falta | Ya resolví",
+    "answer": "Le agradezco su gestión, {nombre_deudor}. Recuerde conservar el comprobante de su compra. Si necesita validarlo, puede comunicarse con nuestra línea de atención al comprador."
+  },
+  {
+    "question": "¿Me pueden transferir con un asesor? | ¿Puedo hablar con otro asesor? | Quiero hablar con un humano | Páseme con un especialista | Necesito hablar con alguien más",
+    "answer": "Yo le puedo apoyar con la información de su crédito en este momento. Si requiere atención adicional, puede comunicarse con nuestra línea de atención al comprador de lunes a viernes de ocho de la mañana a cinco de la tarde, y los sábados de ocho a doce del mediodía."
+  },
+  {
+    "question": "Quiero presentar una queja | Tengo un reclamo | Quiero poner una PQR | Estoy molesto con el servicio",
+    "answer": "Lamento escucharlo, {nombre_deudor}. Para registrar su queja o reclamo formalmente, le sugiero comunicarse con nuestra línea de atención al comprador de ImagenPro, donde podrán darle el trámite correspondiente."
+  },
+  {
+    "question": "Soy fiador | Soy codeudor | No soy el titular soy fiador | Soy garante | El crédito no es mío",
+    "answer": "Le agradezco aclararlo. Como su nombre figura asociado al crédito, su apoyo es importante para que la cuenta del titular se mantenga al día. ¿Tendría forma de comunicarse con el titular para que nos contacte?"
+  },
+  {
+    "question": "No conozco esa cotización | No reconozco ese crédito | Yo no pedí ese crédito | Eso no es mío | No reconozco la cotización | No sé de qué crédito me habla",
+    "answer": "Entiendo su preocupación, {nombre_deudor}. Le sugiero comunicarse con nuestra línea de servicio al comprador al tres, dos, cero, tres, cinco, cero, cuatro, cero, cero, cuatro, o acercarse a una de nuestras oficinas. Puede consultar las ubicaciones en ImagenPro en la opción Ubícanos, en la sección de oficinas. Es importante que solucione este tema, ya que el crédito está próximo a caer en seguimiento comercial y eso podría generarle reportes en centrales de riesgo."
+  },
+  {
+    "question": "¿Me llaman a otro número? | ¿Tienen mi número correcto? | Quiero actualizar mis datos | Cambio de número | Cambio de dirección",
+    "answer": "Para actualizar su información de contacto le sugiero acercarse a una de nuestras oficinas o comunicarse con nuestra línea de atención al comprador, donde podrán registrar sus datos de forma segura."
+  },
+  {
+    "question": "¿Cuál es el número de cuenta? | ¿Cuál es la referencia de compra? | ¿Cuál es el folio? | ¿Me da la referencia para cerrar la compra?",
+    "answer": "Le hablo del crédito identificado con la referencia {reference_spelled}. Puede cerrar la compra con esa referencia a través del botón PSE o el botón Bancolombia en nuestra página web, en oficinas, en corresponsales Bancolombia y Akí, o en Punto compra, Super Giros o cualquier punto Efecty a nivel nacional."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "ImagenPro puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

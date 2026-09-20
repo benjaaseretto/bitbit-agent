@@ -1,0 +1,527 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "labtech_sur_flow",
+    "visible_name": "LabTech Sur",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (19 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/labtech_sur.json",
+      "company_id": "labtech_sur-demo",
+      "description": "Base de conocimiento de LabTech Sur."
+    },
+    "company_id": "labtech_sur-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "mapfre_pe_flow_graph.json",
+      "node_count": 19,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "LabTech Sur",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Sí soy yo",
+            "Soy yo",
+            "Con él habla",
+            "Con ella habla",
+            "Habla el titular",
+            "Sí dígame",
+            "Sí, dígame",
+            "Sí señor",
+            "Sí señora",
+            "Correcto",
+            "Correcto, soy el titular",
+            "Así es",
+            "Adelante",
+            "Sí, lo escucho",
+            "Sí, adelante",
+            "Sí, ¿qué pasó?",
+            "El mismo",
+            "La misma"
+          ],
+          "identity_pregunta": "Buen día, ¿tengo el gusto de hablar con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le saluda {nombre_agente} de LabTech Sur.",
+          "identity_repregunta": "Para poder continuar, ¿me confirma que estoy hablando con {nombre_deudor_completo}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "pay_confirmation_config": {
+              "recolectar_medio_pago": true,
+              "medio_pago_opciones": [
+                "agente bancario",
+                "ventanilla del banco",
+                "APP MAPFRE",
+                "portal del comprador",
+                "página web del banco",
+                "otro"
+              ],
+              "medio_pago_pregunta": "¿Podría confirmarme por qué medio efectuó el compra? Por ejemplo agente bancario, ventanilla, APP MAPFRE, portal del comprador o página web del banco."
+            },
+            "goto_by": {
+              "field": "mapfre_segment",
+              "cases": {
+                "preventiva_mono": "intent.opening_preventiva",
+                "preventiva_multi": "intent.opening_preventiva"
+              },
+              "default": "intent.opening"
+            }
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura Vigente / Temprana",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "mapfre_segment",
+          "cases": {
+            "vigente_mono": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de LabTech Sur. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo por su póliza contratada con LabTech Sur. Actualmente presenta {dias_mora_apertura_palabras} días de seguimiento comercial, con un importe pendiente de {saldo_apertura_mono_palabras} {moneda_hablar}. Para mantener activos los beneficios de su póliza, coordinemos la regularización de este compra.",
+            "vigente_multi": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de LabTech Sur. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo porque registra múltiples pólizas pendientes de compra con nosotros. El importe total adeudado es de {total_apertura_palabras} {moneda_hablar}. {mapfre_urgencia_poliza}. cerrar la oferta hoy evitará la suspensión de sus coberturas."
+          },
+          "default": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de LabTech Sur. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo por su póliza con LabTech Sur, que presenta un importe pendiente de {saldo_apertura_mono_palabras} {moneda_hablar}. Para mantener activa su cobertura, coordinemos la regularización."
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.opening_preventiva": {
+        "type": "intention",
+        "label": "Apertura preventiva (recordatorio)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El comprador escucha un recordatorio de una cuota de financiamiento próxima a vencer (cartera preventiva: 0 intentos de negociación; la fecha de pedido es la de vigencia de oferta indicada). Si acepta o confirma que va a cerrar la compra en esa fecha o antes ('sí', 'claro', 'de acuerdo', 'sí puedo', 'cuenta conmigo'), selecciona 'Acepta'. Si duda, necesita pensarlo o propone otra fecha distinta a la indicada ('déjeme ver', 'no sé', 'mejor el 20', 'la próxima semana'), selecciona 'Duda'. Si se niega o dice que no puede ('no', 'no puedo', 'ahora no'), selecciona 'Negativa'. Si indica que ya compró, selecciona 'Pagado'. Solo selecciona una opción; no continúes la conversación.",
+        "prompt_by": {
+          "field": "mapfre_segment",
+          "cases": {
+            "preventiva_mono": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de LabTech Sur. Esta llamada está siendo grabada para brindarle un mejor servicio. Le contactamos para dejarle un recordatorio de la póliza contratada con LabTech Sur. Su cuota de financiamiento por {saldo_apertura_mono_palabras} {moneda_hablar} está próxima a vencerse. Téngalo presente para mantener sus coberturas sin inconvenientes. ¿Podemos contar con su compra para el día {due_date_spoken}?",
+            "preventiva_multi": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de LabTech Sur. Esta llamada está siendo grabada para brindarle un mejor servicio. Le contactamos para dejarle un recordatorio de sus {num_polizas_hablar} pólizas contratadas, por un valor de {total_apertura_palabras} {moneda_hablar}. Téngalo presente para mantener sus coberturas sin inconvenientes. ¿Podemos contar con su compra para el día {due_date_spoken}?"
+          },
+          "default": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de LabTech Sur. Esta llamada está siendo grabada para brindarle un mejor servicio. Le dejamos un recordatorio de su cuota de financiamiento próxima a vencer por {saldo_apertura_mono_palabras} {moneda_hablar}. ¿Podemos contar con su compra para el día {due_date_spoken}?"
+        },
+        "on": {
+          "Acepta": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "register_commitment": {
+              "date": "{due_date}",
+              "invalid_goto": "intent.preventiva_commit_failed"
+            },
+            "goto": "final.end_preventiva_compromiso"
+          },
+          "Duda": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_preventiva_duda"
+          },
+          "Negativa": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_preventiva_negativa"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "intent.pay_confirmation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación de pedido de compra",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "{max_dias}",
+          "max_attempts": 2,
+          "suggest_dias": 1,
+          "staggered_days": [
+            1,
+            "{max_dias}"
+          ],
+          "monto_deuda": "{monto_objetivo}",
+          "monto_deuda_palabras": "{monto_objetivo_palabras}",
+          "moneda_deuda": "{mapfre_currency_code}",
+          "nombre_empresa": "LabTech Sur",
+          "deudor": "{nombre_deudor}",
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": true,
+          "collect_payment_method": false,
+          "restrict_to_current_month": true,
+          "accept_out_of_window_as_intention": true,
+          "out_of_window_warning_message": "Comprendo. El pedido debe quedar dentro de este mes, a más tardar el {fecha_limite}. ¿Qué día de este mes le sería posible cerrar la oferta?",
+          "invalid_date_retry_message": "Comprendo. Para mantener activa su cobertura necesitamos una fecha dentro de este mes, a más tardar el {fecha_limite}. ¿Qué día de este mes le sería posible cerrar la oferta?",
+          "unparseable_date_message": "Disculpe, no alcancé a escuchar bien la fecha. ¿Qué día de este mes podría realizar el compra?",
+          "invalid_date_message": "Entiendo. El pedido debe quedar dentro de este mes, a más tardar el {fecha_limite}. ¿Podría realizarlo ese día o antes?",
+          "benefit_hints": [
+            "mantener activa su cobertura le da tranquilidad a usted y a su familia",
+            "cerrar la oferta a tiempo evita la suspensión de los beneficios de su póliza",
+            "estar al día con su servicio de previsión protege el respaldo de LabTech Sur"
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy compra",
+              "hoy le compra",
+              "hoy mismo compra",
+              "hoy mismo deposito",
+              "hoy hago la transferencia",
+              "hoy cancelo",
+              "hoy regularizo",
+              "ahorita compra",
+              "ahorita mismo compra",
+              "hoy en la tarde compra",
+              "en la tarde compra",
+              "ya voy a cerrar la compra"
+            ],
+            "mañana": [
+              "mañana compra",
+              "mañana le compra",
+              "mañana cancelo",
+              "mañana hago la transferencia",
+              "mañana deposito",
+              "mañana sin falta",
+              "para mañana"
+            ],
+            "pasado_mañana": [
+              "pasado mañana",
+              "pasado mañana compra",
+              "en dos días",
+              "dentro de dos días"
+            ]
+          },
+          "custom_instructions": "Trate al comprador de USTED en todo momento; nunca tutee ni use expresiones informales como 'chévere', 'ya pues', 'genial'. Español peruano formal. Moneda según {moneda_hablar} (soles o dólares). NO ofrezca descuentos, quitas ni pagos parciales. NO pida referencias personales ni datos de terceros. Enfoque de valor: hable de mantener activa la cobertura, proteger la tranquilidad de la familia o estar al día con el servicio de previsión; evite un tono agresivo de cobro. Ventana de pedido: solo hasta fin de mes ({fecha_limite}). ESCALONAMIENTO: 1) proponga primero el compra para HOY; 2) si rechaza, ofrezca como máximo hasta el {fecha_limite}; 3) si insiste en una fecha posterior, no renegocie: el sistema tipificará Intención de compra. Ante falta de dinero, pida una fecha concreta dentro del mes. Ante negativa use 'Entiendo' o 'Comprendo', nunca 'Perfecto'. Si pide humano o asesor, indíquele el WhatsApp más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres y cierre. Las respuestas de preguntas frecuentes y objeciones se dicen tal como están escritas.",
+          "objection_handlers": [
+            {
+              "objection": "¿Dónde compra? | ¿Cómo puedo cerrar la compra? | ¿Cuáles son los medios de compra? | ¿Por dónde compra? | ¿Me manda los medios de compra?",
+              "answer": "Puede cerrar la compra por agente bancario, en ventanilla del banco, por la APP MAPFRE, en el portal del comprador portal punto mapfre punto com punto pe, o desde la página web de su banco. Si desea el detalle de un medio, con gusto se lo explico."
+            },
+            {
+              "objection": "No tengo dinero | Estoy ajustado | Estoy misio | No me alcanza | Estoy sin chamba | Recién me pagan fin de mes | Estoy corto de dinero",
+              "answer": "Entendemos. ¿En qué fecha de este mes puede realizarlo? Recuerde que para mantener activa su cobertura necesitamos cerrar la oferta a más tardar el {fecha_limite}."
+            },
+            {
+              "objection": "No reconozco la cotización | Esta cotización no es mía | Yo no debo eso | No conozco esa cotización | Ese monto está mal",
+              "answer": "Comprendo. Vamos a escalar su caso para darle seguimiento especializado. Para mayor información comuníquese al WhatsApp más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cotización"
+            },
+            {
+              "objection": "Es una estafa | Esto es un fraude | Me quieren estafar | Reporto fraude",
+              "answer": "Comprendo. Vamos a escalar de inmediato a un especialista. Contáctenos por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cotización"
+            },
+            {
+              "objection": "Estoy fuera del país | Estoy en el extranjero | Ando de viaje fuera",
+              "answer": "Gracias, le dejamos el mensaje para cuando regrese.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Fuera de cobertura logística"
+            },
+            {
+              "objection": "Llámeme después | Ahorita no puedo | Estoy ocupado | Estoy trabajando | No puedo hablar ahora | Estoy manejando | Vuelva a llamar otro día",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "llamar_luego"
+            },
+            {
+              "objection": "Quiero hablar con una persona | Quiero hablar con un humano | Páseme con un asesor | Quiero un agente | Transfiérame",
+              "answer": "Con gusto, puede contactarnos por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Contacto WhatsApp"
+            },
+            {
+              "objection": "¿Hay descuento? | ¿Hay quita? | ¿Me pueden rebajar? | ¿Hay campaña de descuento? | ¿Puedo cerrar la compra menos?",
+              "answer": "En este momento no contamos con descuentos ni quitas. Lo importante es definir una fecha de este mes para mantener activa su cobertura. ¿Qué día podría cerrar la oferta?"
+            },
+            {
+              "objection": "¿Puedo cerrar la compra en partes? | ¿Aceptan abonos? | ¿Puedo abonar algo nomás? | Solo puedo cerrar la compra una parte | ¿Puedo dejar un adelanto?",
+              "answer": "Por el momento necesitamos la regularización del importe completo para mantener su cobertura. ¿Qué fecha de este mes le sería posible cancelar el total?"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intention"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "pay_confirmation": false,
+            "goto": "intent.pay_confirmation"
+          },
+          "No reconoce la cotización": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "No reconoce la cotización",
+            "goto": "final.hangup_silent"
+          },
+          "Fuera de cobertura logística": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Fuera de cobertura logística",
+            "goto": "final.hangup_silent"
+          },
+          "Contacto WhatsApp": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Contacto WhatsApp",
+            "goto": "final.hangup_silent"
+          },
+          "llamar_luego": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.llamar_luego"
+          }
+        }
+      },
+      "intent.preventiva_commit_failed": {
+        "type": "intention",
+        "label": "Preventiva - fecha de pedido inválida",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Sin problema, recuerde que el monto a cubrir es de {monto_objetivo_palabras} {moneda_hablar}. Cuando decida puede escribirnos a nuestros canales de atención por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres. Que tenga buen día.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.hangup_silent"
+          }
+        }
+      },
+      "intent.llamar_luego": {
+        "type": "intention",
+        "label": "Llamar luego",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera la respuesta del comprador antes de avanzar. Una vez que haya respondido, elige la opción Continuar.",
+        "prompt": "Comprendo, no le quito más tiempo. ¿A qué hora le queda mejor una llamada?",
+        "on": {
+          "always": {
+            "set_agent_output": {
+              "hora_llamada": "{last_user_turn_text}"
+            },
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.pay_confirmation": {
+        "type": "intention",
+        "label": "Confirmación de compra informado",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Acabas de pedir medio y valor del compra. Es OBLIGATORIO esperar la respuesta del comprador antes de elegir cualquier opción. Cuando responda, clasifica: si indica agente bancario, selecciona 'agente bancario'; si ventanilla o agencia bancaria, 'ventanilla'; si APP MAPFRE, 'app'; si portal del comprador o portal punto mapfre, 'portal'; si web del banco o banca móvil, 'web banco'; en cualquier otro caso o si no especifica, 'otro'. Solo selecciona la opción cuando el comprador haya respondido.",
+        "prompt": "De acuerdo. ¿Podría confirmarme el valor y por qué medio efectuó el compra? Puede enviarnos su comprobante por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres para verificar.",
+        "on": {
+          "agente bancario": {
+            "set_agent_output": {
+              "medio_pago": "agente bancario"
+            },
+            "goto": "final.end_paid"
+          },
+          "ventanilla": {
+            "set_agent_output": {
+              "medio_pago": "ventanilla del banco"
+            },
+            "goto": "final.end_paid"
+          },
+          "app": {
+            "set_agent_output": {
+              "medio_pago": "APP MAPFRE"
+            },
+            "goto": "final.end_paid"
+          },
+          "portal": {
+            "set_agent_output": {
+              "medio_pago": "portal del comprador"
+            },
+            "goto": "final.end_paid"
+          },
+          "web banco": {
+            "set_agent_output": {
+              "medio_pago": "página web del banco"
+            },
+            "goto": "final.end_paid"
+          },
+          "otro": {
+            "set_agent_output": {
+              "medio_pago": "{last_user_turn_text}"
+            },
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar pedido y medios de compra",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto {nombre_deudor}, queda anotado el pedido para el {commitment_date_spoken}. Puede realizar su compra en nuestros canales oficiales: agente bancario, ventanilla del banco, APP MAPFRE, portal del comprador o página web del banco.",
+        "on": {
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "intent.pay_confirmation"
+          },
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.hangup_silent": {
+        "type": "final",
+        "label": "Cierre silencioso (mensaje ya dicho en nodo anterior)",
+        "delivery": "say",
+        "prompt": ""
+      },
+      "final.end_preventiva_compromiso": {
+        "type": "final",
+        "label": "Preventiva - pedido",
+        "prompt": "Perfecto {nombre_deudor}, queda anotado el pedido para el {due_date_spoken}. Puede realizar su compra en nuestros canales oficiales. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_preventiva_duda": {
+        "type": "final",
+        "label": "Preventiva - duda",
+        "prompt": "Sin problema, recuerde que el monto a cubrir es de {monto_objetivo_palabras} {moneda_hablar}. Cuando decida puede escribirnos a nuestros canales de atención por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_preventiva_negativa": {
+        "type": "final",
+        "label": "Preventiva - negativa",
+        "prompt": "Entendido. Cuando pueda cerrar la oferta, puede usar nuestros canales oficiales o escribirnos por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida con pedido",
+        "prompt": "Agradecemos su pedido de regularización. Quedamos atentos a su compra. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida sin pedido",
+        "prompt": "Entiendo {nombre_deudor}. Lo importante es mantener activa su cobertura. Cuando pueda, escríbanos por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_intention": {
+        "type": "final",
+        "label": "Despedida intención de compra",
+        "prompt": "Queda anotada su intención de compra. Recuerde que para mantener su cobertura conviene cerrar la oferta dentro de este mes. Puede escribirnos al WhatsApp más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida compra informado",
+        "prompt": "De acuerdo. Por favor envíe su constancia de compra a nuestros canales de atención por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres para actualizar el sistema. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida número equivocado",
+        "prompt": "Disculpe la molestia, que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida recado con tercero",
+        "prompt": "Comprendo. ¿Podría indicarle a {nombre_deudor_completo} que se comunique lo antes posible con nosotros para un tema de su interés? Muchas gracias.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida buzón",
+        "prompt": "Gracias por atender. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

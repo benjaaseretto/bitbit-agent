@@ -1,0 +1,406 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "tecno_medico_flow",
+    "visible_name": "TecnoMédico Equipos",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (20 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/tecno_medico.json",
+      "company_id": "tecno_medico-demo",
+      "description": "Base de conocimiento de TecnoMédico Equipos."
+    },
+    "company_id": "tecno_medico-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "kredit_plus_flow_graph.json",
+      "node_count": 20,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "TecnoMédico Equipos",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_pregunta": "{saludo_por_horario}, mi nombre es {nombre_agente}, Agente AI, le llamo de Kredit S A. ¿Es usted {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Mi nombre es {nombre_agente}, Agente AI de Kredit S A."
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.disclosure",
+            "express_route": true,
+            "express_route_next": "task.negotiation"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_days": 3,
+          "allow_partial_payments": false,
+          "max_attempts_negotiation": 3,
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "collect_payment_method_in_task": false,
+          "benefit_hints": [
+            "Mantener acceso a productos financieros",
+            "Evitar bloqueos o reportes negativos",
+            "Mejorar calificación en centrales de riesgo",
+            "Evitar intereses de seguimiento comercial y gastos de seguimiento de venta"
+          ],
+          "empresa": "{nombre_empresa}",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda_palabras": "{monto_deuda_palabras}",
+          "monto_deuda": "{due_balance}",
+          "instructions": "Sé directo cobrando lo que debe el comprador. Menciona dinámicamente 2 o más beneficios de estar al día: mantener acceso a productos financieros, evitar bloqueos o reportes negativos, mejorar calificación en centrales de riesgo, evitar intereses de seguimiento comercial y gastos de seguimiento de venta. Recuerda 2 o más consecuencias de seguir en seguimiento comercial: reporte en centrales de riesgo, bloqueo en sector financiero, gastos adicionales de seguimiento de venta, riesgo de inicio de cobro jurídico. Se debe cobrar en pesos, el comprador no puede cerrar la compra en otra moneda. No uses muletillas ni repitas la misma frase. Los pagos se pueden realizar mediante transferencia o consignación a la cuenta de Bancolombia desde su cuenta, corresponsal bancario, o en una sucursal Bancolombia. Si el comprador indica que no puede cerrar la compra hoy, recuérdale que la cotización seguirá sumando intereses y gastos de seguimiento de venta, lo cual perjudica su perfil crediticio. Si insiste en que no puede cerrar la compra, menciona que continuar con la altura de seguimiento comercial podría activar las políticas internas para iniciar cobro jurídico sobre el total de la seguimiento de venta. No te despidas ni cierres la llamada dentro de esta tarea: si después de insistir hasta el máximo de intentos no logras un acuerdo de compra, devuelve el resultado 'Sin pedido' para que el flujo pueda cerrar la llamada.",
+          "custom_instructions": "Sos asesor comercial de equipos médicos. Presentá beneficios, plazos de entrega y opciones de financiamiento. No inventes precios fuera de la KB. Cerrá con pedido o próximo contacto."
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.payment_details"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "No puedo pagar hoy": {
+            "goto": "intent.no_puedo_pagar_hoy"
+          },
+          "Respuesta desconocida": {
+            "goto": "intent.faq_handler"
+          }
+        }
+      },
+      "task.negotiation_partial": {
+        "type": "task",
+        "label": "Negociación con pagos parciales",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_days": 3,
+          "allow_partial_payments": true,
+          "min_partial_percentage": 50,
+          "max_attempts_negotiation": 3,
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "collect_payment_method_in_task": false,
+          "benefit_hints": [
+            "Mantener acceso a productos financieros",
+            "Evitar bloqueos o reportes negativos",
+            "Mejorar calificación en centrales de riesgo",
+            "Evitar intereses de seguimiento comercial y gastos de seguimiento de venta"
+          ],
+          "empresa": "{nombre_empresa}",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda_palabras": "{monto_deuda_palabras}",
+          "monto_deuda": "{due_balance}",
+          "instructions": "Usa siempre {due_balance} como base. Si el comprador menciona porcentajes, conviértelos a un monto en pesos antes de llamar a la herramienta. Para pagos parciales, confirma fecha y monto y usa solo registrar_pago_parcial. No pidas que el comprador proponga montos libres.",
+          "custom_instructions": "Sos asesor comercial de equipos médicos. Presentá beneficios, plazos de entrega y opciones de financiamiento. No inventes precios fuera de la KB. Cerrá con pedido o próximo contacto."
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.payment_details"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Respuesta desconocida": {
+            "goto": "intent.faq_handler"
+          }
+        }
+      },
+      "intent.disclosure": {
+        "type": "intention",
+        "label": "Informar importe y solicitar compra",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Hola {nombre_deudor}, le habla {nombre_agente} de Colektia, agencia externa de {nombre_empresa}. Le informo que la conversación está siendo grabada. La razón de mi llamada es recordarte que tienes pendiente el compra de tu libranza número {reference_spoken}, con la pagaduría {dim_1}, por un valor de {due_balance_palabras}. ¿Podrías realizar el compra de esta seguimiento comercial hoy mismo?",
+        "on": {
+          "No puedo pagar hoy": {
+            "goto": "intent.no_puedo_pagar_hoy"
+          },
+          "No tiene dinero": {
+            "goto": "intent.negociacion_parcial_intro"
+          },
+          "No quiero que me sigan llamando": {
+            "goto": "intent.no_llamadas"
+          },
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.no_puedo_pagar_hoy": {
+        "type": "intention",
+        "label": "No puede cerrar la compra hoy",
+        "delivery": "say",
+        "instruction": "Si el comprador pregunta de cuánto es la cotización, cuánto debe, o de cuánto es la seguimiento comercial, responde siempre: 'El valor de la seguimiento comercial es de {monto_deuda_palabras}.' y luego continúa con la negociación.",
+        "prompt": "Te entiendo, {nombre_deudor}. Ten en cuenta que la cotización seguirá sumando intereses y gastos de seguimiento de venta, lo cual además afecta negativamente tu perfil crediticio. ¿Crees que podrías realizar el compra dentro de los próximos 3 días de este mes?",
+        "on": {
+          "Sí": {
+            "goto": "intent.negociacion_parcial_intro"
+          },
+          "No": {
+            "goto": "intent.negociacion_juridica"
+          },
+          "No quiero que me sigan llamando": {
+            "goto": "intent.no_llamadas"
+          },
+          "always": {
+            "goto": "intent.negociacion_juridica"
+          }
+        }
+      },
+      "intent.negociacion_juridica": {
+        "type": "intention",
+        "label": "Advertencia jurídica",
+        "delivery": "say",
+        "interruptible": false,
+        "instruction": "Si el comprador pregunta de cuánto es la cotización, cuánto debe, o de cuánto es la seguimiento comercial, responde siempre: 'El valor de la seguimiento comercial es de {monto_deuda_palabras}.' y luego continúa con la negociación.",
+        "prompt": "Si la seguimiento comercial continúa, podrías cumplir con las políticas internas para iniciar cobro jurídico sobre el total de la seguimiento de venta. Es importante buscar una solución para evitar este proceso. ¿Podemos intentar acordar un monto hoy?",
+        "on": {
+          "No quiero que me sigan llamando": {
+            "goto": "intent.no_llamadas"
+          },
+          "Continuar": {
+            "goto": "intent.negociacion_parcial_intro"
+          },
+          "always": {
+            "goto": "intent.negociacion_parcial_intro"
+          }
+        }
+      },
+      "intent.negociacion_parcial_intro": {
+        "type": "intention",
+        "label": "Introducción a pagos parciales",
+        "delivery": "generate",
+        "interruptible": false,
+        "prompt": "El comprador ya indicó que no puede cerrar la compra el total hoy. Explica de forma breve y empática que existen alternativas de compra parcial sobre la seguimiento comercial. Deja muy claro que el mínimo para que un compra parcial sea válido es el cincuenta por ciento del valor de la seguimiento comercial, y que también se puede manejar un setenta por ciento para avanzar más rápido en la normalización. Usa el monto {monto_deuda_palabras} como referencia verbal, sin volver a mencionar otros montos del sistema. Termina SIEMPRE el mensaje con una pregunta directa del estilo: '¿Te ves en posibilidad de cerrar la compra alrededor del setenta por ciento, o prefieres algo más cercano a la mitad de la seguimiento comercial?'. No pidas que el comprador proponga libremente un monto; solo pídele que elija entre esas dos alternativas.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_partial"
+          }
+        }
+      },
+      "intent.payment_details": {
+        "type": "intention",
+        "label": "Proporcionar datos de compra",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto, entonces confirmamos tu pedido de compra para el {commitment_date_spoken}. ¿Tienes dónde tomar nota de los datos de compra?",
+        "on": {
+          "Sí": {
+            "goto": "intent.dictate_payment_details"
+          },
+          "No": {
+            "goto": "intent.dictate_payment_details"
+          },
+          "always": {
+            "goto": "intent.dictate_payment_details"
+          }
+        }
+      },
+      "intent.dictate_payment_details": {
+        "type": "intention",
+        "label": "Dictar datos bancarios",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "A nombre de: P A ESEFECTIVO. Entidad: Bancolombia. Tipo de cuenta: Ahorros. Número: ocho dos nueve ocho cero cuatro ocho nueve cinco ocho nueve. NIT: nueve cero uno cero siete seis ocho cuatro cero guion cinco. Una vez realices el compra, envíanos el soporte para poder identificarlo.",
+        "on": {
+          "always": {
+            "goto": "intent.final_confirmation"
+          }
+        }
+      },
+      "intent.final_confirmation": {
+        "type": "intention",
+        "label": "Confirmación final y cierre",
+        "delivery": "generate",
+        "interruptible": false,
+        "prompt": "Si hay un pedido registrado, confirma nuevamente el valor y la fecha de compra antes de cerrar cordialmente. Si no hay pedido, insiste brevemente en la importancia de realizar el compra para evitar consecuencias y mantener los beneficios de estar al día, luego cierra.",
+        "on": {
+          "Con compromiso": {
+            "goto": "final.end_commitment"
+          },
+          "Sin pedido": {
+            "goto": "final.end_no_commitment"
+          },
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.no_llamadas": {
+        "type": "intention",
+        "label": "comprador no quiere recibir llamadas",
+        "delivery": "say",
+        "prompt": "Entiendo tu molestia, pero las llamadas continuarán hasta que se normalice la seguimiento comercial. Es una obligación adquirida y debes asumir la responsabilidad del compra. Mantenerte al día evita reportes negativos, bloqueos y gastos de seguimiento de venta.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.fallback_unknown": {
+        "type": "intention",
+        "label": "Respuesta cuando no hay información",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "No tengo la información disponible, pero puede contactarse con el centro de atención al comprador. El teléfono es 57 300 913 6077.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.faq_handler": {
+        "type": "intention",
+        "label": "Responder preguntas frecuentes",
+        "delivery": "generate",
+        "prompt": "Responde a la consulta del comprador usando exclusivamente la información del archivo kredit_plus.json cuando haya una pregunta que coincida con las preguntas frecuentes definidas allí. Si no encuentras ninguna información relevante en kredit_plus.json o no tienes suficiente información para responder con precisión, di textualmente: \"No tengo la información disponible, pero puede contactarse con el centro de atención al comprador. El teléfono es 57 300 913 6077\".",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Gracias por tu pedido. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Se estarán realizando nuevas llamadas con el fin de buscar un acuerdo que permita la normalización de tu libranza. Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo, ¡todo en orden entonces!",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intención de compra para contactarnos en otra ocasión.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Entiendo. ¿En qué horario podría comunicarme con el titular? Muchas gracias, que tenga usted buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

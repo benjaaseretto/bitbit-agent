@@ -1,0 +1,745 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "rehab_motion_flow",
+    "visible_name": "Rehab Motion",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (18 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/rehab_motion.json",
+      "company_id": "rehab_motion-demo",
+      "description": "Base de conocimiento de Rehab Motion."
+    },
+    "company_id": "rehab_motion-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "skandia_co_flow_graph.json",
+      "node_count": 18,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Rehab Motion",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_identificacion_breve": "Buenos días, mi nombre es {nombre_agente}, Agente AI, le llamo de Rehab Motion",
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Sí, soy yo",
+            "Soy yo",
+            "Sí, con él habla",
+            "Sí, con ella habla",
+            "Con él habla",
+            "Con ella habla",
+            "Con él",
+            "Con ella",
+            "Sí, habla con él",
+            "Sí, habla con ella",
+            "Sí señor",
+            "Sí señora",
+            "Sí, correcto",
+            "Sí, dígame",
+            "Dígame",
+            "Sí, cuénteme",
+            "Cuénteme",
+            "Ajá",
+            "Sí, en qué le colaboro",
+            "Sí, a la orden",
+            "A la orden",
+            "Sí, presente",
+            "Presente",
+            "Sí, soy el titular",
+            "Soy el titular",
+            "Sí, yo respondo por eso",
+            "Sí, soy el de la póliza",
+            "Sí, soy el del producto",
+            "Sí, soy el comprador",
+            "Sí, habla directamente con él",
+            "Sí, habla directamente con ella",
+            "Sí, soy quien realiza los aportes",
+            "Sí, soy el dueño de la cuenta",
+            "Sí, la dueña de la cuenta",
+            "Sí, el mismo",
+            "Sí, la misma",
+            "El mismo",
+            "La misma",
+            "Sí, soy",
+            "Sí claro",
+            "Claro, soy yo",
+            "Correcto",
+            "Así es",
+            "Con gusto",
+            "Sí, me encuentro",
+            "Me encuentro",
+            "Sí, qué necesita",
+            "Sí, yo manejo eso",
+            "Claro",
+            "Claro que sí"
+          ],
+          "identity_repregunta": "Para continuar, necesito confirmar si me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?",
+          "invalid_confirmation_identification": [
+            "no soy",
+            "no es",
+            "no estoy",
+            "no está",
+            "no se encuentra",
+            "no responde",
+            "número equivocado",
+            "se equivocó",
+            "equivocado",
+            "no es aquí",
+            "no vive aquí",
+            "ya no vive"
+          ]
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "express_route": true,
+            "express_route_next": "task.negotiation",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura según número de primas y producto",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el comprador dice que puede cerrar la compra el total, selecciona 'Puede cerrar la compra total'. Si dice que no puede cerrar la compra el total, que solo puede cerrar la compra una parte, el importe vencido o el próximo aporte, selecciona 'No puede total / dificultad'. Si pregunta por las opciones o el compra parcial, selecciona 'Pregunta por opciones / parcial'. REGLA CRITICA: NO negocies fechas, no pidas montos, no agregues comentarios extra solamente clasifica lo que te dice el comprador en unas de las opciones disponibles o elige continuar. Si el comprador menciona que está esperando la prima o la bonificación de mitad de año, selecciona 'Espera prima o bonificacion'.",
+        "prompt_by": {
+          "field": "Rehab Motion_segment",
+          "cases": {
+            "una_prima": "Buenos días {nombre_deudor}, soy {nombre_agente}, Agente AI, le llamo de Rehab Motion. Le informo que esta llamada puede ser grabada y sus datos están siendo tratados bajo nuestra política de tratamiento de datos. El motivo de mi llamado es para conversar y recordarle sobre su producto {producto} el cual tiene aporte pendiente de compra de {info_7} por {due_balance_palabras} y se acerca su próximo aporte de {invoiced_balance_palabras}. Lo invitamos a realizar su aporte total correspondiente a {total_balance_palabras}. Recuerde que mantener su aporte mensual al día lo acerca a sus metas financieras y protege su futuro. ¡Cumple tu meta y sigue construyendo tu patrimonio ¿Cree que podría cerrar la compra el total correspondiente a {total_balance_palabras} dentro de los próximos {max_dias} días?",
+            "n_primas_patrimonio": "Buenos días {nombre_deudor}, soy {nombre_agente}, Agente AI, le llamo de Rehab Motion. Le informo que esta llamada puede ser grabada y sus datos están siendo tratados bajo nuestra política de tratamiento de datos. El motivo de mi llamado es para conversar y recordarle sobre su producto {producto} el cual a día de hoy tiene aportes pendientes de {info_7} por {due_balance_palabras} y se acerca su próximo aporte de {invoiced_balance_palabras}. Lo invitamos a realizar su aporte total correspondiente a {total_balance_palabras}. Recuerde que cerrar la oferta sus aportes lo acerca a sus metas financieras y protege su futuro. ¡Cumple tu meta y sigue construyendo tu patrimonio! ¿Cree que podría cerrar la compra el total correspondiente a {total_balance_palabras} dentro de los próximos {max_dias} días?",
+            "n_primas_ahorro": "Buenos días {nombre_deudor}, soy {nombre_agente}, Agente AI, le llamo de Rehab Motion. Le informo que esta llamada puede ser grabada y sus datos están siendo tratados bajo nuestra política de tratamiento de datos. El motivo de mi llamado es para conversar y recordarle sobre su producto {producto} el cual a día de hoy tiene aportes pendientes de {info_7} por {due_balance_palabras} y se acerca su próximo aporte de {invoiced_balance_palabras}. Lo invitamos a realizar su aporte total correspondiente a {total_balance_palabras}. Recuerde que cerrar la oferta sus aportes lo acerca a sus metas financieras y protege su futuro. ¡Cumple tu meta y sigue construyendo tu patrimonio! ¿Cree que podría cerrar la compra el total correspondiente a {total_balance_palabras} dentro de los próximos {max_dias} días?",
+            "antes_cancelacion_patrimonio": "Buenos días {nombre_deudor}, soy {nombre_agente}, Agente AI, le llamo de Rehab Motion. Le informo que esta llamada puede ser grabada y sus datos están siendo tratados bajo nuestra política de tratamiento de datos. El motivo de mi llamado es para conversar e informarle sobre su producto {producto} el cual a día de hoy tiene aportes pendientes de {info_7} por un total de {due_balance_palabras} y se acerca su próximo aporte por {invoiced_balance_palabras}. Evita la cancelación de tu producto y protege tu ahorro y cobertura de seguro realizando el aporte total de {total_balance_palabras}. Recuerde cerrar la oferta sus aportes para mantener su plan activo y proteger su ahorro y cobertura de seguro. ¿Cree que podría cerrar la compra el total correspondiente a {total_balance_palabras} dentro de los próximos {max_dias} días?",
+            "antes_cancelacion_ahorro": "Buenos días {nombre_deudor}, soy {nombre_agente}, Agente AI, le llamo de Rehab Motion. Le informo que esta llamada puede ser grabada y sus datos están siendo tratados bajo nuestra política de tratamiento de datos. El motivo de mi llamado es para conversar e informarle sobre su producto {producto} el cual a día de hoy tiene aportes pendientes de {info_7} por un total de {due_balance_palabras} y se acerca su próximo aporte por {invoiced_balance_palabras}. Evita la cancelación de tu producto y protege tu ahorro y cobertura de seguro realizando el aporte total de {total_balance_palabras}. Recuerde cerrar la oferta sus aportes para mantener su plan activo y proteger su ahorro y cobertura de seguro. ¿Cree que podría cerrar la compra el total correspondiente a {total_balance_palabras} dentro de los próximos {max_dias} días?"
+          },
+          "default": "Buenos días {nombre_deudor}, soy {nombre_agente}, Agente AI, le llamo de Rehab Motion. Le informo que esta llamada puede ser grabada y sus datos están siendo tratados bajo nuestra política de tratamiento de datos. El motivo de mi llamado es para conversar y recordarle sobre su producto {producto} el cual tiene aportes pendientes de compra. Lo invitamos a realizar su aporte total correspondiente a {total_balance_palabras}. ¿Estarías dispuesto a llegar a un acuerdo de compra?"
+        },
+        "on": {
+          "Puede pagar total": {
+            "goto": "task.negotiation"
+          },
+          "No puede total / dificultad": {
+            "goto_by": {
+              "field": "allow_partial_payments_Rehab Motion",
+              "cases": {
+                "true": "intent.partial_offer_Rehab Motion",
+                "false": "intent.soft_close_no_commitment"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          },
+          "Pregunta por opciones / parcial": {
+            "goto_by": {
+              "field": "allow_partial_payments_Rehab Motion",
+              "cases": {
+                "true": "intent.partial_offer_Rehab Motion",
+                "false": "intent.soft_close_no_commitment"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          },
+          "always": {
+            "goto_by": {
+              "field": "allow_partial_payments_Rehab Motion",
+              "cases": {
+                "true": "intent.partial_offer_Rehab Motion",
+                "false": "intent.soft_close_no_commitment"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          },
+          "Espera prima o bonificacion": {
+            "goto": "intent.espera_prima_bonificacion"
+          }
+        }
+      },
+      "intent.espera_prima_bonificacion": {
+        "type": "intention",
+        "label": "Espera prima o bonificacion",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el comprador dice que puede cerrar la compra el total, selecciona 'Puede cerrar la compra total'. Si dice que no puede cerrar la compra el total, que solo puede cerrar la compra una parte, el importe vencido o el próximo aporte, selecciona 'No puede total / dificultad'. Si pregunta por las opciones o el compra parcial, selecciona 'Pregunta por opciones / parcial'. REGLA CRITICA: NO negocies fechas, no pidas montos, no agregues comentarios extra solamente clasifica lo que te dice el comprador en unas de las opciones disponibles o elige continuar. Si el comprador insiste con que va a esperar la prima o la bonificación de mitad de año, selecciona 'Espera prima o bonificacion'.",
+        "prompt": "Perfecto, gracias por informarlo. Antes de recibirlo, ¿tendrías posibilidad de realizar algún abono o programar un compra dentro de los próximos {max_dias} días?",
+        "on": {
+          "Puede pagar total": {
+            "goto": "task.negotiation"
+          },
+          "No puede total / dificultad": {
+            "goto_by": {
+              "field": "allow_partial_payments_Rehab Motion",
+              "cases": {
+                "true": "intent.partial_offer_Rehab Motion",
+                "false": "intent.soft_close_no_commitment"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          },
+          "Pregunta por opciones / parcial": {
+            "goto_by": {
+              "field": "allow_partial_payments_Rehab Motion",
+              "cases": {
+                "true": "intent.partial_offer_Rehab Motion",
+                "false": "intent.soft_close_no_commitment"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          },
+          "always": {
+            "goto_by": {
+              "field": "allow_partial_payments_Rehab Motion",
+              "cases": {
+                "true": "intent.partial_offer_Rehab Motion",
+                "false": "intent.soft_close_no_commitment"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          },
+          "Espera prima o bonificacion": {
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "intent.partial_offer_skandia": {
+        "type": "intention",
+        "label": "Ofrecer compra parcial Rehab Motion",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el comprador elige cerrar la compra los aportes vencidos selecciona 'Elige aportes vencidos'. Si elige el próximo aporte selecciona 'Elige próximo aporte'. Si no define una opción clara, selecciona por defecto 'Continuar'.",
+        "prompt": "Entiendo que ahora no pueda cubrir el total. Podemos manejar un compra parcial sobre sus aportes. Puede cerrar la compra los aportes vencidos por {due_balance_palabras}, o el próximo aporte que está por vencer por {invoiced_balance_palabras}. ¿Cuál de estas opciones ve más viable para usted?",
+        "on": {
+          "Elige aportes vencidos": {
+            "goto": "task.negotiation_partial_Rehab Motion_vencidos"
+          },
+          "Elige próximo aporte": {
+            "goto": "task.negotiation_partial_Rehab Motion_proximo"
+          },
+          "always": {
+            "goto": "task.negotiation_partial_Rehab Motion_vencidos"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación compra total",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_days": "{max_dias}",
+          "allow_partial_payments": false,
+          "max_attempts_negotiation": 3,
+          "objection_handlers_builtin": true,
+          "collect_payment_method_in_task": false,
+          "ask_nonpayment_reason": false,
+          "benefit_hint": "cumplir metas financieras y proteger su futuro",
+          "empresa": "Rehab Motion",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda_palabras": "{total_balance_palabras}",
+          "monto_deuda": "{total_balance}",
+          "custom_instructions": "PRIMA / BONIFICACIÓN / AGUINALDO DE MITAD DE AÑO (REGLA OBLIGATORIA): 1) Si el comprador menciona que está esperando la prima, la bonificación o el aguinaldo de mitad de año —aunque lo diga con frases que suenen a disposición, como 'para poder cerrar la compra', 'apenas me llegue compra' o 'así te compra'—, NO lo interpretes como que aceptó cerrar la compra y NO llames cliente_dispuesto en ese turno: esperar la prima NO es una fecha de compra válida. 2) PRIMERO ofrécele realizar el aporte total dentro del plazo, ANTES de que le llegue la prima, con una pregunta breve y cerrada, por ejemplo: '¿Podrías realizar el aporte total dentro de los próximos días, antes de que te llegue la prima?'. 3) Si el comprador ACEPTA cerrar la compra el total en una fecha concreta dentro del plazo, regístralo normalmente llamando cliente_dispuesto(fecha_propuesta=...). 4) REGLA CRÍTICA DE CIERRE: si el comprador deja claro que pagará ÚNICAMENTE cuando reciba la prima/bonificación y NO hará ningún aporte antes, NO lo registres como pedido, NO pidas monto y NUNCA llames cliente_dispuesto. Es una INTENCIÓN DE compra: confírmalo con naturalidad (por ejemplo: 'Entiendo, registraré tu intención de compra para cuando recibas la prima.') y llama de inmediato finalizar_objecion_terminal(etiqueta='Intención de compra').",
+          "objection_handlers": [
+            {
+              "objection": "El comprador deja claro que pagará ÚNICAMENTE cuando reciba la prima, la bonificación o el aguinaldo de mitad de año y NO hará ningún aporte antes (por ejemplo: 'voy a cerrar la compra con la prima', 'compra cuando me llegue la prima', 'estoy esperando la prima para cerrar la compra', 'apenas me llegue la prima compra', 'no puedo cerrar la compra nada hasta que me llegue la prima', 'tendría que esperar la prima sí o sí').",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra"
+            }
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy compra",
+              "hoy le compra",
+              "hoy mismo compra",
+              "hoy mismo le compra",
+              "hoy hago el aporte",
+              "hoy hago el compra",
+              "hoy hago la transferencia",
+              "hoy hago la consignación",
+              "hoy transfiero",
+              "hoy consigno",
+              "hoy paso por el banco",
+              "hoy entro a la app",
+              "hoy sin falta compra",
+              "de hoy no pasa",
+              "de hoy no pasa el compra",
+              "ahorita compra",
+              "ahorita le compra",
+              "ahorita lo hago",
+              "ahorita mismo compra",
+              "ya mismo compra",
+              "ya mismo le compra",
+              "ya mismo lo hago",
+              "al ratico compra",
+              "al ratico le compra",
+              "al rato compra",
+              "más tardecito compra",
+              "más al ratico compra",
+              "esta tarde compra",
+              "esta tarde le compra",
+              "esta tardecita compra",
+              "esta noche compra",
+              "más rato compra"
+            ],
+            "mañana": [
+              "mañana compra",
+              "mañana le compra",
+              "mañana hago el aporte",
+              "mañana hago el compra",
+              "mañana hago la transferencia",
+              "mañana hago la consignación",
+              "mañana transfiero",
+              "mañana consigno",
+              "mañana paso por el banco",
+              "mañana entro a la app",
+              "mañana sin falta",
+              "mañana sin falta compra",
+              "mañana temprano compra",
+              "mañana tempranito compra",
+              "mañana mismo compra",
+              "mañana en la mañana compra",
+              "mañana en la tarde compra"
+            ],
+            "pasado_mañana": [
+              "pasado mañana compra",
+              "pasado mañana le compra",
+              "pasado mañana hago el aporte",
+              "pasado mañana hago el compra",
+              "pasado mañana hago la transferencia",
+              "pasado mañana hago la consignación",
+              "pasado mañana transfiero",
+              "pasado mañana consigno",
+              "pasado mañana sin falta",
+              "pasado mañana sin falta compra",
+              "pasado mañana temprano compra",
+              "pasado mañana mismo compra"
+            ]
+          }
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "task.negotiation_partial_skandia_vencidos": {
+        "type": "task",
+        "label": "Negociación compra parcial Rehab Motion (aportes vencidos)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_days": 3,
+          "allow_partial_payments": false,
+          "max_attempts_negotiation": 3,
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "collect_payment_method_in_task": false,
+          "ask_nonpayment_reason": false,
+          "empresa": "Rehab Motion",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "objection_handlers": [
+            {
+              "objection": "El comprador deja claro que pagará ÚNICAMENTE cuando reciba la prima, la bonificación o el aguinaldo de mitad de año y NO hará ningún aporte antes (por ejemplo: 'voy a cerrar la compra con la prima', 'compra cuando me llegue la prima', 'estoy esperando la prima para cerrar la compra', 'apenas me llegue la prima compra', 'no puedo cerrar la compra nada hasta que me llegue la prima', 'tendría que esperar la prima sí o sí').",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra"
+            }
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy compra",
+              "hoy le compra",
+              "hoy mismo compra",
+              "hoy mismo le compra",
+              "hoy hago el aporte",
+              "hoy hago el compra",
+              "hoy hago la transferencia",
+              "hoy hago la consignación",
+              "hoy transfiero",
+              "hoy consigno",
+              "hoy paso por el banco",
+              "hoy entro a la app",
+              "hoy sin falta compra",
+              "de hoy no pasa",
+              "de hoy no pasa el compra",
+              "ahorita compra",
+              "ahorita le compra",
+              "ahorita lo hago",
+              "ahorita mismo compra",
+              "ya mismo compra",
+              "ya mismo le compra",
+              "ya mismo lo hago",
+              "al ratico compra",
+              "al ratico le compra",
+              "al rato compra",
+              "más tardecito compra",
+              "más al ratico compra",
+              "esta tarde compra",
+              "esta tarde le compra",
+              "esta tardecita compra",
+              "esta noche compra",
+              "más rato compra"
+            ],
+            "mañana": [
+              "mañana compra",
+              "mañana le compra",
+              "mañana hago el aporte",
+              "mañana hago el compra",
+              "mañana hago la transferencia",
+              "mañana hago la consignación",
+              "mañana transfiero",
+              "mañana consigno",
+              "mañana paso por el banco",
+              "mañana entro a la app",
+              "mañana sin falta",
+              "mañana sin falta compra",
+              "mañana temprano compra",
+              "mañana tempranito compra",
+              "mañana mismo compra",
+              "mañana en la mañana compra",
+              "mañana en la tarde compra"
+            ],
+            "pasado_mañana": [
+              "pasado mañana compra",
+              "pasado mañana le compra",
+              "pasado mañana hago el aporte",
+              "pasado mañana hago el compra",
+              "pasado mañana hago la transferencia",
+              "pasado mañana hago la consignación",
+              "pasado mañana transfiero",
+              "pasado mañana consigno",
+              "pasado mañana sin falta",
+              "pasado mañana sin falta compra",
+              "pasado mañana temprano compra",
+              "pasado mañana mismo compra"
+            ]
+          },
+          "custom_instructions": "Rehab Motion - compra PARCIAL FIJO (APORTES VENCIDOS). MODO ESPECIAL: EN ESTE TASK SOLO EXISTE compra PARCIAL FIJO SOBRE APORTES VENCIDOS. El monto del abono es FIJO: {due_balance} pesos ({due_balance_palabras}). No preguntes cuánto puede cerrar la compra ni aceptes otros montos. Tu objetivo es acordar UNA fecha dentro de los próximos {max_dias} días y un pedido explícito para ese abono parcial. Haz UNA sola pregunta que combine fecha y pedido, por ejemplo: '¿Se compromete a cerrar la compra {due_balance_palabras} este viernes?' o la fecha que corresponda. Cuando el comprador confirme una fecha, llama cliente_dispuesto(fecha_propuesta='YYYY-MM-DD') DE INMEDIATO. Si el comprador dice que no puede cerrar la compra este monto en ninguna fecha, llama cliente_dispuesto(dispuesto=False). No vuelvas a pedir una segunda confirmación de la misma fecha si ya respondió afirmativamente. PRIMA / BONIFICACIÓN / AGUINALDO DE MITAD DE AÑO (REGLA OBLIGATORIA): 1) Si el comprador menciona que está esperando la prima, la bonificación o el aguinaldo de mitad de año —aunque lo diga con frases que suenen a disposición, como 'para poder cerrar la compra', 'apenas me llegue compra' o 'así te compra'—, NO lo interpretes como que aceptó cerrar la compra y NO llames cliente_dispuesto en ese turno: esperar la prima NO es una fecha de compra válida. 2) PRIMERO ofrécele abonar los aportes vencidos por {due_balance_palabras} dentro del plazo, ANTES de que le llegue la prima, con una pregunta breve y cerrada, por ejemplo: '¿Podrías abonar los aportes vencidos por {due_balance_palabras} dentro de los próximos días, antes de que te llegue la prima?'. 3) Si el comprador ACEPTA ese abono en una fecha concreta dentro del plazo, regístralo normalmente llamando cliente_dispuesto(fecha_propuesta=...). 4) REGLA CRÍTICA DE CIERRE: si el comprador deja claro que pagará ÚNICAMENTE cuando reciba la prima/bonificación y NO hará ningún aporte antes, NO lo registres como pedido, NO pidas monto y NUNCA llames cliente_dispuesto. Es una INTENCIÓN DE compra: confírmalo con naturalidad (por ejemplo: 'Entiendo, registraré tu intención de compra para cuando recibas la prima.') y llama de inmediato finalizar_objecion_terminal(etiqueta='Intención de compra')."
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "task.negotiation_partial_skandia_proximo": {
+        "type": "task",
+        "label": "Negociación compra parcial Rehab Motion (próximo aporte)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_days": 3,
+          "allow_partial_payments": "{allow_partial_payments_Rehab Motion}",
+          "max_attempts_negotiation": 3,
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "collect_payment_method_in_task": false,
+          "ask_nonpayment_reason": false,
+          "empresa": "Rehab Motion",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{invoiced_balance}",
+          "monto_deuda_palabras": "{invoiced_balance_palabras}",
+          "objection_handlers": [
+            {
+              "objection": "El comprador deja claro que pagará ÚNICAMENTE cuando reciba la prima, la bonificación o el aguinaldo de mitad de año y NO hará ningún aporte antes (por ejemplo: 'voy a cerrar la compra con la prima', 'compra cuando me llegue la prima', 'estoy esperando la prima para cerrar la compra', 'apenas me llegue la prima compra', 'no puedo cerrar la compra nada hasta que me llegue la prima', 'tendría que esperar la prima sí o sí').",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra"
+            }
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy compra",
+              "hoy le compra",
+              "hoy mismo compra",
+              "hoy mismo le compra",
+              "hoy hago el aporte",
+              "hoy hago el compra",
+              "hoy hago la transferencia",
+              "hoy hago la consignación",
+              "hoy transfiero",
+              "hoy consigno",
+              "hoy paso por el banco",
+              "hoy entro a la app",
+              "hoy sin falta compra",
+              "de hoy no pasa",
+              "de hoy no pasa el compra",
+              "ahorita compra",
+              "ahorita le compra",
+              "ahorita lo hago",
+              "ahorita mismo compra",
+              "ya mismo compra",
+              "ya mismo le compra",
+              "ya mismo lo hago",
+              "al ratico compra",
+              "al ratico le compra",
+              "al rato compra",
+              "más tardecito compra",
+              "más al ratico compra",
+              "esta tarde compra",
+              "esta tarde le compra",
+              "esta tardecita compra",
+              "esta noche compra",
+              "más rato compra"
+            ],
+            "mañana": [
+              "mañana compra",
+              "mañana le compra",
+              "mañana hago el aporte",
+              "mañana hago el compra",
+              "mañana hago la transferencia",
+              "mañana hago la consignación",
+              "mañana transfiero",
+              "mañana consigno",
+              "mañana paso por el banco",
+              "mañana entro a la app",
+              "mañana sin falta",
+              "mañana sin falta compra",
+              "mañana temprano compra",
+              "mañana tempranito compra",
+              "mañana mismo compra",
+              "mañana en la mañana compra",
+              "mañana en la tarde compra"
+            ],
+            "pasado_mañana": [
+              "pasado mañana compra",
+              "pasado mañana le compra",
+              "pasado mañana hago el aporte",
+              "pasado mañana hago el compra",
+              "pasado mañana hago la transferencia",
+              "pasado mañana hago la consignación",
+              "pasado mañana transfiero",
+              "pasado mañana consigno",
+              "pasado mañana sin falta",
+              "pasado mañana sin falta compra",
+              "pasado mañana temprano compra",
+              "pasado mañana mismo compra"
+            ]
+          },
+          "custom_instructions": "Rehab Motion - compra PARCIAL FIJO (PRÓXIMO APORTE). MODO ESPECIAL: EN ESTE TASK SOLO EXISTE compra PARCIAL FIJO SOBRE EL PRÓXIMO APORTE. El monto del abono es FIJO: {invoiced_balance} pesos ({invoiced_balance_palabras}). No preguntes cuánto puede cerrar la compra ni aceptes otros montos. Tu objetivo es acordar UNA fecha dentro de los próximos {max_dias} días y un pedido explícito para ese aporte parcial. Haz UNA sola pregunta que combine fecha y pedido, por ejemplo: '¿Se compromete a cerrar la compra {invoiced_balance_palabras} este viernes?' o la fecha que corresponda. Cuando el comprador confirme una fecha, llama cliente_dispuesto(fecha_propuesta='YYYY-MM-DD') DE INMEDIATO. Si el comprador dice que no puede cerrar la compra este monto en ninguna fecha, llama cliente_dispuesto(dispuesto=False). No vuelvas a pedir una segunda confirmación de la misma fecha si ya respondió afirmativamente. PRIMA / BONIFICACIÓN / AGUINALDO DE MITAD DE AÑO (REGLA OBLIGATORIA): 1) Si el comprador menciona que está esperando la prima, la bonificación o el aguinaldo de mitad de año —aunque lo diga con frases que suenen a disposición, como 'para poder cerrar la compra', 'apenas me llegue compra' o 'así te compra'—, NO lo interpretes como que aceptó cerrar la compra y NO llames cliente_dispuesto en ese turno: esperar la prima NO es una fecha de compra válida. 2) PRIMERO ofrécele abonar el próximo aporte por {invoiced_balance_palabras} dentro del plazo, ANTES de que le llegue la prima, con una pregunta breve y cerrada, por ejemplo: '¿Podrías abonar el próximo aporte por {invoiced_balance_palabras} dentro de los próximos días, antes de que te llegue la prima?'. 3) Si el comprador ACEPTA ese abono en una fecha concreta dentro del plazo, regístralo normalmente llamando cliente_dispuesto(fecha_propuesta=...). 4) REGLA CRÍTICA DE CIERRE: si el comprador deja claro que pagará ÚNICAMENTE cuando reciba la prima/bonificación y NO hará ningún aporte antes, NO lo registres como pedido, NO pidas monto y NUNCA llames cliente_dispuesto. Es una INTENCIÓN DE compra: confírmalo con naturalidad (por ejemplo: 'Entiendo, registraré tu intención de compra para cuando recibas la prima.') y llama de inmediato finalizar_objecion_terminal(etiqueta='Intención de compra')."
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar pedido y medios de compra",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto, entonces ya quedo su pedido de compra para el día {commitment_date_spoken} ¿de acuerdo? Haz tu compra de forma fácil, rápida y 100% digital desde nuestra página pública, Portal de Clientes o la App Rehab Motion. Recuerda que mantener tus aportes al día te acerca a tus metas financieras y protege tu futuro. ¿Tienes alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin pedido)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo. Gracias por tu tiempo. Te contactaremos en otra ocasión.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "task.payment_intention_date": {
+        "type": "task",
+        "label": "Agendar intención de compra (prima / bonificación)",
+        "task_type": "PaymentIntentionDateTask",
+        "params": {
+          "max_retries": 3,
+          "custom_max_days": 45
+        },
+        "on": {
+          "Fecha tentativa capturada": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "payment_intention_date": "result.tentative_date",
+            "payment_intention_raw": "result.raw_text",
+            "set_payment_intention": true,
+            "goto": "final.close_intencion_de_pago"
+          },
+          "Sin fecha": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "set_payment_intention": true,
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "final.close_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida intención de compra (prima / bonificación)",
+        "delivery": "say",
+        "prompt": "Perfecto, {nombre_deudor}. Registré tu intención de compra, tomando como referencia {payment_intention_date_spoken}. Mantendremos el seguimiento para acompañarte hasta cerrar la oferta tus aportes. Gracias por tu tiempo, que tengas un feliz día."
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intención de compra para contactarnos en otra ocasión.",
+        "delivery": "say"
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Gracias por tu pedido. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Gracias por tu tiempo. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele que desde Rehab Motion intentamos ponernos en contacto con el titular.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

@@ -1,0 +1,641 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "oxigeno_plus_flow",
+    "visible_name": "Oxígeno Plus",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (19 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/oxigeno_plus.json",
+      "company_id": "oxigeno_plus-demo",
+      "description": "Base de conocimiento de Oxígeno Plus."
+    },
+    "company_id": "oxigeno_plus-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "nexu_flow_graph.json",
+      "node_count": 19,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Oxígeno Plus",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_pregunta": "{saludo_por_horario}. ¿Me comunico con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le habla el Agente AI de Oxígeno Plus respecto a su mensualidad.",
+          "identity_repregunta": "Para poder ayudarle, ¿me confirma que hablo con {nombre_deudor_completo}?",
+          "identity_no_titular_pregunta": "¿Podría comunicarme con {nombre_deudor_completo}? Le llamo de Oxígeno Plus respecto a una mensualidad pendiente. Si no está disponible, ¿a qué hora puedo intentar nuevamente?",
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí",
+            "sí soy yo",
+            "soy yo",
+            "con él habla",
+            "con ella habla",
+            "él habla",
+            "ella habla",
+            "el mismo",
+            "la misma",
+            "sí dígame",
+            "bueno",
+            "sí señor",
+            "sí señora",
+            "claro que sí",
+            "así es",
+            "correcto",
+            "mande",
+            "a sus órdenes",
+            "adelante"
+          ]
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "resumen_total_productos",
+              "rules": [
+                {
+                  "op": ">",
+                  "value": 1,
+                  "goto": "intent.intro_multi"
+                }
+              ],
+              "default": "intent.intro"
+            },
+            "express_route": true,
+            "express_route_next": "task.negotiation",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.intro": {
+        "type": "intention",
+        "label": "Identificación post-titularidad (playbook §5)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si confirma que tiene un momento o responde afirmativamente (sí, dime, adelante, claro, mande, etc.), avanza. Si dice que está ocupado, no puede hablar o pide que lo llamen después, cierra con empatía sin presentar la cotización. Si pregunta quién habla, de dónde o de parte de quién, responde ÚNICAMENTE 'Le habla el Agente AI de Oxígeno Plus respecto a su mensualidad.' SIN montos, días de seguimiento comercial, producto ni detalle de la cotización, y vuelve a preguntar si tiene un momento. No presentes el importe ni la cotización todavía.",
+        "prompt": "Le habla {nombre_agente}, Agente de Oxígeno Plus. El motivo de mi llamada es respecto a su mensualidad de {producto_fuente} que presenta un importe vencido. ¿Tiene un momento para que lo resolvamos juntos?",
+        "on": {
+          "always": {
+            "goto": "intent.opening"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Ocupado",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Presentación de la cotización (playbook §7)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Su cuenta Oxígeno Plus presenta una mensualidad de {producto_1_mensualidad_palabras} que lleva {producto_1_dias_mora_locucion} vencida. Lo bueno es que estamos en tiempo para resolverlo hoy sin que genere consecuencias adicionales. {tono_apertura_segmento}¿El compra lo realiza hoy mismo o se le hace mejor mañana?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.intro_multi": {
+        "type": "intention",
+        "label": "Identificación post-titularidad multiproducto (playbook §5)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si confirma que tiene un momento o responde afirmativamente (sí, dime, adelante, claro, mande, etc.), avanza. Si dice que está ocupado, no puede hablar o pide que lo llamen después, cierra con empatía sin presentar la cotización. Si pregunta quién habla, de dónde o de parte de quién, responde ÚNICAMENTE 'Le habla el Agente AI de Oxígeno Plus respecto a su mensualidad.' SIN montos, días de seguimiento comercial, producto ni detalle de la cotización, y vuelve a preguntar si tiene un momento. No presentes el importe ni la cotización todavía.",
+        "prompt": "Le habla {nombre_agente}, Agente de Oxígeno Plus. El motivo de mi llamada es respecto a sus mensualidades que presentan un importe vencido. ¿Tiene un momento para que lo resolvamos juntos?",
+        "on": {
+          "always": {
+            "goto": "intent.opening_multi"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Ocupado",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.opening_multi": {
+        "type": "intention",
+        "label": "Presentación multiproducto (playbook §7b)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Tiene {total_productos_palabras} contratos con mensualidades vencidas por un total de {deuda_total_palabras}. Lo bueno es que estamos en tiempo para resolverlo hoy sin que genere consecuencias adicionales. ¿Podemos regularizarlos hoy? Empecemos con su {producto_1_producto}, con una mensualidad de {producto_1_mensualidad_palabras} que lleva {producto_1_dias_mora_locucion} vencida. ¿Este compra lo realiza hoy mismo o se le hace mejor mañana?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_multi"
+          }
+        }
+      },
+      "task.negotiation_multi": {
+        "type": "task",
+        "label": "Negociación multiproducto (pedido por contrato)",
+        "task_type": "MultiProductNegotiationTask",
+        "params": {
+          "max_products": "{resumen_total_productos}",
+          "announce_first_product": false,
+          "continue_after_commitment": true,
+          "auto_advance_on_decline": true,
+          "shared_negotiation_kwargs": {
+            "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. cerrar la compra a más tardar {fecha_limite} le ayuda a evitar intereses moratorios y no afectar su historial en Buró de Crédito. ¿Podría realizar el compra dentro de ese plazo?",
+            "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, la cotización podría seguir creciendo y afectar su historial. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el compra ese día?",
+            "max_dias": 3,
+            "max_attempts": 3,
+            "empresa": "Oxígeno Plus",
+            "deudor": "{nombre_deudor}",
+            "currency": "MXN",
+            "allow_partial_payments": false,
+            "require_confirmation": false,
+            "collect_payment_method": false,
+            "require_acceptance": false,
+            "ask_nonpayment_reason": true,
+            "skip_opening_generate_reply": true,
+            "benefit_hints": [
+              "evitar la generación de intereses moratorios",
+              "no afectar su historial en Buró de Crédito",
+              "mantener su cuenta al día y resolverlo mientras aún está a tiempo"
+            ],
+            "custom_instructions": "Trato de USTED, cercano pero amable; puedes pasar al tuteo únicamente si el comprador te tutea primero. Español mexicano neutro, sin regionalismos ni anglicismos. Estás gestionando VARIOS contratos del comprador, UNO A LA VEZ: negocia únicamente la mensualidad del contrato actual; el sistema te llevará al siguiente. La cotización total ya se presentó en la apertura, no la repitas. En tu primera intervención no repitas saludo ni motivo: ve directo a anclar fecha. Nunca hagas preguntas abiertas a un 'No'; ofrece opciones concretas con beneficio. Plazo máximo 3 días contando el de gestión. REGLA DE MONTO (ESTRICTA): el único monto que puedes agendar para este contrato es su mensualidad COMPLETA; NUNCA agendes un monto menor. Si el comprador ofrece cerrar la compra solo una parte de esta mensualidad, explícale con empatía que el compra mínimo que se puede aceptar es la mensualidad completa de un contrato, y que si le acomoda mejor puede empezar cubriendo completa la mensualidad de otro de sus contratos: enseguida los revisarán uno por uno. Si el comprador dice que no tiene dinero, PRIMERO pregunta si es algo temporal o si cambió su situación de ingresos, antes de decidir el siguiente paso. Si el comprador quiere cerrar la compra todos sus contratos el mismo día, registra esa misma fecha para el contrato actual y confírmala también en los siguientes. USO DE HERRAMIENTAS: llama cliente_dispuesto UNA sola vez por turno y SOLO con la fecha del contrato que estás gestionando AHORA. Si el comprador también menciona el monto o la fecha de OTRO de sus contratos, NO los agendes en esta llamada: dile que enseguida revisan ese contrato; el sistema retomará esos datos automáticamente. No ofrezcas descuentos ni condonaciones.{instruccion_medio_pago} Al proponer o cerrar el acuerdo de compra, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el pedido, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+            "flow_objection_handlers": [
+              {
+                "objection": "Ya pagué | Ya hice el compra | Ya deposité | Ya transferí | Ya quedó pagado | Le envío el comprobante | Pagué ayer | Ya está pagado",
+                "answer": "Gracias por informarme. Aún no veo su compra reflejado en el sistema; le pido que comparta su comprobante por WhatsApp para validarlo con Finanzas y evitar cualquier cargo adicional. En cuanto se aplique, le confirmamos.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Ya compró"
+              },
+              {
+                "objection": "Me cobraron doble | Me hicieron un doble cargo | Pagué y me volvieron a cobrar | No aplicaron mi compra | Ya deposité y sigue apareciendo",
+                "answer": "Entiendo la molestia y lo vamos a resolver. Le pido que comparta su comprobante de compra; lo escalo de inmediato con el equipo de pagos de Oxígeno Plus para que validen el cargo. También puede dar seguimiento escribiendo a pagos arroba Oxígeno Plus punto m equis. En cuanto tengamos la validación le confirmamos.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Escalar pagos"
+              },
+              {
+                "objection": "Quiero entregar el carro | Quiero devolver el vehículo | Ya no puedo cerrar la compra y quiero devolverlo | Quiero cancelar el contrato y entregar la unidad",
+                "answer": "Entiendo su situación. Antes de tomar esa decisión, quiero que sepa que hay opciones que un especialista de Oxígeno Plus puede explorar con usted. Le comparto los datos del área de seguimiento de venta: puede escribir a seguimiento de venta arroba Oxígeno Plus punto m equis o llamar al cinco cinco, siete nueve, dos nueve, dos seis, nueve tres, de lunes a viernes de ocho de la mañana a cinco de la tarde. Les avisaré que va a contactarlos para que estén preparados.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Escalar seguimiento de venta"
+              },
+              {
+                "objection": "Estoy ocupado, no puedo hablar | Ahorita no puedo hablar | Llámeme después | Estoy en una reunión | Estoy manejando | Mándeme un mensaje mejor",
+                "answer": "Comprendo, no le quito más tiempo. Le enviaré la información por WhatsApp para que pueda revisarla cuando tenga un momento. Es importante resolverlo pronto para evitar complicaciones en su cuenta.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Cliente ocupado"
+              },
+              {
+                "objection": "No tengo dinero | No traigo lana ahorita | Ando corto | No me alcanza | Estoy apretado | La situación está difícil",
+                "answer": "Entiendo, {nombre_deudor}. ¿Esto es algo temporal o ha cambiado su situación de ingresos? Le pregunto porque dependiendo de eso tenemos opciones diferentes para apoyarle: si es temporal, podemos apuntar una fecha en los próximos días para que su cuenta no siga acumulando atraso."
+              },
+              {
+                "objection": "Solo puedo cerrar la compra una parte | ¿Aceptan compra parcial? | Puedo abonar algo | Le doy la mitad | No puedo cerrar la compra todo | Solo puedo cerrar la compra una cantidad al mes",
+                "answer": "Entiendo, {nombre_deudor}. Puede avanzar contrato por contrato: cada compra debe cubrir la mensualidad completa de uno de sus contratos y no es posible aceptar un monto menor. ¿Le acomoda cubrir completa la mensualidad de este contrato, o prefiere empezar por la de otro de sus contratos?"
+              },
+              {
+                "objection": "Quiero cerrar la compra por transferencia | Le hago un SPEI | Lo compra por transferencia | ¿Puedo transferir? | ¿Tengo que hacer una transferencia?",
+                "answer": "{respuesta_prefiere_transferencia_multi}"
+              },
+              {
+                "objection": "Hay importe suficiente | Ya tengo importe | Ya hay importe | Hay importe en la cuenta | Pueden hacer la domiciliación | Ya cuenta con importe | En este momento hay importe",
+                "answer": "{respuesta_saldo_suficiente_multi}"
+              },
+              {
+                "objection": "Tuve imprevistos | Me surgieron gastos inesperados | Se me atravesaron cosas | Tuve una emergencia",
+                "answer": "Entiendo perfectamente, los imprevistos pasan. Lo bueno es que su cuenta tiene poco atraso y estamos a tiempo de resolverlo sin que se complique. ¿Para cuándo podría tener disponible el compra de esta mensualidad?"
+              },
+              {
+                "objection": "Estoy esperando un dinero que me deben | Me van a cerrar la compra en unos días | Estoy esperando un depósito | Cuando me paguen le compra",
+                "answer": "Entiendo que está esperando ese recurso. Para no dejarlo abierto, pongamos una fecha límite: si el dinero llega antes, puede cerrar la compra de inmediato. ¿Qué fecha le funciona como límite?"
+              },
+              {
+                "objection": "Es que la quincena | Hasta la quincena | Me pagan en la quincena | Cuando caiga la quincena",
+                "answer": "Claro, entiendo que su flujo depende de la quincena. ¿Qué día exacto le pagan? Así registramos su pedido justo para esa fecha y su cuenta queda al corriente sin cargos adicionales."
+              },
+              {
+                "objection": "Perdí mi empleo | Me quedé sin trabajo | Estoy desempleado | Me corrieron del trabajo",
+                "answer": "Lamento escuchar eso, {nombre_deudor}. Quiero que sepa que hay opciones antes de que la situación se complique. ¿Tiene alguna fuente de ingreso alternativa en este momento? Si cuenta con algún ingreso, podemos apuntar una fecha de compra mientras estabiliza su situación; si no tiene ningún ingreso, le comparto los datos de un especialista de Oxígeno Plus que puede revisar alternativas para su caso."
+              },
+              {
+                "objection": "Estoy enfermo | Estoy hospitalizado | Estoy incapacitado | Tuve un accidente | Estoy en tratamiento y no puedo cerrar la compra | No tengo ningún ingreso | De verdad no tengo con qué cerrar la compra | Ya le dije que no tengo dinero | Mi situación no va a mejorar pronto | Sigo sin trabajo, no tengo nada",
+                "answer": "Lamento mucho su situación, {nombre_deudor}, y le agradezco que me lo comparta. No le insisto más por hoy; lo más importante es que esté bien. Cuando su situación mejore, puede comunicarse con seguimiento de venta de Oxígeno Plus al cinco cinco, siete nueve, dos nueve, dos seis, nueve tres, o escribir a seguimiento de venta arroba Oxígeno Plus punto m equis para revisar opciones. Cuídese mucho.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Imposibilidad de compra"
+              },
+              {
+                "objection": "Quiero un plan de pagos | ¿Me dan facilidades? | ¿Puedo cerrar la compra en partes? | Quiero un acuerdo de compra",
+                "answer": "Claro que sí. Puede avanzar cubriendo sus mensualidades una por una: cada compra debe ser por la mensualidad completa de un contrato y el sistema lo reconoce automáticamente. ¿Empezamos con la mensualidad que estamos revisando? ¿Qué fecha le funciona para ese compra?"
+              },
+              {
+                "objection": "Ya hablé con otro agente y quedé en algo | Ya tengo un acuerdo | Ya quedé en una fecha con alguien más",
+                "answer": "Gracias por informarme. Para que quede formalizado en el sistema, ¿me confirma para qué fecha y por qué monto es su pedido? Así lo dejamos registrado y evitamos que le sigan contactando por este tema."
+              }
+            ]
+          },
+          "products": [
+            {
+              "label": "su {producto_1_producto}",
+              "output_key": "producto_1",
+              "intro_prompt": "",
+              "negotiation": {
+                "monto_deuda": "{producto_1_mensualidad}"
+              }
+            },
+            {
+              "label": "su {producto_2_producto}",
+              "output_key": "producto_2",
+              "intro_prompt": "Ahora revisemos su {producto_2_producto}, que tiene una mensualidad vencida de {producto_2_mensualidad_palabras} y lleva {producto_2_dias_mora_locucion} vencida. ¿Este compra lo realiza hoy mismo o se le hace mejor mañana?",
+              "negotiation": {
+                "monto_deuda": "{producto_2_mensualidad}"
+              }
+            },
+            {
+              "label": "su {producto_3_producto}",
+              "output_key": "producto_3",
+              "intro_prompt": "Por último, revisemos su {producto_3_producto}, que tiene una mensualidad vencida de {producto_3_mensualidad_palabras}. ¿Este compra lo realiza hoy mismo o se le hace mejor mañana?",
+              "negotiation": {
+                "monto_deuda": "{producto_3_mensualidad}"
+              }
+            }
+          ],
+          "custom_instructions": "Sos asesor comercial de equipos médicos. Presentá beneficios, plazos de entrega y opciones de financiamiento. No inventes precios fuera de la KB. Cerrá con pedido o próximo contacto."
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment_multi"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Ocupado",
+            "goto": "final.end_no_commitment"
+          },
+          "Escalar cobranza": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Escalar seguimiento de venta",
+            "goto": "final.end_escalar_cobranza"
+          },
+          "Escalar pagos": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Escalar pagos",
+            "goto": "final.end_escalar_pagos"
+          },
+          "Imposibilidad de pago": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Imposibilidad de compra",
+            "goto": "final.end_imposibilidad"
+          }
+        }
+      },
+      "intent.confirm_commitment_multi": {
+        "type": "intention",
+        "label": "Confirmar compromisos multiproducto y medios de compra",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del comprador antes de avanzar. Si confirma que no necesita nada más o no tiene dudas, elige 'Continuar' en silencio. Si indica que ya compró (ya pagué, ya deposité, ya transferí, ya quedó pagado, le envío el comprobante u equivalente), elige 'Pagado'. Si reporta doble cargo o que su compra no se aplicó, elige 'Escalar pagos'. Si reporta que una transferencia o SPEI falló, reconoce lo ocurrido, NO vuelvas a sugerir ese mismo medio y ofrece cerrar la compra en Oxígeno Plus punto m equis o, si aplica, mantener importe para la domiciliación. Si confirma importe suficiente para domiciliación, reconoce una vez de forma breve y avanza; no repitas la recomendación de mantener importe ni reconfirmes compromisos. Si pregunta por su CLABE STP, dásela con la base de conocimiento. Si hace otra pregunta, respóndela brevemente con la base de conocimiento. NO sigas la conversación ni te despidas aquí.",
+        "prompt": "Perfecto. Queda registrado su pedido: {commitments_summary_spoken}. {medios_pago_confirmacion} Le enviaré un recordatorio por WhatsApp el día acordado. ¿Algo más en lo que pueda apoyarle, o tuvo algún inconveniente con el medio de compra?",
+        "on": {
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Escalar pagos": {
+            "substatus": "Escalar pagos",
+            "goto": "final.end_escalar_pagos"
+          },
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación de pedido de compra (BKT1 seguimiento comercial temprana)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. cerrar la compra a más tardar {fecha_limite} le ayuda a evitar intereses moratorios y no afectar su historial en Buró de Crédito. ¿Podría realizar el compra dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, la cotización podría seguir creciendo y afectar su historial. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el compra ese día?",
+          "max_dias": 3,
+          "max_attempts": 3,
+          "empresa": "Oxígeno Plus",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{monto_objetivo}",
+          "monto_deuda_palabras": "{monto_objetivo_palabras}",
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "require_acceptance": false,
+          "ask_nonpayment_reason": true,
+          "skip_opening_generate_reply": true,
+          "benefit_hints": [
+            "evitar la generación de intereses moratorios",
+            "no afectar su historial en Buró de Crédito",
+            "mantener su cuenta al día y resolverlo mientras aún está a tiempo"
+          ],
+          "custom_instructions": "Trato de USTED, cercano pero amable; puedes pasar al tuteo únicamente si el comprador te tutea primero. Español mexicano neutro. En tu primera intervención no repitas saludo ni motivo ni el monto: la cotización ya se presentó; ve directo a anclar fecha. Nunca hagas preguntas abiertas a un 'No'; siempre ofrece opciones concretas con beneficio (ej.: hoy o mañana; fecha exacta). Si el comprador dice 'ahorita', 'ya mero' o 'la próxima semana', ancla día y monto exactos. Plazo máximo: 3 días contando el de gestión; si pide más, ofrece la fecha máxima. REGLA DE MONTO (ESTRICTA): el compra mínimo aceptable es una mensualidad COMPLETA ({min_abono_objetivo_palabras} / {producto_1_mensualidad_palabras}); NUNCA agendes un monto menor. No ofrezcas descuentos ni condonaciones. No coordines devolución de vehículo ni modifiques la fecha de compra del contrato.{instruccion_medio_pago} Al proponer o cerrar el acuerdo de compra, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el pedido, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "objection_handlers": [
+            {
+              "objection": "Ya pagué | Ya hice el compra | Ya deposité | Ya transferí | Ya quedó pagado | Le envío el comprobante | Pagué ayer | Ya está pagado",
+              "answer": "Gracias por informarme. Aún no veo su compra reflejado en el sistema; le pido que comparta su comprobante por WhatsApp para validarlo con Finanzas y evitar cualquier cargo adicional. En cuanto se aplique, le confirmamos.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya compró"
+            },
+            {
+              "objection": "Me cobraron doble | Me hicieron un doble cargo | Pagué y me volvieron a cobrar | No aplicaron mi compra | Ya deposité y sigue apareciendo",
+              "answer": "Entiendo la molestia y lo vamos a resolver. Le pido que comparta su comprobante de compra; lo escalo de inmediato con el equipo de pagos de Oxígeno Plus para que validen el cargo. También puede dar seguimiento escribiendo a pagos arroba Oxígeno Plus punto m equis. En cuanto tengamos la validación le confirmamos.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Escalar pagos"
+            },
+            {
+              "objection": "Quiero entregar el carro | Quiero devolver el vehículo | Ya no puedo cerrar la compra y quiero devolverlo | Quiero cancelar el contrato y entregar la unidad",
+              "answer": "Entiendo su situación. Antes de tomar esa decisión, quiero que sepa que hay opciones que un especialista de Oxígeno Plus puede explorar con usted. Le comparto los datos del área de seguimiento de venta: puede escribir a seguimiento de venta arroba Oxígeno Plus punto m equis o llamar al cinco cinco, siete nueve, dos nueve, dos seis, nueve tres, de lunes a viernes de ocho de la mañana a cinco de la tarde. Les avisaré que va a contactarlos para que estén preparados.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Escalar seguimiento de venta"
+            },
+            {
+              "objection": "Estoy ocupado, no puedo hablar | Ahorita no puedo hablar | Llámeme después | Estoy en una reunión | Estoy manejando | Mándeme un mensaje mejor",
+              "answer": "Comprendo, no le quito más tiempo. Le enviaré la información por WhatsApp para que pueda revisarla cuando tenga un momento. Es importante resolverlo pronto para evitar complicaciones en su cuenta.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "No tengo dinero | No traigo lana ahorita | Ando corto | No me alcanza | Estoy apretado | La situación está difícil",
+              "answer": "Entiendo, {nombre_deudor}. ¿Esto es algo temporal o ha cambiado su situación de ingresos? Le pregunto porque dependiendo de eso tenemos opciones diferentes para apoyarle: si es temporal, podemos apuntar una fecha en los próximos días para que su cuenta no siga acumulando atraso."
+            },
+            {
+              "objection": "Solo puedo cerrar la compra una parte | ¿Aceptan compra parcial? | Puedo abonar algo | Le doy la mitad | No puedo cerrar la compra todo | Solo puedo cerrar la compra una cantidad al mes",
+              "answer": "Entiendo, {nombre_deudor}. En este caso su cuenta solo se regulariza con el compra completo de su mensualidad, que es {monto_objetivo_palabras}; no es posible aceptar un monto menor. ¿Qué fecha le funciona para cubrirla dentro de los próximos días?"
+            },
+            {
+              "objection": "Quiero cerrar la compra por transferencia | Le hago un SPEI | Lo compra por transferencia | ¿Puedo transferir? | ¿Tengo que hacer una transferencia?",
+              "answer": "{respuesta_prefiere_transferencia}"
+            },
+            {
+              "objection": "Hay importe suficiente | Ya tengo importe | Ya hay importe | Hay importe en la cuenta | Pueden hacer la domiciliación | Ya cuenta con importe | En este momento hay importe",
+              "answer": "{respuesta_saldo_suficiente}"
+            },
+            {
+              "objection": "Tuve imprevistos | Me surgieron gastos inesperados | Se me atravesaron cosas | Tuve una emergencia",
+              "answer": "Entiendo perfectamente, los imprevistos pasan. Lo bueno es que su cuenta tiene poco atraso y estamos a tiempo de resolverlo sin que se complique. ¿Para cuándo podría tener disponible el compra de su mensualidad?"
+            },
+            {
+              "objection": "Estoy esperando un dinero que me deben | Me van a cerrar la compra en unos días | Estoy esperando un depósito | Cuando me paguen le compra",
+              "answer": "Entiendo que está esperando ese recurso. Para no dejarlo abierto, pongamos una fecha límite: si el dinero llega antes, puede cerrar la compra de inmediato. ¿Qué fecha le funciona como límite?"
+            },
+            {
+              "objection": "Es que la quincena | Hasta la quincena | Me pagan en la quincena | Cuando caiga la quincena",
+              "answer": "Claro, entiendo que su flujo depende de la quincena. ¿Qué día exacto le pagan? Así registramos su pedido justo para esa fecha y su cuenta queda al corriente sin cargos adicionales."
+            },
+            {
+              "objection": "Perdí mi empleo | Me quedé sin trabajo | Estoy desempleado | Me corrieron del trabajo",
+              "answer": "Lamento escuchar eso, {nombre_deudor}. Quiero que sepa que hay opciones antes de que la situación se complique. ¿Tiene alguna fuente de ingreso alternativa en este momento? Si cuenta con algún ingreso, podemos apuntar una fecha de compra mientras estabiliza su situación; si no tiene ningún ingreso, le comparto los datos de un especialista de Oxígeno Plus que puede revisar alternativas para su caso."
+            },
+            {
+              "objection": "Estoy enfermo | Estoy hospitalizado | Estoy incapacitado | Tuve un accidente | Estoy en tratamiento y no puedo cerrar la compra | No tengo ningún ingreso | De verdad no tengo con qué cerrar la compra | Ya le dije que no tengo dinero | Mi situación no va a mejorar pronto | Sigo sin trabajo, no tengo nada",
+              "answer": "Lamento mucho su situación, {nombre_deudor}, y le agradezco que me lo comparta. No le insisto más por hoy; lo más importante es que esté bien. Cuando su situación mejore, puede comunicarse con seguimiento de venta de Oxígeno Plus al cinco cinco, siete nueve, dos nueve, dos seis, nueve tres, o escribir a seguimiento de venta arroba Oxígeno Plus punto m equis para revisar opciones. Cuídese mucho.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Imposibilidad de compra"
+            },
+            {
+              "objection": "Quiero un plan de pagos | ¿Me dan facilidades? | ¿Puedo cerrar la compra en partes? | Quiero un acuerdo de compra",
+              "answer": "Entiendo, {nombre_deudor}. Por ahora su cuenta se regulariza con el compra completo de su mensualidad, que es {monto_objetivo_palabras}; no es posible aceptar un monto menor. Lo que sí podemos hacer es acordar la fecha que mejor le acomode dentro de los próximos días. ¿Qué día le funciona?"
+            },
+            {
+              "objection": "Ya hablé con otro agente y quedé en algo | Ya tengo un acuerdo | Ya quedé en una fecha con alguien más",
+              "answer": "Gracias por informarme. Para que quede formalizado en el sistema, ¿me confirma para qué fecha y por qué monto es su pedido? Así lo dejamos registrado y evitamos que le sigan contactando por este tema."
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Ocupado",
+            "goto": "final.end_no_commitment"
+          },
+          "Escalar cobranza": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Escalar seguimiento de venta",
+            "goto": "final.end_escalar_cobranza"
+          },
+          "Escalar pagos": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Escalar pagos",
+            "goto": "final.end_escalar_pagos"
+          },
+          "Imposibilidad de pago": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Imposibilidad de compra",
+            "goto": "final.end_imposibilidad"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar pedido y medios de compra",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del comprador antes de avanzar. Si confirma que no necesita nada más o no tiene dudas, elige 'Continuar' en silencio. Si indica que ya compró (ya pagué, ya deposité, ya transferí, ya quedó pagado, le envío el comprobante u equivalente), elige 'Pagado'. Si reporta doble cargo o que su compra no se aplicó, elige 'Escalar pagos'. Si reporta que una transferencia o SPEI falló, reconoce lo ocurrido, NO vuelvas a sugerir ese mismo medio y ofrece cerrar la compra en Oxígeno Plus punto m equis o, si aplica, mantener importe para la domiciliación. Si confirma importe suficiente para domiciliación, reconoce una vez de forma breve y avanza; no repitas la recomendación de mantener importe ni reconfirmes el pedido. Si pregunta por su CLABE STP, dásela con la base de conocimiento. Si hace otra pregunta, respóndela brevemente con la base de conocimiento. NO sigas la conversación ni te despidas aquí.",
+        "prompt_by": {
+          "field": "dias_mora_para_medio_pago",
+          "rules": [
+            {
+              "op": "<=",
+              "value": 4,
+              "template": "Perfecto. Queda registrado su pedido de compra por {producto_1_mensualidad_palabras} para el {commitment_date_spoken}. {texto_pago_domiciliacion} Le enviaré un recordatorio por WhatsApp el día acordado. ¿Algo más en lo que pueda apoyarle, o tuvo algún inconveniente con el medio de compra?"
+            }
+          ],
+          "default": "Perfecto. Queda registrado su pedido de compra por {producto_1_mensualidad_palabras} para el {commitment_date_spoken}. Puede cerrar la compra por transferencia SPEI a su cuenta STP personal por el monto exacto. Le enviaré un recordatorio por WhatsApp el día acordado. ¿Algo más en lo que pueda apoyarle, o tuvo algún inconveniente con el medio de compra?"
+        },
+        "on": {
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Escalar pagos": {
+            "substatus": "Escalar pagos",
+            "goto": "final.end_escalar_pagos"
+          },
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Si necesita algo antes, puede comunicarse al {telefono_atencion_spelled}. Que tenga buen día, {nombre_deudor}.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Entiendo su situación, {nombre_deudor}. Le recomiendo resolver esto lo antes posible para evitar que su cuenta genere cargos adicionales. Estaremos en contacto. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por su tiempo, {nombre_deudor}. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Gracias por su tiempo, {nombre_deudor}. Dejamos registrada su intención de compra para contactarle en otra ocasión. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_imposibilidad": {
+        "type": "final",
+        "label": "Despedida (imposibilidad de compra, sin insistencia)",
+        "prompt": "Gracias por su tiempo, {nombre_deudor}. Que esté muy bien.",
+        "delivery": "say"
+      },
+      "final.end_escalar_cobranza": {
+        "type": "final",
+        "label": "Escalar a seguimiento de venta Oxígeno Plus",
+        "prompt": "Le voy a pasar los datos del equipo de Oxígeno Plus que puede atender su caso directamente: puede escribir a seguimiento de venta arroba Oxígeno Plus punto m equis o llamar al cinco cinco, siete nueve, dos nueve, dos seis, nueve tres, de lunes a viernes de ocho de la mañana a cinco de la tarde. Ellos tienen el contexto completo y pueden ayudarle con lo que necesite. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_escalar_pagos": {
+        "type": "final",
+        "label": "Escalar a Pagos Oxígeno Plus (doble cargo / compra no aplicado)",
+        "prompt": "Le voy a pasar los datos del equipo de Oxígeno Plus que puede atender su caso directamente: puede escribir a pagos arroba Oxígeno Plus punto m equis. Ellos tienen el contexto completo y pueden ayudarle con lo que necesite. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (número equivocado)",
+        "prompt": "Le ofrezco una disculpa por la molestia. Procederemos a actualizar nuestros registros. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado a tercero)",
+        "prompt": "Muchas gracias por su ayuda. Por favor pídale a {nombre_deudor_completo} que se comunique con Oxígeno Plus; es un tema importante de su cuenta. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón de voz)",
+        "prompt": "Mensaje para {nombre_deudor}, le habla el Agente AI de Oxígeno Plus respecto a su mensualidad. Por favor contáctenos al {telefono_atencion_spelled} o espere nuestra próxima llamada.",
+        "delivery": "say"
+      }
+    }
+  }
+}

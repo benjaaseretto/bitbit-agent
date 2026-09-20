@@ -1,0 +1,1503 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "aurora_salud_flow",
+    "visible_name": "Sanatorio Aurora",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (58 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/aurora_salud.json",
+      "company_id": "aurora_salud-demo",
+      "description": "Base de conocimiento de Sanatorio Aurora."
+    },
+    "company_id": "aurora_salud-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "caja_los_andes_repro_transunion_flow.json",
+      "node_count": 58,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Sanatorio Aurora",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.1",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí",
+            "si",
+            "sí po",
+            "si po",
+            "sipo",
+            "sí poh",
+            "si poh",
+            "ya",
+            "ya po",
+            "ya poh",
+            "yapo",
+            "claro",
+            "claro po",
+            "claro poh",
+            "claro pos",
+            "claro que sí",
+            "sí pues",
+            "afirmativo",
+            "correcto",
+            "habla",
+            "habla él",
+            "habla ella",
+            "con él habla",
+            "con ella habla",
+            "sí con él habla",
+            "sí con ella habla",
+            "él mismo",
+            "ella misma",
+            "el mismo",
+            "la misma",
+            "sí él mismo",
+            "sí ella misma",
+            "yo mismo",
+            "yo misma",
+            "soy yo",
+            "sí soy yo",
+            "si soy yo",
+            "soy yo po",
+            "soy yo poh",
+            "yo soy",
+            "hola sí soy yo",
+            "sí señor",
+            "sí señora",
+            "sí señorita",
+            "aló",
+            "aló sí",
+            "sí aló",
+            "aló soy yo",
+            "aló soy yo po",
+            "aló diga",
+            "diga",
+            "dígame",
+            "sí dígame",
+            "sí, dígame",
+            "dime",
+            "ya dime",
+            "sí dime",
+            "dime no más",
+            "sí dime no más",
+            "no más dime",
+            "cuénteme",
+            "cuéntame",
+            "aquí estoy",
+            "sí aquí estoy",
+            "aquí ando",
+            "qué tal",
+            "qué pasó",
+            "él",
+            "ella",
+            "con él",
+            "con ella",
+            "sí, con él",
+            "sí, con ella",
+            "él habla",
+            "ella habla",
+            "él es",
+            "ella es",
+            "a la orden",
+            "sí aló con él habla",
+            "sí aló con ella habla",
+            "aló sí soy yo",
+            "sí aló soy yo",
+            "sí aló soy yo po",
+            "aló sí soy yo po",
+            "aló sí soy yo po cuéntame",
+            "sí aquí estoy",
+            "sí aquí estoy qué se le ofrece",
+            "qué se le ofrece",
+            "ya aló qué pasó",
+            "aló qué pasó",
+            "sí dime no más qué onda",
+            "qué onda"
+          ],
+          "invalid_confirmation_identification": [
+            "quién habla",
+            "quien habla",
+            "con quién hablo",
+            "con quien hablo",
+            "de parte de quién",
+            "de parte de quien",
+            "cómo",
+            "no entendí",
+            "no entendi",
+            "para qué sería",
+            "para que seria",
+            "para qué es",
+            "para que es",
+            "otra vez llamando",
+            "otra vez están llamando",
+            "estoy ocupado",
+            "estoy ocupada",
+            "no me interesa",
+            "dejen de llamar",
+            "dejen de molestar",
+            "qué necesitan",
+            "que necesitan",
+            "qué quieren",
+            "que quieren",
+            "estoy manejando",
+            "voy manejando",
+            "ando manejando",
+            "no puedo hablar ahora",
+            "no puedo hablar",
+            "no puedo hablar en este momento",
+            "llámeme más tarde",
+            "llameme mas tarde",
+            "llame más tarde",
+            "llamen más tarde",
+            "me llama más tarde",
+            "más tarde por favor"
+          ],
+          "identity_pregunta": "Hola {saludo_por_horario}. ¿Hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "{saludo_por_horario}, mi nombre es {nombre_agente}, Agente IA, le llamo de Sanatorio Aurora por Colektia.",
+          "identity_repregunta": "Para continuar, necesito confirmar que me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "dim_5",
+              "cases": {
+                "PROXIMO CONTACTO": "intent.prox_contexto",
+                "Próximo contacto": "intent.prox_contexto",
+                "Proximo contacto": "intent.prox_contexto"
+              },
+              "default": "intent.opening"
+            }
+          },
+          "No Autenticado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Error validacion identidad",
+            "goto": "final.end_sin_compromiso_validacion"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura y exposición del motivo",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera una respuesta clara del paciente antes de avanzar. Si el paciente propone una fecha de turno, especialidad, dice que pagará después o acepta confirmar la cita (por ejemplo: 'cancelar a fin de mes', 'turno el viernes', 'puedo agendar mañana'), NO selecciones turno domiciliado: usa 'always' para continuar a negociación. Si el paciente dice que NO puede agendar, que no le alcanza, que no tiene cómo, o que no quiere confirmar la cita (por ejemplo: 'no puedo', 'no creo que pueda', 'no tengo plata', 'no voy a poder'), selecciona 'Rechaza confirmar la cita' para pasar a ofrecerle la reprogramación (NO insistas con el turno). Solo selecciona 'turno Domiciliado o Debito Automático' si el paciente afirma explícitamente que tiene turno domiciliado, débito automático, descuento por planilla o que ya se le descuenta automáticamente. No lo infieras ni lo preguntes tú si el paciente no lo mencionó.",
+        "prompt": "Soy {nombre_agente}, asistente virtual de Colektia, agencia autorizada por Sanatorio Aurora. Esta llamada será grabada para fines de calidad. {nombre_deudor}, el motivo de mi llamado es conversar sobre su o sus créditos en atraso de agenda con nosotros para confirmar la cita su situación. Actualmente, usted presenta un turno total vencido de {total_balance_palabras}, que corresponde a un total de {cuotas_en_mora_texto} en atraso de agenda. ¿Podría realizar el turno en los próximos días?",
+        "on": {
+          "Tiene cobertura prepaga": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.soft_close_paid"
+          },
+          "No reconoce la cita": {
+            "goto": "intent.reconocimiento_de_deuda"
+          },
+          "always": {
+            "goto": "task.negotiation"
+          },
+          "Rechaza agendar": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "rules": [
+                {
+                  "op": "==",
+                  "value": 1,
+                  "goto": "intent.repro_intro"
+                }
+              ],
+              "default": "intent.repro_multi_intro"
+            }
+          }
+        }
+      },
+      "intent.reconocimiento_de_deuda": {
+        "type": "intention",
+        "label": "Reconocimiento de cita pendiente",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Comprendo su sorpresa. Le comento que, según el sistema, actualmente presenta un turno total vencido de {total_balance_palabras}, correspondiente a {cuotas_en_mora_texto} en atraso de agenda con Sanatorio Aurora. ¿Ha considerado cómo podría confirmar la cita esta situación para evitar gestiones o costos adicionales?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación V2",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias}",
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "benefit_hints": [
+            "evitar recargos",
+            "mantener sus beneficios como afiliado"
+          ],
+          "monto_deuda": "{total_balance}",
+          "custom_instructions": "REGLAS DE ESTILO Y TONO (Chile, Sanatorio Aurora):\n- Tono empático, cercano y profesional. Sin tecnicismos. Adaptado al público chileno con expresiones neutras y fácil comprensión.\n- Lenguaje permitido y recomendado: 'Ya, perfecto', 'Entiendo', 'No hay problema', 'Dale, lo revisamos', 'Te explico', 'Mira', 'A ver', 'Te ayudo con eso', 'Quedó claro', 'Vamos viendo'.\n- PROHIBIDO usar frases coercitivas o amenazantes: 'Debe confirmar la cita hoy mismo', 'Es obligatorio agendar ahora', 'No tiene opción', 'Está incumpliendo'. Nunca amenazar.\n- No interrumpas al paciente, no suenes robótico, no repitas el especialidad más veces de las necesarias.\n- Si el paciente no confirmó titularidad, no reveles datos sensibles.\n- Si el paciente dice 'ya pagué', 'ya cancelé', 'ya está cancelado', 'turno en trámite' o que le descuentan por planilla/débito automático, NO sigas negociando: agradece y deriva a la verificación en Mi Sucursal Virtual.",
+          "objection_handlers": [
+            {
+              "objection": "paciente dice que no tiene dinero o no le alcanza (no tengo plata, no tengo dinero, ando sin un peso, no me alcanza, mala situación económica, ando justo de plata)",
+              "answer": "Entiendo, lamento su situación. ¿Le parece que coordinemos una fecha más adelante?"
+            },
+            {
+              "objection": "paciente está desempleado o sin trabajo (estoy sin trabajo, perdí la pega, no tengo trabajo, estoy cesante, me quedé sin pega, me echaron)",
+              "answer": "Entiendo, lamento su situación. ¿Le parece que coordinemos una fecha más adelante?"
+            },
+            {
+              "objection": "paciente dice que pagará después o más adelante sin precisar día (turno después, turno más adelante, lo veo después, te aviso cuando pueda, lo turno cuando pueda)",
+              "answer": "Entiendo, ¿para qué fecha le acomoda dejarlo programado?"
+            },
+            {
+              "objection": "paciente expresa que no quiere agendar (no quiero agendar, no voy a agendar, no me da la gana, no pienso agendar)",
+              "answer": "Entiendo, solo le recuerdo que el turno sigue pendiente y es importante resolverlo para evitar inconvenientes con su cuenta."
+            },
+            {
+              "objection": "paciente no reconoce la cita pendiente o dice que nunca pidió el crédito (no es mi cita pendiente, no reconozco esa cita pendiente, no debo nada, nunca pedí ese crédito, no tengo crédito con ustedes)",
+              "answer": "Entiendo, le recomiendo comunicarse con nuestro centro de atención al paciente al seis cero cero, cinco diez, cero cero cero cero, para revisar el detalle.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "paciente pregunta por qué el especialidad o las cuotas son altas, o pide un detalle del turno (por qué tan alto, por qué tanto, de dónde sale, por qué tantas cuotas, no entiendo el especialidad, cómo se compone)",
+              "answer": "Comprendo su duda. El turno que le mencioné corresponde a la suma de los montos vencidos de los créditos que tiene activos con Sanatorio Aurora."
+            },
+            {
+              "objection": "paciente menciona descuento por planilla, débito automático o gestión a través de su empresa (descuento por planilla, me descuentan del sueldo, turno domiciliado, débito automático, lo paga la empresa, gestión empresa)",
+              "answer": "Gracias por comentarlo. Al día de hoy no veo el turno registrado en el sistema; le invito a verificarlo en Mi Sucursal Virtual de Sanatorio Aurora.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "paciente pregunta por qué la llamada proviene de un número fijo o móvil y no de un número 600 (por qué llaman de ese número, no es un seis cero cero, de dónde es esta llamada, número raro, no es número oficial)",
+              "answer": "Le informo que, debido a una actualización en la normativa de prefijos telefónicos, nuestras gestiones de coordinación de agenda ahora pueden realizarse desde números fijos o móviles, no por números seis cero cero, de acuerdo al fallo reciente de la Corte Suprema."
+            },
+            {
+              "objection": "paciente consulta por cuotas restantes, mes impago, detalle del crédito o especialidad total restante (cuántas cuotas me quedan, qué mes no pagué, detalle del crédito, especialidad total que debo, cuánto debo en total, qué cuotas faltan)",
+              "answer": "Para revisar el detalle, puede ingresar a triple dobleve punto cajalosandes punto cl barra centro de ayuda barra accede a tu sucursal virtual, seleccionar Mi Sucursal Virtual, iniciar sesión con su RUT y clave, y en Créditos Sociales, Mis Créditos, revisar sus créditos vigentes, cuotas pagadas o pendientes y el especialidad total adeudado."
+            },
+            {
+              "objection": "paciente pide un momento para revisar o corroborar información (regáleme un segundo, dame un momento, espera que reviso, dame un segundo que vea la agenda, un momentito, espéreme un segundo)",
+              "answer": "Por supuesto, le espero."
+            },
+            {
+              "objection": "paciente solo puede agendar una parte de la cita pendiente (puedo agendar una parte, solo una parte, abonar algo, agendar un poco, no puedo agendar todo)",
+              "answer": "Entiendo, en ese caso le recomendamos saldar lo que le sea posible para mejorar su situación financiera. ¿Para qué fecha le acomoda dejarlo programado?"
+            },
+            {
+              "objection": "paciente quiere hablar con una persona o un ejecutivo (quiero hablar con una persona, con un ejecutivo, con un humano, no quiero hablar con un robot, comuníqueme con alguien)",
+              "answer": "Entiendo. En ese caso lo invitamos a tomar la reprogramación de forma presencial en cualquiera de las sucursales de Sanatorio Aurora.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Derivacion"
+            },
+            {
+              "objection": "paciente no quiere que lo graben (no quiero que me graben, no autorizo la grabación, no acepto ser grabado, sin grabación)",
+              "answer": "Entiendo. En ese caso lo invitamos a tomar la reprogramación de forma presencial en cualquiera de las sucursales de Sanatorio Aurora.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Derivacion"
+            }
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "altiro turno",
+              "al tiro turno",
+              "altiro le turno",
+              "al tiro le turno",
+              "altiro lo turno",
+              "al tiro lo turno",
+              "altiro hago el turno",
+              "al tiro hago el turno",
+              "altiro deposito",
+              "al tiro deposito",
+              "altiro transfiero",
+              "al tiro transfiero",
+              "altiro lo hago",
+              "al tiro lo hago",
+              "hoy día turno",
+              "hoy día le turno",
+              "hoy día hago el turno",
+              "hoy día deposito",
+              "hoy día transfiero",
+              "hoy mismo turno",
+              "hoy mismo le turno",
+              "hoy sin falta turno",
+              "de hoy no pasa",
+              "al toque turno",
+              "al toque le turno",
+              "al toque lo hago",
+              "al rato turno",
+              "al ratito turno",
+              "en un rato turno",
+              "en la tarde turno",
+              "en la tarde le turno",
+              "esta tarde turno",
+              "esta tarde lo hago",
+              "ahora turno",
+              "ahorita turno",
+              "ahora mismo turno",
+              "ahora mismo lo hago"
+            ],
+            "mañana": [
+              "mañana turno",
+              "mañana le turno",
+              "mañana hago el turno",
+              "mañana deposito",
+              "mañana transfiero",
+              "mañana sin falta",
+              "mañana sin falta turno",
+              "mañana sin falta le turno",
+              "mañana mismo turno",
+              "mañana mismo le turno",
+              "mañana mismo lo hago",
+              "mañana le caigo",
+              "mañana cae",
+              "mañana sí o sí turno",
+              "mañana sí o sí le turno",
+              "mañana sipo",
+              "mañana po",
+              "mañana poh",
+              "mañana temprano turno",
+              "mañana tempranito turno",
+              "mañana primera hora turno",
+              "mañana en la mañana turno",
+              "mañana a primera hora le turno"
+            ],
+            "pasado_mañana": [
+              "pasado mañana turno",
+              "pasado mañana le turno",
+              "pasado mañana hago el turno",
+              "pasado mañana deposito",
+              "pasado mañana transfiero",
+              "pasado mañana sin falta",
+              "pasado mañana sin falta turno",
+              "pasado mañana mismo turno",
+              "pasado mañana le caigo",
+              "pasao mañana turno",
+              "pasao mañana le turno",
+              "pasao mañana hago el turno",
+              "pasao mañana sin falta",
+              "pasao mañana po",
+              "subiendo pasado mañana turno"
+            ]
+          }
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "rules": [
+                {
+                  "op": "==",
+                  "value": 1,
+                  "goto": "intent.repro_intro"
+                }
+              ],
+              "default": "intent.repro_multi_intro"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.soft_close_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Derivacion": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Derivacion a paciente",
+            "goto": "final.end_derivacion"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_no_reconoce"
+          }
+        }
+      },
+      "intent.repro_intro": {
+        "type": "intention",
+        "label": "Ofrecimiento de reprogramación (monoproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo su situación. En este caso, Sanatorio Aurora pone a su disposición una alternativa de reprogramación para el único crédito que mantiene con nosotros, que le permitirá reorganizarlo y confirmar la cita su situación financiera.",
+        "on": {
+          "always": {
+            "set_variables": {
+              "cantidad_productos_reprogramar": "1"
+            },
+            "set_agent_output": {
+              "cantidad_productos_reprogramar": "1"
+            },
+            "goto": "intent.repro_alternativas"
+          }
+        }
+      },
+      "intent.repro_alternativas": {
+        "type": "intention",
+        "label": "Lectura de alternativas de reprogramación",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Lee las alternativas y pregunta cuál se ajusta mejor. Cuando el paciente elija un plazo, selecciona la opción con ese número de cuotas (12, 24, 36, 48 o 60). Si el paciente rechaza la reprogramación o no quiere ninguna alternativa, selecciona 'Rechaza'.",
+        "prompt": "Las alternativas de plazo para su crédito son las siguientes. {alternativas_repro_p1} ¿Cuál de estas alternativas se ajusta mejor a su situación?",
+        "on": {
+          "12": {
+            "set_variables": {
+              "cuotas_elegidas": "12"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "12",
+              "suma_valor_cuota_elegida": "{producto_1_repro_12_valor_cuota_oferta_a_12_meses}"
+            },
+            "goto": "intent.repro_confirm_seleccion"
+          },
+          "24": {
+            "set_variables": {
+              "cuotas_elegidas": "24"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "24",
+              "suma_valor_cuota_elegida": "{producto_1_repro_24_valor_cuota_oferta_a_24_meses}"
+            },
+            "goto": "intent.repro_confirm_seleccion"
+          },
+          "36": {
+            "set_variables": {
+              "cuotas_elegidas": "36"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "36",
+              "suma_valor_cuota_elegida": "{producto_1_repro_36_valor_cuota_oferta_a_36_meses}"
+            },
+            "goto": "intent.repro_confirm_seleccion"
+          },
+          "48": {
+            "set_variables": {
+              "cuotas_elegidas": "48"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "48",
+              "suma_valor_cuota_elegida": "{producto_1_repro_48_valor_cuota_oferta_a_48_meses}"
+            },
+            "goto": "intent.repro_confirm_seleccion"
+          },
+          "60": {
+            "set_variables": {
+              "cuotas_elegidas": "60"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "60",
+              "suma_valor_cuota_elegida": "{producto_1_repro_60_valor_cuota_oferta_a_60_meses}"
+            },
+            "goto": "intent.repro_confirm_seleccion"
+          },
+          "Rechaza": {
+            "goto": "intent.repro_reject_offer"
+          }
+        }
+      },
+      "intent.repro_reject_offer": {
+        "type": "intention",
+        "label": "Rechazo de reprogramación (turno único)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente acepta agendar el turno único del turno total, selecciona 'Acepta'. Si no acepta, selecciona 'No acepta'.",
+        "prompt": "Entiendo su situación. En este caso, si realiza un turno único de {total_balance_palabras} quedaría totalmente al día. ¿Le gustaría agendar el día en que realizará este turno?",
+        "on": {
+          "Acepta": {
+            "goto": "task.negotiation"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_repro_reject"
+          }
+        }
+      },
+      "intent.repro_confirm_seleccion": {
+        "type": "intention",
+        "label": "Confirmación de selección (reprogramación)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente confirma estar de acuerdo con la alternativa, selecciona 'Acepta'. Si quiere cambiar de alternativa o no está de acuerdo, selecciona 'Cambiar'.",
+        "prompt_by": {
+          "field": "cuotas_elegidas",
+          "cases": {
+            "12": "Perfecto. Antes de la grabación del contrato, confirmemos su elección: la reprogramación de su crédito en doce cuotas por un valor mensual de {valor_cuota_p1_12}. ¿Está de acuerdo?",
+            "24": "Perfecto. Antes de la grabación del contrato, confirmemos su elección: la reprogramación de su crédito en veinticuatro cuotas por un valor mensual de {valor_cuota_p1_24}. ¿Está de acuerdo?",
+            "36": "Perfecto. Antes de la grabación del contrato, confirmemos su elección: la reprogramación de su crédito en treinta y seis cuotas por un valor mensual de {valor_cuota_p1_36}. ¿Está de acuerdo?",
+            "48": "Perfecto. Antes de la grabación del contrato, confirmemos su elección: la reprogramación de su crédito en cuarenta y ocho cuotas por un valor mensual de {valor_cuota_p1_48}. ¿Está de acuerdo?",
+            "60": "Perfecto. Antes de la grabación del contrato, confirmemos su elección: la reprogramación de su crédito en sesenta cuotas por un valor mensual de {valor_cuota_p1_60}. ¿Está de acuerdo?"
+          },
+          "default": "Perfecto. Confirmemos su elección de reprogramación. ¿Está de acuerdo?"
+        },
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_disponibilidad"
+          },
+          "Cambiar": {
+            "goto": "intent.repro_alternativas"
+          }
+        }
+      },
+      "intent.repro_disponibilidad": {
+        "type": "intention",
+        "label": "Consulta de disponibilidad previo a grabación",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Selecciona 'Si' solo si el paciente confirma claramente que tiene tiempo ahora (por ejemplo: 'sí', 'sí tengo', 'dale', 'claro', 'ahora sí', 'de acuerdo'). Selecciona 'No' SOLO si el paciente dice explícita y claramente que NO tiene tiempo o no puede ahora (por ejemplo: 'no', 'ahora no', 'no puedo', 'no tengo tiempo'). Si la respuesta es ambigua, muy corta, incompleta, es una sola letra o no se entendió (ruido/transcripción confusa), NO selecciones ninguna opción: discúlpate brevemente diciendo que no lograste escuchar bien y vuelve a preguntar si cuenta con el tiempo ahora, esperando una respuesta clara. Nunca asumas 'No' ante una respuesta que no entendiste.",
+        "prompt": "Antes de comenzar con la grabación, necesito confirmar si cuenta con el tiempo disponible para realizarla. La grabación tendrá una duración aproximada de entre cinco y diez minutos. ¿Cuenta con ese tiempo ahora?",
+        "on": {
+          "Si": {
+            "goto": "intent.repro_cedula"
+          },
+          "No": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_proximo_contacto"
+          }
+        }
+      },
+      "intent.repro_cedula": {
+        "type": "intention",
+        "label": "Solicitud de cédula de identidad",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera a que el paciente confirme que tiene a mano su cédula de identidad y luego selecciona 'Continuar'.",
+        "prompt": "Perfecto. Necesito que tenga a mano su cédula de identidad. Por favor, avíseme cuando la tenga.",
+        "on": {
+          "Continuar": {
+            "goto": "intent.repro_apertura_grabacion"
+          }
+        }
+      },
+      "intent.repro_apertura_grabacion": {
+        "type": "intention",
+        "label": "Apertura de grabación y mandato de canales remotos",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar el mandato respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto' (con esa frase), selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra cosa sin la frase exacta, selecciona 'Repetir'.",
+        "prompt": "Para su respaldo y seguridad, a partir de este momento esta conversación está siendo grabada. Para comenzar, {nombre_deudor_completo}, necesitamos que usted acepte el mandato de canales remotos, el cual nos autoriza a organizar la gestión de reprogramación durante esta llamada. En el caso de que acepte, por favor responda con un fuerte y claro: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "goto": "task.collect_email"
+          },
+          "Repetir": {
+            "goto": "intent.repro_mandato_repregunta"
+          }
+        }
+      },
+      "intent.repro_mandato_repregunta": {
+        "type": "intention",
+        "label": "Repregunta mandato (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'No acepta'.",
+        "prompt": "Disculpe, para que la grabación sea legalmente válida ante auditoría, necesito que responda exactamente con la frase de aceptación obligatoria: Sí, acepto. Le repito la pregunta: ¿Acepta el mandato de canales remotos?",
+        "on": {
+          "Acepta": {
+            "goto": "task.collect_email"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_mandato_no_aceptado"
+          }
+        }
+      },
+      "task.collect_email": {
+        "type": "task",
+        "label": "Recolectar correo electrónico",
+        "task_type": "FormTask",
+        "params": {
+          "intro": "Me indica su correo electrónico para hacer envío del mandato de canal remoto.",
+          "schema": [
+            {
+              "name": "correo_electronico",
+              "type": "email",
+              "label": "su correo electrónico",
+              "required": false
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto": "task.primera_validacion"
+          },
+          "Cancelado": {
+            "goto": "task.primera_validacion"
+          },
+          "MaxTriesExceeded": {
+            "goto": "task.primera_validacion"
+          }
+        }
+      },
+      "task.primera_validacion": {
+        "type": "task",
+        "label": "Primera validación de identidad (2.4)",
+        "task_type": "FieldVerificationTask",
+        "params": {
+          "max_attempts_total": 6,
+          "fields": [
+            {
+              "id": "rut",
+              "source": {
+                "kind": "metadata",
+                "key": "rut"
+              },
+              "label": "su RUT",
+              "prompt": "Muy bien. Antes de continuar, y para proteger su información, necesito validar su identidad con algunos datos. Comencemos: ¿me indica su RUT, por favor?",
+              "type": "string",
+              "normalization": {
+                "uppercase": true,
+                "remove_accents": true,
+                "keep_alnum_only": true
+              },
+              "comparison": {
+                "mode": "exact"
+              },
+              "max_attempts": 2,
+              "required": true
+            },
+            {
+              "id": "serie_cedula",
+              "label": "el número de serie o de documento de su cédula de identidad",
+              "prompt": "Gracias. Ahora, ¿me indica el número de serie o número de documento que aparece en su cédula de identidad?",
+              "type": "string",
+              "normalization": {
+                "uppercase": true,
+                "remove_accents": true,
+                "keep_alnum_only": true
+              },
+              "comparison": {
+                "mode": "capture"
+              },
+              "max_attempts": 1,
+              "required": true
+            },
+            {
+              "id": "nombre",
+              "source": {
+                "kind": "metadata",
+                "key": "nombre_deudor_completo"
+              },
+              "label": "su nombre completo",
+              "prompt": "Perfecto. ¿Me confirma su nombre completo, por favor?",
+              "type": "string",
+              "value_shape": "words",
+              "normalization": {
+                "uppercase": true,
+                "remove_accents": true
+              },
+              "comparison": {
+                "mode": "contains"
+              },
+              "max_attempts": 2,
+              "required": true
+            },
+            {
+              "id": "fecha_nacimiento",
+              "label": "su fecha de nacimiento",
+              "prompt": "Muy bien. Por último, ¿me indica su fecha de nacimiento, por favor?",
+              "type": "date",
+              "comparison": {
+                "mode": "capture"
+              },
+              "max_attempts": 1,
+              "required": false
+            }
+          ]
+        },
+        "on": {
+          "Verificado": {
+            "goto": "task.kba"
+          },
+          "No Autenticado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Error validacion identidad",
+            "goto": "final.end_sin_compromiso_validacion"
+          },
+          "SinDato": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_proximo_contacto"
+          }
+        }
+      },
+      "task.kba": {
+        "type": "task",
+        "label": "Segunda validación TransUnion KBV (2.5)",
+        "task_type": "KBATask",
+        "params": {
+          "provider": "mock",
+          "intro": "A continuación le realizaré 3 preguntas de seguridad. Por favor, espere a que mencione todas las alternativas antes de responder cuál es la correcta, o indique si ninguna corresponde."
+        },
+        "on": {
+          "Aprobado": {
+            "goto_by": {
+              "field": "cantidad_productos_reprogramar",
+              "rules": [
+                {
+                  "op": "==",
+                  "value": 1,
+                  "goto": "intent.repro_detalle"
+                }
+              ],
+              "default": "intent.repro_multi_detalle"
+            }
+          },
+          "DosFallidas": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Error validacion identidad",
+            "goto": "final.end_equifax_dos_fallidas"
+          },
+          "TodasFallidas": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Derivacion a paciente",
+            "goto": "final.end_equifax_todas_fallidas"
+          },
+          "ErrorTecnico": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_kba_error_tecnico"
+          }
+        }
+      },
+      "intent.repro_detalle": {
+        "type": "intention",
+        "label": "Lectura del detalle de la reprogramación",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "cuotas_elegidas",
+          "cases": {
+            "12": "{detalle_repro_p1_12} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "24": "{detalle_repro_p1_24} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "36": "{detalle_repro_p1_36} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "48": "{detalle_repro_p1_48} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "60": "{detalle_repro_p1_60} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto."
+          },
+          "default": "En este momento no logramos recuperar las condiciones exactas de su reprogramación."
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "cuotas_elegidas",
+              "cases": {
+                "12": "intent.repro_aceptacion_final",
+                "24": "intent.repro_aceptacion_final",
+                "36": "intent.repro_aceptacion_final",
+                "48": "intent.repro_aceptacion_final",
+                "60": "intent.repro_aceptacion_final"
+              },
+              "default": "intent.repro_plazo_no_recuperable"
+            }
+          }
+        }
+      },
+      "intent.repro_aceptacion_final": {
+        "type": "intention",
+        "label": "Aceptación final",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto', selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra cosa sin la frase exacta, selecciona 'Repetir'.",
+        "prompt": "¿Usted acepta efectuar la reprogramación de su cita pendiente en los términos ya descritos? En el caso de que acepte, por favor responda con un fuerte y claro: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_cierre_formal"
+          },
+          "Repetir": {
+            "goto": "intent.repro_aceptacion_repregunta"
+          }
+        }
+      },
+      "intent.repro_aceptacion_repregunta": {
+        "type": "intention",
+        "label": "Repregunta aceptación final (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'Repetir'.",
+        "prompt": "Disculpe, para que la grabación sea legalmente válida ante auditoría, necesito que responda exactamente con la frase de aceptación obligatoria: Sí, acepto. Le repito la pregunta: ¿Usted acepta efectuar la reprogramación de su cita pendiente en los términos ya descritos?",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_cierre_formal"
+          },
+          "Repetir": {
+            "goto": "intent.repro_aceptacion_repregunta_2"
+          }
+        }
+      },
+      "intent.repro_aceptacion_repregunta_2": {
+        "type": "intention",
+        "label": "Segunda repregunta aceptación final (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'No acepta'.",
+        "prompt": "En caso de querer formalizar la reprogramación necesito que responda únicamente: Sí, acepto. ¿Usted acepta efectuar la reprogramación de su cita pendiente en los términos ya descritos?",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_cierre_formal"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_repro_aceptacion_fallida"
+          }
+        }
+      },
+      "intent.repro_cierre_formal": {
+        "type": "intention",
+        "label": "Cierre formal (reprogramación)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Siendo hoy {today_date}, la reprogramación de su crédito con folio terminado en {folio_p1_palabras} será cursada respetando todas las condiciones antes mencionadas, previo a evaluación de esta grabación. Ante cualquier rechazo se le notificará por esta vía o mediante correo electrónico dentro de las cuarenta y ocho horas hábiles. Esta información quedará reflejada en nuestros sistemas en cuarenta y ocho horas hábiles. Le informo que dentro de los diez días posteriores a esta operación, usted podrá retractarse de lo contratado, acudiendo a cualquier sucursal de Sanatorio Aurora donde se le generará un número de ticket. Las condiciones finales serán detalladas en una carta normativa que enviaremos a su correo electrónico.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "reprogramación",
+            "goto": "final.end_refinanciamiento"
+          }
+        }
+      },
+      "intent.repro_multi_intro": {
+        "type": "intention",
+        "label": "Ofrecimiento de reprogramación (multiproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo su situación. En este caso, Sanatorio Aurora pone a su disposición una alternativa de reprogramación para los {info_6} créditos que usted mantiene con nosotros y que pueden ser reprogramados, la cual le permitirá reorganizarlos y confirmar la cita su situación financiera, facilitando una mejor administración de sus compromisos de turno. En conjunto, estos {info_6} créditos suman una cita pendiente total de {oferta_repro_total_palabras}.",
+        "on": {
+          "always": {
+            "set_variables": {
+              "cantidad_productos_reprogramar": "{info_6}"
+            },
+            "set_agent_output": {
+              "cantidad_productos_reprogramar": "{info_6}"
+            },
+            "goto": "intent.repro_multi_alternativas"
+          }
+        }
+      },
+      "intent.repro_multi_alternativas": {
+        "type": "intention",
+        "label": "Alternativas de reprogramación (multiproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Lee las alternativas consolidadas y pregunta cuál se ajusta mejor. Cuando el paciente elija un plazo, selecciona la opción con ese número de cuotas (12, 24, 36, 48 o 60). Si rechaza la reprogramación, selecciona 'Rechaza'.",
+        "prompt": "Las alternativas de plazo para sus créditos son las siguientes. {alternativas_repro_multi} ¿Cuál de estas alternativas se ajusta mejor a su situación?",
+        "on": {
+          "12": {
+            "set_variables": {
+              "cuotas_elegidas": "12"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "12",
+              "suma_valor_cuota_elegida": "{todos_los_productos_repro_12_suma_valor_cuota_oferta_a_12_meses}"
+            },
+            "goto": "intent.repro_multi_confirm"
+          },
+          "24": {
+            "set_variables": {
+              "cuotas_elegidas": "24"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "24",
+              "suma_valor_cuota_elegida": "{todos_los_productos_repro_24_suma_valor_cuota_oferta_a_24_meses}"
+            },
+            "goto": "intent.repro_multi_confirm"
+          },
+          "36": {
+            "set_variables": {
+              "cuotas_elegidas": "36"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "36",
+              "suma_valor_cuota_elegida": "{todos_los_productos_repro_36_suma_valor_cuota_oferta_a_36_meses}"
+            },
+            "goto": "intent.repro_multi_confirm"
+          },
+          "48": {
+            "set_variables": {
+              "cuotas_elegidas": "48"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "48",
+              "suma_valor_cuota_elegida": "{todos_los_productos_repro_48_suma_valor_cuota_oferta_a_48_meses}"
+            },
+            "goto": "intent.repro_multi_confirm"
+          },
+          "60": {
+            "set_variables": {
+              "cuotas_elegidas": "60"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "60",
+              "suma_valor_cuota_elegida": "{todos_los_productos_repro_60_suma_valor_cuota_oferta_a_60_meses}"
+            },
+            "goto": "intent.repro_multi_confirm"
+          },
+          "Rechaza": {
+            "goto": "intent.repro_multi_reject"
+          }
+        }
+      },
+      "intent.repro_multi_confirm": {
+        "type": "intention",
+        "label": "Confirmación y consulta de aceptación (multiproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente acepta proceder con la reprogramación de todos sus créditos, selecciona 'Acepta todos'. Si quiere reprogramar solo uno o menos productos, selecciona 'Menos productos'. Si no acepta la reprogramación, selecciona 'No acepta'. Si quiere cambiar el plazo, selecciona 'Cambiar'.",
+        "prompt_by": {
+          "field": "cuotas_elegidas",
+          "cases": {
+            "12": "Por la reprogramación de sus créditos usted pagaría un valor mensual consolidado de {valor_cuota_multi_12} en doce cuotas. ¿Le parecen bien estas condiciones para proceder con la grabación de los contratos por reprogramación? Le comento que se leerá el contrato de cada crédito de forma diferenciada.",
+            "24": "Por la reprogramación de sus créditos usted pagaría un valor mensual consolidado de {valor_cuota_multi_24} en veinticuatro cuotas. ¿Le parecen bien estas condiciones para proceder con la grabación de los contratos por reprogramación? Le comento que se leerá el contrato de cada crédito de forma diferenciada.",
+            "36": "Por la reprogramación de sus créditos usted pagaría un valor mensual consolidado de {valor_cuota_multi_36} en treinta y seis cuotas. ¿Le parecen bien estas condiciones para proceder con la grabación de los contratos por reprogramación? Le comento que se leerá el contrato de cada crédito de forma diferenciada.",
+            "48": "Por la reprogramación de sus créditos usted pagaría un valor mensual consolidado de {valor_cuota_multi_48} en cuarenta y ocho cuotas. ¿Le parecen bien estas condiciones para proceder con la grabación de los contratos por reprogramación? Le comento que se leerá el contrato de cada crédito de forma diferenciada.",
+            "60": "Por la reprogramación de sus créditos usted pagaría un valor mensual consolidado de {valor_cuota_multi_60} en sesenta cuotas. ¿Le parecen bien estas condiciones para proceder con la grabación de los contratos por reprogramación? Le comento que se leerá el contrato de cada crédito de forma diferenciada."
+          },
+          "default": "¿Le parecen bien estas condiciones para proceder con la grabación de los contratos por reprogramación? Le comento que se leerá el contrato de cada crédito de forma diferenciada."
+        },
+        "on": {
+          "Acepta todos": {
+            "goto": "intent.repro_multi_disponibilidad"
+          },
+          "Menos productos": {
+            "goto": "intent.repro_un_solo_producto"
+          },
+          "Cambiar": {
+            "goto": "intent.repro_multi_alternativas"
+          },
+          "No acepta": {
+            "goto": "intent.repro_multi_reject"
+          }
+        }
+      },
+      "intent.repro_multi_reject": {
+        "type": "intention",
+        "label": "Rechazo de reprogramación multiproducto (turno único)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente acepta agendar el turno único total, selecciona 'Acepta'. Si prefiere reprogramar solo uno de sus productos, selecciona 'Un producto'. Si no acepta nada, selecciona 'No acepta'.",
+        "prompt": "Entiendo su situación. Sin embargo, le recomendamos ponerse al día con sus créditos para evitar que la cita pendiente siga creciendo. Si realiza un turno único de {total_balance_palabras} quedaría totalmente al día. ¿Le gustaría agendar el día en que realizará este turno?",
+        "on": {
+          "Acepta": {
+            "goto": "task.negotiation"
+          },
+          "Un producto": {
+            "goto": "intent.repro_un_solo_producto"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_repro_reject"
+          }
+        }
+      },
+      "intent.repro_un_solo_producto": {
+        "type": "intention",
+        "label": "Reprogramación de un solo crédito (3.10)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Continúa para gestionar la reprogramación del primer crédito.",
+        "prompt": "Entiendo. En este caso podemos gestionar la reprogramación por uno de sus productos. Podemos ofrecerle la reprogramación del crédito terminado en {folio_p1_palabras}.",
+        "on": {
+          "always": {
+            "set_variables": {
+              "cantidad_productos_reprogramar": "1"
+            },
+            "set_agent_output": {
+              "multiproducto_repro_producto_1": "1",
+              "cantidad_productos_reprogramar": "1"
+            },
+            "goto": "intent.repro_alternativas"
+          }
+        }
+      },
+      "intent.repro_multi_disponibilidad": {
+        "type": "intention",
+        "label": "Inicio de contrato multiproducto (disponibilidad)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Selecciona 'Si' solo si el paciente confirma claramente que tiene tiempo ahora (por ejemplo: 'sí', 'sí tengo', 'dale', 'claro', 'ahora sí', 'de acuerdo'). Selecciona 'No' SOLO si el paciente dice explícita y claramente que NO tiene tiempo o no puede ahora (por ejemplo: 'no', 'ahora no', 'no puedo', 'no tengo tiempo'). Si la respuesta es ambigua, muy corta, incompleta, es una sola letra o no se entendió (ruido/transcripción confusa), NO selecciones ninguna opción: discúlpate brevemente diciendo que no lograste escuchar bien y vuelve a preguntar si cuenta con el tiempo ahora, esperando una respuesta clara. Nunca asumas 'No' ante una respuesta que no entendiste.",
+        "prompt": "Perfecto. Ahora leeremos el contrato telefónico para formalizar la reprogramación. ¿Cuenta con tiempo disponible para ello? Llevará entre cinco y diez minutos.",
+        "on": {
+          "Si": {
+            "goto": "intent.repro_multi_cedula"
+          },
+          "No": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_proximo_contacto"
+          }
+        }
+      },
+      "intent.repro_multi_cedula": {
+        "type": "intention",
+        "label": "Solicitud de cédula (multiproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera a que el paciente confirme que tiene a mano su cédula de identidad y luego selecciona 'Continuar'.",
+        "prompt": "Perfecto. Necesito que tenga a mano su cédula de identidad. Por favor, avíseme cuando la tenga.",
+        "on": {
+          "Continuar": {
+            "goto": "intent.repro_multi_apertura_grabacion"
+          }
+        }
+      },
+      "intent.repro_multi_apertura_grabacion": {
+        "type": "intention",
+        "label": "Apertura de grabación y mandato (multiproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar el mandato respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto', selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra cosa sin la frase exacta, selecciona 'Repetir'.",
+        "prompt": "Para su respaldo y seguridad, a partir de este momento esta conversación está siendo grabada. Para comenzar, {nombre_deudor_completo}, necesitamos que usted acepte el mandato de canales remotos, el cual nos autoriza a organizar la gestión de reprogramación durante esta llamada. En el caso de que acepte, por favor responda con un fuerte y claro: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "goto": "task.collect_email_multi"
+          },
+          "Repetir": {
+            "goto": "intent.repro_multi_mandato_repregunta"
+          }
+        }
+      },
+      "intent.repro_multi_mandato_repregunta": {
+        "type": "intention",
+        "label": "Repregunta mandato multiproducto (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'No acepta'.",
+        "prompt": "Disculpe, para que la grabación sea legalmente válida ante auditoría, necesito que responda exactamente con la frase de aceptación obligatoria: Sí, acepto. Le repito la pregunta: ¿Acepta el mandato de canales remotos?",
+        "on": {
+          "Acepta": {
+            "goto": "task.collect_email_multi"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_mandato_no_aceptado"
+          }
+        }
+      },
+      "task.collect_email_multi": {
+        "type": "task",
+        "label": "Recolectar correo electrónico (multiproducto)",
+        "task_type": "FormTask",
+        "params": {
+          "intro": "Me indica su correo electrónico para hacer envío del mandato de canal remoto.",
+          "schema": [
+            {
+              "name": "correo_electronico",
+              "type": "email",
+              "label": "su correo electrónico",
+              "required": false
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto": "task.primera_validacion"
+          },
+          "Cancelado": {
+            "goto": "task.primera_validacion"
+          },
+          "MaxTriesExceeded": {
+            "goto": "task.primera_validacion"
+          }
+        }
+      },
+      "intent.repro_multi_detalle": {
+        "type": "intention",
+        "label": "Lectura del detalle de las reprogramaciones (multiproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "cuotas_elegidas",
+          "cases": {
+            "12": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_12} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "24": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_24} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "36": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_36} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "48": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_48} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "60": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_60} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto."
+          },
+          "default": "En este momento no logramos recuperar las condiciones exactas de sus reprogramaciones."
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "cuotas_elegidas",
+              "cases": {
+                "12": "intent.repro_multi_aceptacion",
+                "24": "intent.repro_multi_aceptacion",
+                "36": "intent.repro_multi_aceptacion",
+                "48": "intent.repro_multi_aceptacion",
+                "60": "intent.repro_multi_aceptacion"
+              },
+              "default": "intent.repro_plazo_no_recuperable"
+            }
+          }
+        }
+      },
+      "intent.repro_multi_aceptacion": {
+        "type": "intention",
+        "label": "Aceptación final multiproducto",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto', selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra cosa sin la frase exacta, selecciona 'Repetir'.",
+        "prompt": "¿Usted acepta efectuar las reprogramaciones de sus deudas en los términos ya descritos para sus créditos informados? En el caso de que acepte, por favor responda con un fuerte y claro: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_multi_cierre_formal"
+          },
+          "Repetir": {
+            "goto": "intent.repro_multi_aceptacion_repregunta"
+          }
+        }
+      },
+      "intent.repro_multi_aceptacion_repregunta": {
+        "type": "intention",
+        "label": "Repregunta aceptación final multiproducto (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'Repetir'.",
+        "prompt": "Disculpe, para que la grabación sea legalmente válida ante auditoría, necesito que responda exactamente con la frase de aceptación obligatoria: Sí, acepto. Le repito la pregunta: ¿Usted acepta efectuar las reprogramaciones de sus deudas en los términos ya descritos?",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_multi_cierre_formal"
+          },
+          "Repetir": {
+            "goto": "intent.repro_multi_aceptacion_repregunta_2"
+          }
+        }
+      },
+      "intent.repro_multi_aceptacion_repregunta_2": {
+        "type": "intention",
+        "label": "Segunda repregunta aceptación final multiproducto (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'No acepta'.",
+        "prompt": "En caso de querer formalizar la reprogramación necesito que responda únicamente: Sí, acepto. ¿Usted acepta efectuar las reprogramaciones de sus deudas en los términos ya descritos?",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_multi_cierre_formal"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_repro_aceptacion_fallida"
+          }
+        }
+      },
+      "intent.repro_multi_cierre_formal": {
+        "type": "intention",
+        "label": "Cierre formal multiproducto",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Siendo hoy {today_date}, sus reprogramaciones de los créditos informados serán cursadas respetando todas las condiciones antes mencionadas, previo a evaluación de esta grabación. Ante cualquier rechazo se le notificará por esta vía o mediante correo electrónico dentro de las cuarenta y ocho horas hábiles. Esta información quedará reflejada en nuestros sistemas en cuarenta y ocho horas hábiles. Le informo que dentro de los diez días posteriores a esta operación, usted podrá retractarse de lo contratado, acudiendo a cualquier sucursal de Sanatorio Aurora donde se le generará un número de ticket. Las condiciones finales serán detalladas en una carta normativa que enviaremos a su correo electrónico.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "reprogramación",
+            "goto": "final.end_refinanciamiento"
+          }
+        }
+      },
+      "intent.repro_plazo_no_recuperable": {
+        "type": "intention",
+        "label": "Corte de seguridad: plazo elegido no recuperable (no leer contrato)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Por lo que no podemos continuar con la grabación del contrato en este momento. Lo contactaremos nuevamente a la brevedad para completar la formalización de su reprogramación. Que tenga un buen día.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "substatus": "REPROGRAMACION INCONCLUSA",
+            "end": true
+          }
+        }
+      },
+      "intent.prox_contexto": {
+        "type": "intention",
+        "label": "Próximo contacto - contexto de recuperación (5.2)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Hola {nombre_deudor}. Nos estamos comunicando nuevamente con usted dado que en nuestra última llamada se encontraba interesado en la propuesta de reprogramación de su sesión en atraso de agenda, pero no disponía del tiempo suficiente para realizar la lectura obligatoria del contrato legal.",
+        "on": {
+          "always": {
+            "goto": "intent.prox_disponibilidad"
+          }
+        }
+      },
+      "intent.prox_disponibilidad": {
+        "type": "intention",
+        "label": "Próximo contacto - validación de tiempo (5.3)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente dispone de tiempo ahora, selecciona 'Si'. Si no puede en este momento, selecciona 'No puede ahora'. Si no quiere hacerlo, selecciona 'No quiere'.",
+        "prompt": "¿Dispone en este momento de cinco a siete minutos libres para que podamos realizar las preguntas de seguridad y dejar el beneficio completamente activado en el sistema?",
+        "on": {
+          "Si": {
+            "goto_by": {
+              "field": "info_6",
+              "rules": [
+                {
+                  "op": "==",
+                  "value": 1,
+                  "goto": "intent.repro_intro"
+                }
+              ],
+              "default": "intent.repro_multi_intro"
+            }
+          },
+          "No puede ahora": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_proximo_contacto"
+          },
+          "No quiere": {
+            "goto": "intent.repro_reject_offer"
+          }
+        }
+      },
+      "intent.soft_close_paid": {
+        "type": "intention",
+        "label": "Cierre suave (pagado)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Gracias por comentarlo. Al día de hoy, no hay un turno registrado en el sistema, pero puede verificarlo si lo desea. Sabes como verificarlo o necesitas ayuda?",
+        "on": {
+          "necesita ayuda": {
+            "goto": "intent.help_paid"
+          },
+          "no necesita ayuda": {
+            "goto": "final.end_paid"
+          },
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.help_paid": {
+        "type": "intention",
+        "label": "Ayuda (pagado)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Puede ingresar a doble ve doble ve doble ve punto, Sanatorio Aurora punto, ce ele barra, centro, guion, de, guion, ayuda, barra, accede guion, a, guion, tu, guion, sucursal guion, virtual, seleccionar 'Mi Sucursal Virtual', iniciar sesión con su RUT y clave, y en 'Créditos Sociales - Mis Créditos', revisar sus créditos vigentes, cuotas pagadas o pendientes y el especialidad total adeudado. Si persisten dudas o la información no se actualiza, puede escribir a soluciones arroba Sanatorio Aurora punto ce ele o comunicarse al + 5, 6, 9, 3, 4, 8, 4, 8, 4, 2, 5.",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente realiza una pregunta de la base de conocimientos respóndela y luego elige la opción Continuar. Si no hace pregunta o solo agradece o se despide, elige la opción Continuar de inmediato sin agregar ni comentar nada (NO te despidas, NO digas 'gracias' ni 'que tenga buen día' — el cierre lo dará el siguiente paso del flujo).",
+        "prompt": "Perfecto, entonces confirmamos su cita de turno por un valor de {total_balance_palabras} para el día {commitment_date_spoken}. Puede agendar en Mi Sucursal Webpay, ingresando a triple dobleve punto cajalosandes punto cl; en Toku, en triple dobleve punto cajalosandes punto try toku punto com; en Servipag, sanatorio Estado o Sencillito; en Caja Vecina con el número de convenio uno cuatro cero seis nueve; o directamente en una sucursal de Sanatorio Aurora en la Caja Pagadora. ¿Tiene alguna otra duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Perfecto. Muchas gracias por su tiempo. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intencion de turno para contactarnos en otra ocasión.",
+        "delivery": "say"
+      },
+      "final.end_repro_reject": {
+        "type": "final",
+        "label": "Despedida (rechazo turno único reprogramación)",
+        "prompt": "Entiendo, solo le recuerdo que el turno sigue pendiente y es importante resolverlo para evitar inconvenientes con su cuenta. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_repro_aceptacion_fallida": {
+        "type": "final",
+        "label": "Despedida (aceptación final no lograda)",
+        "prompt": "Lo siento, necesitamos que sea claro y responda lo indicado para finalizar la reprogramación. En esta ocasión no podemos dar cierre formal al contrato. Lo estaremos contactando próximamente. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Perfecto, le agradezco su tiempo. Que esté muy bien.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele al titular que Sanatorio Aurora intentó ponerse en contacto con él.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_refinanciamiento": {
+        "type": "final",
+        "label": "Despedida (reprogramación / reprogramación)",
+        "delivery": "say",
+        "prompt": "Le deseamos un excelente día y muchas gracias por su tiempo."
+      },
+      "final.end_proximo_contacto": {
+        "type": "final",
+        "label": "Despedida (próximo contacto)",
+        "delivery": "say",
+        "prompt": "No se preocupe. Necesitamos poder realizarlo con tiempo, por lo que lo llamaremos más tarde para continuar con la lectura del contrato y formalizar la reprogramación. Que tenga un buen día."
+      },
+      "final.end_mandato_no_aceptado": {
+        "type": "final",
+        "label": "Despedida (mandato canales remotos no aceptado)",
+        "delivery": "say",
+        "prompt": "Disculpe, para poder continuar la lectura del contrato necesitamos que responda con claridad. Lo llamaremos más tarde para continuar con la formalización de la reprogramación. Que tenga un buen día."
+      },
+      "final.end_derivacion": {
+        "type": "final",
+        "label": "Despedida (derivación a sucursal)",
+        "delivery": "say",
+        "prompt": "Entiendo. En ese caso lo invitamos a tomar la reprogramación de forma presencial en cualquiera de las sucursales de Sanatorio Aurora. Que tenga un buen día."
+      },
+      "final.end_sin_compromiso_validacion": {
+        "type": "final",
+        "label": "Despedida (error validación identidad)",
+        "delivery": "say",
+        "prompt": "Lo siento, no pudimos validar su identidad en esta ocasión, por lo que no podemos continuar con la gestión. Lo contactaremos nuevamente. Que tenga un buen día."
+      },
+      "final.end_equifax_dos_fallidas": {
+        "type": "final",
+        "label": "Despedida (dos preguntas de seguridad fallidas)",
+        "delivery": "say",
+        "prompt": "Lo siento, como dos de las preguntas no han sido correctas, no podremos avanzar en la formalización de la reprogramación. Lo llamaremos en otro momento para su finalización. Que tenga un buen día."
+      },
+      "final.end_equifax_todas_fallidas": {
+        "type": "final",
+        "label": "Despedida (todas las preguntas de seguridad fallidas)",
+        "delivery": "say",
+        "prompt": "Lo siento, las respuestas no han sido correctas, motivo por el cual no podremos avanzar en la formalización de la reprogramación. Lo invitamos a tomar la reprogramación de forma presencial en cualquiera de las sucursales de Sanatorio Aurora. Que tenga un buen día."
+      },
+      "final.end_kba_error_tecnico": {
+        "type": "final",
+        "label": "Despedida (error técnico validación TransUnion)",
+        "delivery": "say",
+        "prompt": "Lo siento, no podremos continuar con la validación en este momento. Lo llamaremos más tarde para finalizar la reprogramación. Que tenga buen día."
+      },
+      "final.end_no_reconoce": {
+        "type": "final",
+        "label": "Despedida (no reconoce la cita pendiente)",
+        "delivery": "say",
+        "prompt": "Gracias por su tiempo. Que tenga un buen día."
+      }
+    }
+  }
+}

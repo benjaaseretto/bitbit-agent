@@ -15,8 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets" / "voices"
 PROMPT_WAV = ASSETS / "ana_es_prompt.wav"
 PROMPT_TEXT = (
-    "Hola, buen día. Mi nombre es Ana, le hablo de Bitbit respecto al "
-    "financiamiento de su teléfono móvil. Quedo atento a su respuesta."
+    "Hola, buen día. Mi nombre es Ana, le hablo de Clínica Vida para "
+    "coordinar su consulta médica. Quedo atento a su respuesta."
 )
 
 

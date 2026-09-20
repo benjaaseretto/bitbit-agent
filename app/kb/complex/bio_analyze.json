@@ -1,0 +1,134 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Quién me llama? | ¿De qué empresa me llaman? | ¿Quién es usted? | ¿Es BioAnalyze?",
+    "answer": "Le habla {nombre_agente}, Agente Virtual del área de Servicio y seguimiento de venta de BioAnalyze. Le contactamos para apoyarle con la gestión de su Tarjeta de Crédito departamental, válida en tiendas BioAnalyze."
+  },
+  {
+    "question": "¿A qué número puedo llamar? | ¿Cuál es el número de atención al comprador? | ¿Tienen un teléfono de contacto? | ¿Dónde puedo reportar?",
+    "answer": "Para cualquier tema relacionado con su Tarjeta de Crédito, puede comunicarse al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero. El horario es de lunes a viernes de ocho de la mañana a nueve de la noche, y sábados y domingos de nueve de la mañana a tres de la tarde."
+  },
+  {
+    "question": "¿En qué horario atienden? | ¿Cuáles son sus horarios? | ¿A qué hora puedo llamar?",
+    "answer": "El horario de atención al comprador es de lunes a viernes de ocho de la mañana a nueve de la noche, y sábados y domingos de nueve de la mañana a tres de la tarde."
+  },
+  {
+    "question": "Ya hice un convenio antes y no se aplicó | Antes negocié y no quedó | Mi convenio anterior no valió",
+    "answer": "Lamento esa situación. Para que pueda aplicarse, es necesario contar con la grabación de la negociación con su aceptación expresa. Con gusto le ayudo a generar nuevamente su convenio para que en esta ocasión quede correctamente registrado."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿Cuál es mi importe? | ¿De cuánto es la cotización? | ¿Qué monto tengo pendiente?",
+    "answer": "Su importe pendiente actual es de {total_balance_palabras}. Es el monto a cerrar la compra para mantener su cuenta al corriente."
+  },
+  {
+    "question": "¿Cuál es el compra mínimo? | ¿Cuánto es el mínimo? | ¿Cuánto es lo mínimo que puedo cerrar la compra? | ¿Cuál es el monto mínimo?",
+    "answer": "El monto mínimo a cubrir, con el beneficio de descuento aplicable a su caso, es de {monto_minimo_palabras}."
+  },
+  {
+    "question": "¿Cuándo es mi fecha de compra? | ¿Cuándo vence? | ¿Cuál es la Fecha Límite de compra? | ¿Cuándo tengo que cerrar la compra? | ¿Cuál es la FLP?",
+    "answer": "Su Fecha Límite de compra es el {due_date_spoken}. Le invitamos a realizar su compra antes o en esa fecha para conservar su buen historial y evitar cargos."
+  },
+  {
+    "question": "¿Cuántos días llevo sin cerrar la compra? | ¿Cuántos días de atraso tengo? | ¿Cuántos días me he retrasado?",
+    "answer": "Según nuestros registros, su cuenta presenta {delinquency} días de atraso. Le invitamos a cerrar la oferta su compra lo antes posible para evitar mayores afectaciones."
+  },
+  {
+    "question": "¿Cómo puedo cerrar la compra? | ¿Dónde compra? | ¿Cuáles son los canales de compra? | ¿Cómo realizo el compra?",
+    "answer": "Puede realizar su compra directamente desde su Aplicación Móvil o de forma presencial en cualquier tienda BioAnalyze más cercana."
+  },
+  {
+    "question": "¿Puedo cerrar la compra en línea? | ¿Hay una app para cerrar la compra? | ¿Tienen aplicación? | ¿Cómo compra en la app? | ¿Se puede en la página? | ¿Se puede en línea? | ¿Se puede por internet? | ¿Puedo cerrar la compra por la página?",
+    "answer": "Sí, puede cerrar la compra de forma rápida desde su Aplicación Móvil de BioAnalyze en su celular. También puede acudir a cualquier tienda BioAnalyze para realizar su compra."
+  },
+  {
+    "question": "Ya pagué | Yo ya hice el compra | Hice el compra hace unos días | compra realizado | Ya abonó",
+    "answer": "Entiendo. Para validarlo, ¿me podría indicar en qué fecha realizó su compra y por qué monto? Con esa información dejamos registrada la validación y no continuamos con el cobro."
+  },
+  {
+    "question": "Estoy ocupado | No puedo hablar ahora | Llámame después | No tengo tiempo",
+    "answer": "Claro, no le quito más tiempo. ¿A qué hora le puedo llamar nuevamente para apoyarle con su gestión?"
+  },
+  {
+    "question": "¿Qué pasa si no compra? | ¿Qué consecuencias tiene no cerrar la compra? | ¿Qué cargos me cobran si no compra?",
+    "answer": "Si no realiza su compra a tiempo se pueden generar cargos adicionales y afectar el buen comportamiento de su Tarjeta de Crédito. Por eso le invitamos a cerrar la oferta su compra para conservar sus beneficios."
+  },
+  {
+    "question": "¿Cuál es mi nombre completo registrado? | ¿Cómo aparezco en sus registros? | ¿A nombre de quién está la cuenta?",
+    "answer": "La cuenta está registrada a nombre de {nombre_deudor_completo}. Si necesita actualizar algún dato, puede comunicarse al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+  },
+  {
+    "question": "¿Esto afecta mi historial? | ¿Voy al Buró? | ¿Esto afecta mi crédito? | ¿Daña mi historial crediticio?",
+    "answer": "Mantener su Tarjeta de Crédito al corriente le permite conservar su buen historial y los beneficios de su tarjeta. Por eso le invitamos a cerrar la oferta su compra a tiempo."
+  },
+  {
+    "question": "Estoy molesto | Por qué me molestan | Me están acosando | Estoy enojado",
+    "answer": "Entiendo, {nombre_deudor}. La intención de esta llamada es apoyarle a mantener su cuenta de BioAnalyze al corriente y conservar sus beneficios. También puede realizar su gestión directamente por nuestros canales de atención llamando al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+  },
+  {
+    "question": "La app no funciona | No puedo cerrar la compra en la aplicación | El portal marca error | La aplicación se cae | Intenté cerrar la compra y el compra no pasa | La plataforma no me deja cerrar la compra",
+    "answer": "Le ofrezco una disculpa por el inconveniente con la aplicación; entiendo lo molesto que resulta y no es un error de su parte. Mientras se resuelve, puede realizar su compra de forma presencial en cualquier tienda BioAnalyze, o reportar la falla al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+  },
+  {
+    "question": "¿Cuál es la empresa que llama? | ¿Cómo se llama la empresa? | ¿Es una agencia externa?",
+    "answer": "Soy Agente Virtual del área de Servicio y seguimiento de venta de BioAnalyze. Le contactamos por su Tarjeta de Crédito departamental BioAnalyze."
+  },
+  {
+    "question": "¿Dónde puedo usar mi tarjeta? | ¿En qué tiendas funciona? | ¿Sirve en BioAnalyze?",
+    "answer": "Su Tarjeta de Crédito departamental puede ser utilizada para compras en tiendas BioAnalyze."
+  },
+  {
+    "question": "¿Qué es la revolvente? | La revolvente | Mi revolvente | ¿De qué se trata mi crédito revolvente? | ¿Qué es mi línea revolvente?",
+    "answer": "Cuando hablamos de su revolvente nos referimos a la línea de crédito de su Tarjeta de Crédito departamental BioAnalyze. Actualmente presenta un importe pendiente de {total_balance_palabras}, que es el monto a cubrir para mantener su cuenta al corriente."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "BioAnalyze puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

@@ -1,50 +1,50 @@
 [
   {
-    "question": "¿Cuántos días de atraso tengo? | ¿Cuántos días llevo sin pagar?",
-    "answer": "Su cuota presenta un atraso de {dias_mora} días. Por eso lo contactamos desde Bitbit para ayudarle a regularizar y evitar restricciones en el equipo."
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} atendemos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
   },
   {
-    "question": "¿Cuánto debo? | ¿De cuánto es mi deuda?",
-    "answer": "El monto pendiente es {monto_deuda_palabras}. Corresponde al financiamiento de su teléfono con Bitbit."
+    "question": "¿Dónde queda la clínica? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La consulta es en {sucursal}. Si necesita la dirección exacta o cómo llegar, indíqueme y le oriento con lo que tengo registrado."
   },
   {
-    "question": "¿Qué pasa si no pago? | ¿Qué consecuencias hay?",
-    "answer": "Si el atraso continúa, el sistema puede restringir el teléfono y generar cargos adicionales. También afecta su historial con Bitbit. Queremos evitarle esa molestia."
+    "question": "¿Cuánto cuesta la consulta? | ¿Cuál es el precio? | ¿Aceptan seguro?",
+    "answer": "Los costos y coberturas dependen del convenio o seguro. En recepción de {sucursal} le confirman el importe al llegar. Yo puedo ayudarle a reservar el turno."
   },
   {
-    "question": "¿Cómo puedo pagar? | ¿Dónde pago? | ¿Medios de pago?",
-    "answer": "Puede pagar por la app Bitbit, transferencia bancaria o tiendas autorizadas. Si necesita ayuda con el proceso, indíqueme y le oriento."
+    "question": "¿Necesito llevar algo? | ¿Qué documentos llevo?",
+    "answer": "Le pedimos documento de identidad y, si tiene, estudios previos o carnet de seguros. Llegue unos diez minutos antes."
   },
   {
-    "question": "¿Mi teléfono será bloqueado?",
-    "answer": "Si el atraso continúa, el sistema puede restringir el funcionamiento del teléfono. Regularizar el pago lo antes posible mantiene el equipo activo."
+    "question": "¿Puedo cancelar o reprogramar? | ¿Cómo cambio la cita?",
+    "answer": "Sí. Puede reprogramar llamando a {nombre_empresa} o avisando con anticipación. ¿Quiere que agendemos otra fecha ahora?"
   },
   {
-    "question": "¿Qué es Bitbit? | ¿Qué es bitbit?",
-    "answer": "Bitbit financia equipos celulares con planes de pago. Lo contactamos para mantener su financiamiento al día."
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Para urgencias graves debe acudir a guardia o emergencias. Si es una consulta programable de {especialidad}, puedo ofrecerle el turno más cercano disponible."
+  },
+  {
+    "question": "¿Horarios de atención? | ¿A qué hora abren?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por turnos. ¿Prefiere franja de mañana o de tarde dentro de los próximos días?"
+  },
+  {
+    "question": "¿Quién es el doctor? | ¿Con qué médico es?",
+    "answer": "Su consulta de {especialidad} sería con {nombre_medico} en {sucursal}."
   },
   {
     "question": "¿Por qué me llaman?",
-    "answer": "Le llamamos desde Bitbit porque su cuota del financiamiento presenta un atraso de {dias_mora} días. Queremos apoyarle a mantener el servicio activo."
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
   },
   {
-    "question": "¿Puedo pagar hoy?",
-    "answer": "Sí. Pagar hoy regulariza de inmediato y evita restricciones. ¿Confirmamos el pago para el día de hoy?"
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea que deje registrado que ya estaba agendado?"
   },
   {
-    "question": "Quiero devolver el teléfono | Quiero cancelar",
-    "answer": "Entiendo. Para iniciar ese proceso primero hay que poner al día el saldo pendiente. ¿Le ayudo a normalizar su cuenta hoy?"
+    "question": "¿Número de teléfono? | ¿WhatsApp?",
+    "answer": "Puede contactar a {nombre_empresa} por el canal habitual de la clínica. En esta llamada también puedo ayudarle a agendar."
   },
   {
-    "question": "Insisto en devolver | No quiero pagar, quiero cancelar",
-    "answer": "Lamento la situación. Por ahora solo puedo gestionar el pago del saldo vigente para evitar que crezca la deuda. Una vez al día podrá tramitar la cancelación. ¿Podría cubrir {monto_deuda_palabras} hoy?"
-  },
-  {
-    "question": "¿Cuál es el número de atención?",
-    "answer": "Atención Bitbit: cinco cinco cinco, dos cuatro cero, uno nueve ocho. Cobranza: cinco cinco cuatro, tres siete uno, seis seis cero dos."
-  },
-  {
-    "question": "Ya pagué | ¿Por qué me llaman si ya pagué?",
-    "answer": "Si ya pagó, puede haber demora en la actualización. Verifique en la app Bitbit o con atención al cliente. Gracias por avisar."
+    "question": "¿Dan recetas o diagnóstico por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos la agenda. El diagnóstico y las indicaciones las da el médico en la consulta presencial."
   }
 ]

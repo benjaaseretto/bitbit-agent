@@ -8,6 +8,9 @@ __pycache__/
 .mypy_cache/
 .env
 .env.local
+.env.mac
+reports/
+assets/voices/
 *.log
 .DS_Store
 dist/

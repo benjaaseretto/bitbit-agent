@@ -1,0 +1,535 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "camino_verde_flow",
+    "visible_name": "Camino Verde Salud",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (24 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/camino_verde.json",
+      "company_id": "camino_verde-demo",
+      "description": "Base de conocimiento de Camino Verde Salud."
+    },
+    "company_id": "camino_verde-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "abcdin_lax_flow_graph.json",
+      "node_count": 24,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Camino Verde Salud",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "2.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_identificacion_breve": "Hola, soy {nombre_agente} de {nombre_empresa}."
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "express_route": true,
+            "express_route_next": "task.negotiation"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura (presentación + divulgación)",
+        "delivery": "say",
+        "interruptible": true,
+        "kb_exclude_hint": "IMPORTANTE: cada opción de este paso tiene un nodo destino que ya responde al paciente con su propio guion (Consulta cita pendiente → detalle de especialidad/fecha; Opciones de turno → oferta de próximo contacto; Ya asistió → validación de turno; Próximo contacto → negociación, que ofrece reagendar si el paciente solo quiere que lo llamen; No reconoce cita pendiente → cierre). Por eso, cuando el paciente pregunte, pida o mencione cualquiera de estos temas (especialidad, turno, cuánto/cuanto debe, fecha propuesta, opciones de turno, cuotas, convenio, facilidad de turno, próximo contacto, agendar, llamar después, ocupado, ya asistió, ya aboné, no reconoce la cita pendiente o similar), elige EN SILENCIO la opción del Criterio de decisión que corresponda. NO respondas tú aquí ni adelantes preguntas del siguiente paso: el nodo destino se encarga. NO CONFUNDAS una fecha de turno con un pedido de RELLAMADO: 'mañana hago el turno' es intención de turno (va a negociación), no una solicitud de próximo contacto. Solo es 'Próximo contacto' cuando el paciente pide que lo contacten y no dice que vaya a agendar.",
+        "prompt": "Hola {nombre_deudor}, soy {nombre_agente} de {nombre_empresa}. Te comento que esta llamada será grabada para fines de calidad. Llamo por tu turno pendiente de {monto_deuda_palabras} con fecha de fecha propuesta {due_date_spoken}. Si lo resolvemos en los próximos {max_dias} días, evitas gestiones y costos adicionales. ¿Te parece lo revisamos ahora?",
+        "decision": "PRIORIDAD MÁXIMA — intención de turno: si el paciente dice que va a agendar, abonar, transferir, depositar o cancelar la cita pendiente, o menciona una fecha en la que pagará (por ejemplo: 'mañana hago el turno', 'hoy día se hace', 'lo turno el viernes', 'ya voy a cobrar y lo turno'), elige 'Continuar' AUNQUE el turno empiece con 'no', traiga excusas, diga que está ocupado, que no pudo agendar antes o que recién va a cobrar. NUNCA elijas 'Próximo contacto' cuando el paciente expresó que va a agendar: el cita se registra en el paso de negociación, no reagendando la llamada. Después de esa prioridad: si detectas especialidad, cuánto, cuanto, debo, cita pendiente, turno o fecha propuesta, elige 'Consulta cita pendiente' aunque el paciente agregue otra cosa. Si el paciente dice que ya asistió, elige 'Ya asistió'. Elige 'Próximo contacto' SOLO si pide que lo llamen después, está ocupado o no puede hablar Y no expresó ninguna intención de turno. Si solicita convenio, cuotas o facilidad de turno, elige 'Opciones de turno'. Si no reconoce la cita pendiente, elige 'No reconoce cita pendiente'. En cualquier otro caso, elige 'Continuar'.",
+        "on": {
+          "Continuar": {
+            "goto": "task.negotiation"
+          },
+          "Consulta deuda": {
+            "goto": "intent.debt_info"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.already_paid_validation"
+          },
+          "Próximo contacto": {
+            "goto": "task.negotiation"
+          },
+          "Opciones de pago": {
+            "goto": "intent.offer_payment_options_next_contact"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_not_recognized"
+          },
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.debt_info": {
+        "type": "intention",
+        "label": "Información de cita pendiente",
+        "delivery": "say",
+        "interruptible": true,
+        "kb_exclude_hint": "IMPORTANTE: la opción 'Pide puntos de recaudo' lleva a un paso que ya le da al paciente el guion completo de tiendas físicas, sitio web y cómo ubicar la sede más cercana. Por eso, si el paciente pide los puntos de recaudo, pregunta dónde agendar o menciona tiendas, sucursales, sedes, locales o la página web, elige EN SILENCIO 'Pide puntos de recaudo': no respondas tú, no uses las preguntas frecuentes de ese tema y no agregues preguntas de seguimiento. NUNCA ofrezcas enviar información por WhatsApp, correo, mensaje ni ningún otro canal: no existe ese envío. Para cualquier otra pregunta ajena a dónde agendar, responde de forma fiel con las preguntas frecuentes y retoma este paso.",
+        "decision": "Si el paciente pide los puntos de recaudo, pregunta dónde agendar, o menciona tiendas, sucursales, sedes, locales o la página web, elige 'Pide puntos de recaudo'. Si expresa intención de agendar o menciona una fecha de turno (por ejemplo: 'turno hoy', 'lo abono mañana', 'voy a agendar', 'transfiero el viernes'), elige 'Quiere agendar'. En cualquier otro caso, elige 'Quiere agendar'.",
+        "prompt": "Entiendo tu consulta. Tu turno pendiente es de {monto_deuda_palabras} y la fecha límite de tu sesión fue el {due_date_spoken}.",
+        "on": {
+          "Quiere pagar": {
+            "goto": "task.negotiation"
+          },
+          "Pide puntos de recaudo": {
+            "goto": "intent.payment_locations"
+          },
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.payment_locations": {
+        "type": "intention",
+        "label": "Puntos de recaudo y tiendas",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "prompt": "Puedes realizar tu turno en cualquiera de nuestras tiendas físicas con tu número de identificación. Ingresando a la página doble ve doble ve doble ve punto abc punto ce ele, barra tiendas, puedes consultar la sede más cercana y de tu preferencia, colocando tu ubicación, región o comuna.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación V2",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_days": "{max_dias}",
+          "allow_transfer": false,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "accept_out_of_window_as_intention": true,
+          "out_of_window_warning_message": "Comprendo, gracias por compartirlo. La fecha que indicas excede nuestro plazo habitual, así que te haré una breve consulta para dejar anotada tu intención de turno y darle seguimiento.",
+          "max_attempts_negotiation": 3,
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "collect_payment_method_in_task": false,
+          "ask_nonpayment_reason": false,
+          "benefit_hints": [
+            "evitar recargos y gastos adicionales",
+            "mantener tu cuenta al día",
+            "confirmar la cita tu situación con ABECEDIN y La Polar"
+          ],
+          "empresa": "{nombre_empresa}",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{monto_deuda_palabras}",
+          "custom_instructions": "URLS FONÉTICAS: cuando la KB contenga una URL escrita en forma fonética (por ejemplo 'doble ve doble ve doble ve punto abc punto ce ele, barra tiendas'), reprodúcela textualmente tal como está escrita en la KB, sin convertirla a formato www ni a ninguna otra forma abreviada. ANTI-ALUCINACION: usa solo los datos del lead; no inventes intereses, recargos, descuentos, productos ni fechas. RUTEO SEMANTICO — la task se encarga de validar fechas y retries; tu única decisión es a qué handler enrutar: si el paciente dice agendar/ABONAR/TRANSFERIR/DEPOSITAR llama `cliente_dispuesto` con la fecha textual del paciente (la task evalúa la ventana). Si sólo pide ser LLAMADO/CONTACTADO/HABLAR de nuevo ('llámame mañana', 'hablemos el viernes', 'reagendemos', 'estoy ocupado', 'ahorita no puedo', 'aún no cobré, hablemos después'), activa 'Solicita próximo contacto'. Si el turno contiene AMBAS cosas (una promesa de turno y un pedido de rellamado, por ejemplo 'estoy ocupado pero hoy día se hace'), gana SIEMPRE `cliente_dispuesto`: el cita de turno tiene prioridad sobre reagendar. NUNCA reutilices una fecha u hora de rellamado como fecha de turno. NO verbalices al paciente que 'aceptas la fecha como excepción' ni que 'mantendremos seguimiento activo'; usa el término INTENCIÓN de turno si aplica. OBJECIONES PRIMERO: si el paciente pregunta o reclama (especialidad, turno, cuotas, garantía, estado de la credencial, cobros indebidos), respóndele con la KB antes de retomar la negociación y confirma que quedó claro. RECLAMO GRAVE: si denuncia cobros indebidos, que ya asistió el triple, que no le entregaron la garantía o anuncia reclamo formal en tienda, NO fuerces cita ni intención: enruta a 'No reconoce cita pendiente' o 'Solicita opciones de turno'. MIV: ante red flags (no entiendo, error, cobro injusto, ya pagué, por qué, no reconozco), pausa, responde la duda con la KB, valida y usa la transición 'Entiendo que esa era tu duda principal. Ahora que hemos aclarado el punto, ¿podemos retomar el acuerdo sobre el turno de tu sesión?' antes de retomar.",
+          "objection_handlers": [
+            {
+              "objection": "El paciente dice que ya asistió | ya hice el turno | ya aboné | pagué por la app | pagué en sucursal | ya transferí | ya está pagado",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "El paciente está ocupado o pide que lo llamen después | no puedo hablar | estoy manejando | estoy en reunión | llama más tarde | llámame después | ahora no puedo | no tengo tiempo",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "El paciente pide agendar un próximo contacto o hablar en otro momento, SIN decir que va a agendar. NO uses esta objeción si el paciente menciona que pagará o da una fecha de turno (eso es `cliente_dispuesto`) | podemos hablar la semana que viene | podemos hablar después | agendar una llamada | agendar un llamado | llamar después | llámame después | ver algo la semana que viene | hablemos la semana que viene | hablemos la próxima semana | retomemos esta llamada después | preferiría retomar la llamada | quiero retomar la llamada después | retomar esta llamada la semana que viene | no voy a poder agendar ahora, prefiero reagendar | no puedo agendar ahora, llamame después | no tengo dinero ahora y pide hablar después",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Solicita próximo contacto"
+            },
+            {
+              "objection": "El paciente solicita convenio, cuotas, facilidad de turno, reprogramación, renegociación, alternativa especial o dice que no tiene el dinero completo",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Solicita opciones de turno"
+            },
+            {
+              "objection": "El paciente no reconoce la cita pendiente, dice que no debe, no tiene la cuenta, desconoce el cobro o reclama que no corresponde",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "El paciente pregunta especialidad, turno, cuánto debe, fecha de fecha propuesta, desde cuándo está vencido o por qué se le llama",
+              "answer": "Entiendo tu consulta. Tu turno pendiente es de {monto_deuda_palabras} y la fecha límite de tu sesión fue el {due_date_spoken}. Para evitar cargos adicionales, ¿prefieres realizar el turno hoy mismo o necesitas el detalle de los puntos de recaudo?"
+            },
+            {
+              "objection": "El paciente pregunta quién llama, desde dónde llaman, de qué empresa o institución es la llamada, pide confirmar la empresa o duda de la identidad del interlocutor (por ejemplo: 'quién es', 'desde dónde me llaman', 'qué empresa', 'de dónde son', 'qué sanatorio', 'confírmame la empresa')",
+              "answer": "Te llamamos desde Camino Verde Salud por tu turno pendiente de {monto_deuda_palabras} con fecha de fecha propuesta {due_date_spoken}. ¿Retomamos para coordinar el turno?"
+            },
+            {
+              "objection": "El paciente reporta falla al agendar, problema con aplicación, sitio web, transferencia rechazada o canal caído",
+              "answer": "Lamento los inconvenientes con la App. Para que tu gestión no se detenga, puedes realizar tu turno hoy mismo en cualquiera de nuestras tiendas físicas con tu número de identificación. Asimismo, te sugiero contactar a Atención al paciente para reportar la falla técnica y que puedan ayudarte a restablecer tu acceso. Si necesitas ubicar una tienda, ingresa a doble ve doble ve doble ve punto abc punto ce ele, barra tiendas, y consulta la sede más cercana colocando tu ubicación, región o comuna."
+            },
+            {
+              "objection": "El paciente pregunta por tiendas habilitadas, sucursales, sedes, locales o dónde puede agendar presencialmente",
+              "answer": "Ingresando a la página doble ve doble ve doble ve punto abc punto ce ele, barra tiendas, puedes consultar la sede más cercana y de tu preferencia, colocando tu ubicación, región o comuna. También puedes agendar en tienda física con tu número de identificación."
+            },
+            {
+              "objection": "El paciente tiene que consultar con un tercero, familiar, pareja, jefe o encargado antes de confirmar",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Solicita consulta tercero"
+            },
+            {
+              "objection": "El paciente tiene dudas, dice no entiendo, por qué, error, cobro injusto o pide aclaración antes de agendar",
+              "answer": "Entiendo tu duda. Revisemos primero lo importante: según la información disponible, el turno vencido es {monto_deuda_palabras} y la fecha de fecha propuesta fue el {due_date_spoken}. ¿Con eso queda aclarado el motivo de la gestión? Si es así, retomemos el acuerdo sobre el turno de tu sesión."
+            },
+            {
+              "objection": "El paciente está molesto, frustrado, reclama por llamadas o pide que no lo presionen",
+              "answer": "Comprendo la molestia. La intención es ayudarte a confirmar la cita la cuenta de la forma más clara posible. Solo confirmemos una alternativa concreta para evitar nuevos recargos: ¿qué fecha te acomoda para el turno?"
+            }
+          ],
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.offer_next_contact_after_no_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.already_paid_validation"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.close_intention"
+          },
+          "Solicita próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "agendar_proximo_contacto",
+            "goto": "intent.objection.solicita_proximo_contacto"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ocupado",
+            "goto": "intent.objection.cliente_ocupado"
+          },
+          "Solicita consulta tercero": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "consulta_tercero",
+            "goto": "intent.objection.solicita_consulta_tercero"
+          },
+          "Solicita opciones de pago": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "solicita_opciones_pago",
+            "goto": "intent.objection.solicita_opciones_pago"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_not_recognized"
+          }
+        }
+      },
+      "intent.objection.cliente_ocupado": {
+        "type": "intention",
+        "label": "Objeción: paciente ocupado",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "prompt": "Entiendo perfectamente, no quiero interrumpir tus actividades. Podemos agendar un próximo contacto cuando te quede mejor.",
+        "on": {
+          "always": {
+            "goto": "task.next_contact_capture"
+          }
+        }
+      },
+      "intent.objection.solicita_proximo_contacto": {
+        "type": "intention",
+        "label": "Objeción: solicita próximo contacto",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "prompt": "Entiendo. Podemos agendar un próximo contacto para revisar las opciones cuando tengas disponibilidad.",
+        "on": {
+          "always": {
+            "goto": "task.next_contact_capture"
+          }
+        }
+      },
+      "intent.objection.solicita_opciones_pago": {
+        "type": "intention",
+        "label": "Objeción: solicita opciones de turno",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "Entiendo perfectamente tu situación y no queremos que esto se convierta en una preocupación mayor. Podemos acordar una fecha para un próximo contacto y brindarte las opciones de turno habilitadas para ti, ¿estás de acuerdo?",
+        "on": {
+          "always": {
+            "goto": "task.next_contact_capture"
+          }
+        }
+      },
+      "intent.objection.solicita_consulta_tercero": {
+        "type": "intention",
+        "label": "Objeción: solicita consulta tercero",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "prompt": "Me parece razonable que debas consultarlo. Podemos agendar un próximo contacto para conocer la decisión que tomaron; de esta manera, evitamos que tu turno se siga incrementando.",
+        "on": {
+          "always": {
+            "goto": "task.next_contact_capture"
+          }
+        }
+      },
+      "intent.offer_payment_options_next_contact": {
+        "type": "intention",
+        "label": "Oferta de próximo contacto por opciones de turno",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "Entiendo. Tenemos dos alternativas: podemos coordinar directamente una fecha para que realices el turno tú mismo, o agendar un próximo contacto con un asesor para revisar otras opciones. ¿Qué prefieres?",
+        "decision": "Prioridad de variable: si el paciente menciona una fecha de turno o expresa intención concreta de agendar (por ejemplo: 'puedo agendar mañana', 'turno hoy', 'voy a agendar', 'lo abono el viernes', 'lo cancelo el lunes', 'transfiero mañana', 'lo turno yo'), elige 'Desea turno normal' incluso si el turno empieza con 'no'. Si acepta explícitamente hablar con un asesor sin dar una fecha de turno ('sí, agenda', 'llámame', 'de acuerdo con el asesor', 'está bien, coordinemos'), elige 'Acepta'. Si rechaza cerrado sin dar más información ('no', 'no gracias', 'no quiero', 'cancela', 'no me interesa'), elige 'Rechaza'. En cualquier otro caso, elige 'Desea turno normal'.",
+        "on": {
+          "Acepta": {
+            "goto": "task.next_contact_capture"
+          },
+          "Rechaza": {
+            "goto": "final.end_no_commitment"
+          },
+          "Desea pago normal": {
+            "goto": "task.negotiation"
+          },
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.offer_next_contact_after_no_commitment": {
+        "type": "intention",
+        "label": "Oferta de próximo contacto sin acuerdo",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "Comprendo. Si ahora no podemos definir el turno, dejemos agendado un próximo contacto para revisar nuevamente una alternativa. ¿Te parece bien?",
+        "on": {
+          "Acepta": {
+            "goto": "task.next_contact_capture"
+          },
+          "Rechaza": {
+            "goto": "final.end_no_commitment"
+          },
+          "always": {
+            "goto": "task.next_contact_capture"
+          }
+        }
+      },
+      "task.next_contact_capture": {
+        "type": "task",
+        "label": "Captura fecha próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "require_franja": true,
+          "require_day": true,
+          "default_to_tomorrow": true,
+          "confirm_ambiguous_week": true,
+          "strict_cancel": true,
+          "allow_today": true,
+          "payment_commitment_exit": true,
+          "time_windows": [
+            "mañana",
+            "tarde",
+            "noche",
+            "indistinto"
+          ]
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_next_contact"
+          },
+          "Compromiso de pago": {
+            "goto": "task.negotiation"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.already_paid_validation": {
+        "type": "intention",
+        "label": "Validación de turno declarado",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto, gracias por informarlo. Dejaremos registro de tu turno para su validación en el sistema. Recuerda que si realizaste el turno por la App, el sitio web o en nuestras tiendas físicas, la actualización en sistema puede tardar unas horas en reflejarse. Que tengas un excelente día.",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.close_intention": {
+        "type": "intention",
+        "label": "Cierre (intención de turno)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo. Dejamos registro de tu intención de turno para el {payment_intention_date_spoken} y te contactaremos en otra ocasión para darle seguimiento. Recuerda que puedes realizar tu turno en cualquiera de nuestras tiendas físicas con tu número de identificación.",
+        "on": {
+          "always": {
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, ya quedó registrado tu cita de turno de {monto_deuda_palabras} para el {commitment_date_spoken}. Puedes realizarlo en cualquiera de nuestras tiendas físicas con tu número de identificación.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Gracias por tu cita. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_next_contact": {
+        "type": "final",
+        "label": "Despedida (próximo contacto)",
+        "prompt": "Correcto, ya quedó agendado para {next_contact_date_natural}. Hasta luego, que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Gracias por tu tiempo, que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Perfecto, ya quedó registrado. Gracias por tu tiempo, que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo, dejamos registrada la verificación de tu turno en nuestros canales habilitados. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_not_recognized": {
+        "type": "final",
+        "label": "Despedida (no reconoce cita pendiente)",
+        "prompt": "Entiendo. Dejaremos registro de que no reconoces la cita pendiente para su revisión. Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpa la molestia. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comunícale que desde {nombre_empresa} intentamos ponernos en contacto con el titular.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

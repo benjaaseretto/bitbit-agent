@@ -1,0 +1,154 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Cómo puedo agendar?",
+    "answer": "Puede agendar en Mi Sucursal web en triple dobleve punto cajalosandes punto cl. También en Servipag, sanatorio Estado, Sencillito, Caja Vecina usando el convenio uno, cuatro, cero, seis, nueve; en Toku en cajalosandes punto trytoku punto com; o directamente en nuestras sucursales de Sanatorio Aurora en la Caja Pagadora."
+  },
+  {
+    "question": "¿La sesión es siempre la misma?",
+    "answer": "Sí, el valor de sus cuotas es fijo durante toda la reprogramación."
+  },
+  {
+    "question": "¿Me lo pueden mandar por correo?",
+    "answer": "Toda la información debemos entregársela completamente durante esta llamada telefónica. Si concretamos la reprogramación, luego le enviaremos una carta normativa con las condiciones finales a su correo electrónico."
+  },
+  {
+    "question": "¿Desde cuándo turno?",
+    "answer": "Debería comenzar a agendar a partir del {fecha_primer_venc_p1}. La fecha de turno corresponde al último día hábil de cada mes."
+  },
+  {
+    "question": "¿Desde cuándo turno mis créditos?",
+    "answer": "La primera sesión de su crédito terminado en {producto_1_ultimos_4_del_numero_de_folio} se debería agendar a partir del {fecha_primer_venc_p1}. Para el resto de sus créditos, la fecha de turno también corresponde al último día hábil de cada mes; durante la grabación del contrato le detallo cada uno."
+  },
+  {
+    "question": "¿Cuánto es lo que voy a reprogramar?",
+    "answer": "El turno a reprogramar de su crédito es de {oferta_repro_p1_palabras}. Durante la grabación del contrato le leeré el detalle completo con la tasa, el CAE, el número de cuotas y el costo total."
+  },
+  {
+    "question": "¿Qué significa el CAE?",
+    "answer": "El CAE es la Carga Anual Equivalente. Es un indicador que le permite comparar el costo total del crédito, incluyendo intereses y otros cargos, en un solo número."
+  },
+  {
+    "question": "¿Qué es ese impuesto?",
+    "answer": "El Impuesto de Timbres y Estampillas es un impuesto que aplica a las operaciones de crédito. En su reprogramación ya se encuentra incorporado dentro de las condiciones informadas."
+  },
+  {
+    "question": "¿Puedo arrepentirme?",
+    "answer": "Sí. Dentro de los diez días posteriores a la operación usted puede retractarse de lo contratado, acudiendo a cualquier sucursal de Sanatorio Aurora donde se le generará un número de ticket."
+  },
+  {
+    "question": "¿Por qué me llaman de este número?",
+    "answer": "Debido a una actualización en la normativa de prefijos telefónicos, nuestras gestiones de coordinación de agenda ahora pueden realizarse desde números fijos o móviles, no solo por números seis cero cero, de acuerdo al fallo reciente de la Corte Suprema."
+  },
+  {
+    "question": "¿A qué número y horario los puedo contactar?",
+    "answer": "Puede comunicarse con Atención al paciente al seis cero cero, cinco diez, cero cero cero cero. El horario es de lunes a jueves de nueve de la mañana a una cuarenta y cinco de la tarde y de tres a cuatro cuarenta y cinco de la tarde; los viernes, de nueve de la mañana a dos de la tarde."
+  },
+  {
+    "question": "Yo nunca pedí ese crédito.",
+    "answer": "Entiendo. Le recomiendo comunicarse con nuestro centro de atención al paciente al seis cero cero, cinco diez, cero cero cero cero, para revisar el detalle de su situación."
+  },
+  {
+    "question": "¿Cuánto debo en total?",
+    "answer": "Actualmente usted presenta un turno total vencido de {total_balance_palabras}, que corresponde a {cuotas_en_mora_texto} en atraso de agenda."
+  },
+  {
+    "question": "¿Qué plazos me ofrecen?",
+    "answer": "Las alternativas de plazo para su crédito son las siguientes. {alternativas_repro_p1} Dígame cuál se ajusta mejor a su situación."
+  },
+  {
+    "question": "¿Qué opciones tengo para todos mis créditos?",
+    "answer": "Considerando todos sus créditos, las alternativas de plazo son las siguientes. {alternativas_repro_multi} Dígame cuál prefiere."
+  },
+  {
+    "question": "¿De cuánto queda la sesión mensual?",
+    "answer": "El valor de la sesión depende del plazo que elija. {alternativas_repro_p1} Durante la grabación del contrato le confirmo el valor exacto de la sesión de la alternativa que elija."
+  },
+  {
+    "question": "¿En cuántas cuotas quedó mi reprogramación?",
+    "answer": "Usted eligió reprogramar en {cuotas_elegidas} cuotas. Si desea revisar otra alternativa, con gusto se la comento."
+  },
+  {
+    "question": "¿Cuántos créditos entran en la reprogramación?",
+    "answer": "Actualmente usted cuenta con {info_6} créditos que pueden ser reprogramados."
+  },
+  {
+    "question": "¿Cuántos créditos tengo con ustedes?",
+    "answer": "Según nuestros registros, usted tiene {dim_7} créditos vigentes con Sanatorio Aurora."
+  },
+  {
+    "question": "¿Cuántas cuotas debo?",
+    "answer": "Usted registra {cuotas_en_mora_texto} en atraso de agenda."
+  },
+  {
+    "question": "¿Cuánto es todo junto?",
+    "answer": "Sumando todos sus créditos, el total a reprogramar es de {oferta_repro_total_palabras}."
+  },
+  {
+    "question": "¿De qué crédito me está hablando?",
+    "answer": "Me refiero a su crédito con folio terminado en {producto_1_ultimos_4_del_numero_de_folio}."
+  },
+  {
+    "question": "¿Qué tasa tiene?",
+    "answer": "La tasa depende del plazo que elija. Durante la grabación del contrato le leo la tasa, el CAE y el costo total de la alternativa que usted elija."
+  },
+  {
+    "question": "¿Cuánto termino pagando en total?",
+    "answer": "El costo total depende del plazo que elija. Durante la grabación del contrato le detallo el costo total, la tasa y el CAE de su alternativa."
+  },
+  {
+    "question": "¿Cuánto turno para quedar al día?",
+    "answer": "Si realiza un turno único de {total_balance_palabras} quedaría totalmente al día."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Sanatorio Aurora, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

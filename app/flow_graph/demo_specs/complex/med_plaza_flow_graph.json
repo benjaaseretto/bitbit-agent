@@ -1,0 +1,696 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "med_plaza_flow",
+    "visible_name": "MedPlaza",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (28 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/med_plaza.json",
+      "company_id": "med_plaza-demo",
+      "description": "Base de conocimiento de MedPlaza."
+    },
+    "company_id": "med_plaza-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "caja_los_andes_regrabacion_flow.json",
+      "node_count": 28,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "MedPlaza",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.1",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí",
+            "si",
+            "sí po",
+            "si po",
+            "sipo",
+            "sí poh",
+            "si poh",
+            "ya",
+            "ya po",
+            "ya poh",
+            "yapo",
+            "claro",
+            "claro po",
+            "claro poh",
+            "claro pos",
+            "claro que sí",
+            "sí pues",
+            "afirmativo",
+            "correcto",
+            "habla",
+            "habla él",
+            "habla ella",
+            "con él habla",
+            "con ella habla",
+            "sí con él habla",
+            "sí con ella habla",
+            "él mismo",
+            "ella misma",
+            "el mismo",
+            "la misma",
+            "sí él mismo",
+            "sí ella misma",
+            "yo mismo",
+            "yo misma",
+            "soy yo",
+            "sí soy yo",
+            "si soy yo",
+            "soy yo po",
+            "soy yo poh",
+            "yo soy",
+            "hola sí soy yo",
+            "sí señor",
+            "sí señora",
+            "sí señorita",
+            "aló",
+            "aló sí",
+            "sí aló",
+            "aló soy yo",
+            "aló soy yo po",
+            "aló diga",
+            "diga",
+            "dígame",
+            "sí dígame",
+            "sí, dígame",
+            "dime",
+            "ya dime",
+            "sí dime",
+            "dime no más",
+            "sí dime no más",
+            "no más dime",
+            "cuénteme",
+            "cuéntame",
+            "aquí estoy",
+            "sí aquí estoy",
+            "aquí ando",
+            "qué tal",
+            "qué pasó",
+            "él",
+            "ella",
+            "con él",
+            "con ella",
+            "sí, con él",
+            "sí, con ella",
+            "él habla",
+            "ella habla",
+            "él es",
+            "ella es",
+            "a la orden",
+            "sí aló con él habla",
+            "sí aló con ella habla",
+            "aló sí soy yo",
+            "sí aló soy yo",
+            "sí aló soy yo po",
+            "aló sí soy yo po",
+            "aló sí soy yo po cuéntame",
+            "sí aquí estoy",
+            "sí aquí estoy qué se le ofrece",
+            "qué se le ofrece",
+            "ya aló qué pasó",
+            "aló qué pasó",
+            "sí dime no más qué onda",
+            "qué onda"
+          ],
+          "invalid_confirmation_identification": [
+            "quién habla",
+            "quien habla",
+            "con quién hablo",
+            "con quien hablo",
+            "de parte de quién",
+            "de parte de quien",
+            "cómo",
+            "no entendí",
+            "no entendi",
+            "para qué sería",
+            "para que seria",
+            "para qué es",
+            "para que es",
+            "otra vez llamando",
+            "otra vez están llamando",
+            "estoy ocupado",
+            "estoy ocupada",
+            "no me interesa",
+            "dejen de llamar",
+            "dejen de molestar",
+            "qué necesitan",
+            "que necesitan",
+            "qué quieren",
+            "que quieren",
+            "estoy manejando",
+            "voy manejando",
+            "ando manejando",
+            "no puedo hablar ahora",
+            "no puedo hablar",
+            "no puedo hablar en este momento",
+            "llámeme más tarde",
+            "llameme mas tarde",
+            "llame más tarde",
+            "llamen más tarde",
+            "me llama más tarde",
+            "más tarde por favor"
+          ],
+          "identity_pregunta": "Hola {saludo_por_horario}. ¿Hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "{saludo_por_horario}, mi nombre es {nombre_agente}, Agente IA, le llamo de MedPlaza por Colektia.",
+          "identity_repregunta": "Para continuar, necesito confirmar que me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "cantidad_cuotas_elegida",
+              "cases": {
+                "12": "intent.regrab_motivo",
+                "24": "intent.regrab_motivo",
+                "36": "intent.regrab_motivo",
+                "48": "intent.regrab_motivo",
+                "60": "intent.regrab_motivo"
+              },
+              "default": "intent.regrab_sin_dato_cuotas"
+            }
+          },
+          "No Autenticado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ERROR VALIDACION IDENTIDAD",
+            "goto": "final.end_sin_compromiso_validacion"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.regrab_sin_dato_cuotas": {
+        "type": "intention",
+        "label": "Regrabación - sin dato de plazo previo (no continuar)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Disculpe, en este momento no podemos continuar con la grabación del contrato. Lo contactaremos nuevamente a la brevedad para completar la formalización de su reprogramación. Que tenga un buen día.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "substatus": "REGRABACION INCONCLUSA",
+            "end": true
+          }
+        }
+      },
+      "intent.regrab_motivo": {
+        "type": "intention",
+        "label": "Regrabación - exposición del motivo (4.2)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Selecciona 'Si' solo si el paciente confirma claramente que tiene tiempo ahora (por ejemplo: 'sí', 'sí tengo', 'dale', 'claro', 'ahora sí', 'de acuerdo'). Selecciona 'No' SOLO si el paciente dice explícita y claramente que NO tiene tiempo o no puede ahora (por ejemplo: 'no', 'ahora no', 'no puedo', 'no tengo tiempo'). Si la respuesta es ambigua, muy corta, incompleta, es una sola letra o no se entendió (ruido/transcripción confusa), NO selecciones ninguna opción: discúlpate brevemente diciendo que no lograste escuchar bien y vuelve a preguntar si cuenta con el tiempo ahora, esperando una respuesta clara. Nunca asumas 'No' ante una respuesta que no entendiste.",
+        "prompt": "Hola {nombre_deudor}. Nos comunicamos con usted debido a que su solicitud de reprogramación ya fue previamente acordada y aceptada; sin embargo, nuestro departamento de auditoría interna identificó una interrupción leve o baja calidad en el audio de la llamada anterior, por lo que es necesario repetir exclusivamente el proceso de validación y lectura del contrato para que quede correctamente grabado en el sistema. No realizaremos ninguna gestión de coordinación de agenda ni modificación de montos, iremos directo a la grabación formal. ¿Cuenta con cinco minutos para poder realizarla?",
+        "on": {
+          "Si": {
+            "goto": "intent.regrab_cedula"
+          },
+          "No": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "REGRABACION INCONCLUSA",
+            "goto": "final.end_regrab_inconclusa"
+          }
+        }
+      },
+      "intent.regrab_cedula": {
+        "type": "intention",
+        "label": "Regrabación - solicitud de cédula",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera a que el paciente confirme que tiene a mano su cédula de identidad y luego selecciona 'Continuar'.",
+        "prompt": "Perfecto, necesito que tenga a mano su cédula de identidad. Por favor, avíseme cuando la tenga.",
+        "on": {
+          "Continuar": {
+            "set_variables": {
+              "cuotas_elegidas": "{cantidad_cuotas_elegida}"
+            },
+            "set_agent_output": {
+              "cantidad_cuotas_elegida": "{cantidad_cuotas_elegida}",
+              "suma_valor_cuota_elegida": "{suma_valor_cuota_elegida_calc}",
+              "cantidad_productos_reprogramar": "{productos_reprogramados_efectivo}"
+            },
+            "goto_by": {
+              "field": "productos_reprogramados_efectivo",
+              "rules": [
+                {
+                  "op": "==",
+                  "value": 1,
+                  "goto": "intent.repro_apertura_grabacion"
+                }
+              ],
+              "default": "intent.repro_multi_apertura_grabacion"
+            }
+          }
+        }
+      },
+      "intent.repro_apertura_grabacion": {
+        "type": "intention",
+        "label": "Apertura de grabación y mandato de canales remotos",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar el mandato respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto' (con esa frase), selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra cosa sin la frase exacta, selecciona 'Repetir'.",
+        "prompt": "Para su respaldo y seguridad, a partir de este momento esta conversación está siendo grabada. Para comenzar, {nombre_deudor_completo}, necesitamos que usted acepte el mandato de canales remotos, el cual nos autoriza a organizar la gestión de reprogramación durante esta llamada. En el caso de que acepte, por favor responda con un fuerte y claro: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "goto": "task.collect_email"
+          },
+          "Repetir": {
+            "goto": "intent.repro_mandato_repregunta"
+          }
+        }
+      },
+      "intent.repro_mandato_repregunta": {
+        "type": "intention",
+        "label": "Repregunta mandato (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'No acepta'.",
+        "prompt": "Disculpe, para que la grabación sea legalmente válida ante auditoría, necesito que responda exactamente con la frase de aceptación obligatoria: Sí, acepto. Le repito la pregunta: ¿Acepta el mandato de canales remotos?",
+        "on": {
+          "Acepta": {
+            "goto": "task.collect_email"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_proximo_contacto"
+          }
+        }
+      },
+      "task.collect_email": {
+        "type": "task",
+        "label": "Recolectar correo electrónico",
+        "task_type": "FormTask",
+        "params": {
+          "intro": "Me indica su correo electrónico para hacer envío del mandato de canal remoto.",
+          "schema": [
+            {
+              "name": "correo_electronico",
+              "type": "email",
+              "label": "su correo electrónico",
+              "required": false
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto": "intent.validacion_equifax"
+          },
+          "Cancelado": {
+            "goto": "intent.validacion_equifax"
+          },
+          "MaxTriesExceeded": {
+            "goto": "intent.validacion_equifax"
+          }
+        }
+      },
+      "intent.validacion_equifax": {
+        "type": "intention",
+        "label": "Validación de identidad (RUT, serie de cédula, fecha de nacimiento)",
+        "delivery": "generate",
+        "interruptible": false,
+        "decision": "Valida la identidad del paciente haciendo TRES preguntas, UNA a la vez, esperando su respuesta antes de pasar a la siguiente. Nunca reveles la respuesta correcta ni digas si acertó o falló cada una. Preguntas y respuestas correctas: 1) Su RUT — respuesta correcta: {U6RUTDEUDOR}. 2) El número de serie de su cédula de identidad — respuesta correcta: {serie_cedula}. 3) Su fecha de nacimiento — respuesta correcta: {fecha_nacimiento}. Compara cada respuesta de forma TOLERANTE: ignora puntos, guiones, espacios y mayúsculas/minúsculas; acepta dígitos dichos en palabras y fechas en cualquier formato equivalente (por ejemplo '20 de abril de 1979' equivale a '1979-04-20'). Lleva la cuenta de cuántas responde de forma INCORRECTA; si dice que no sabe, no recuerda o no tiene el dato, cuéntalo como INCORRECTA. Reglas de salida: si falla NINGUNA o UNA, selecciona 'Aprobado'. Si falla exactamente DOS, selecciona 'Dos fallidas'. Si falla las TRES, selecciona 'Todas fallidas'.",
+        "prompt": "Muy bien. Antes de continuar, y para proteger su información, necesito validar su identidad con tres datos. Comencemos: ¿me indica su RUT, por favor?",
+        "on": {
+          "Aprobado": {
+            "set_agent_output": {
+              "SERIECI": "{serie_cedula}",
+              "FECHA_NACIMIENTO": "{fecha_nacimiento}"
+            },
+            "goto_by": {
+              "field": "productos_reprogramados_efectivo",
+              "rules": [
+                {
+                  "op": "==",
+                  "value": 1,
+                  "goto": "intent.repro_detalle"
+                }
+              ],
+              "default": "intent.repro_multi_detalle"
+            }
+          },
+          "Dos fallidas": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ERROR VALIDACION IDENTIDAD",
+            "goto": "final.end_equifax_dos_fallidas"
+          },
+          "Todas fallidas": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "DERIVACION A paciente",
+            "goto": "final.end_equifax_todas_fallidas"
+          }
+        }
+      },
+      "intent.repro_detalle": {
+        "type": "intention",
+        "label": "Lectura del detalle de la reprogramación",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "cuotas_elegidas",
+          "cases": {
+            "12": "{detalle_repro_p1_12} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "24": "{detalle_repro_p1_24} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "36": "{detalle_repro_p1_36} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "48": "{detalle_repro_p1_48} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "60": "{detalle_repro_p1_60} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto."
+          },
+          "default": "En este momento no logramos recuperar las condiciones exactas de su reprogramación."
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "cuotas_elegidas",
+              "cases": {
+                "12": "intent.repro_aceptacion_final",
+                "24": "intent.repro_aceptacion_final",
+                "36": "intent.repro_aceptacion_final",
+                "48": "intent.repro_aceptacion_final",
+                "60": "intent.repro_aceptacion_final"
+              },
+              "default": "intent.regrab_sin_dato_cuotas"
+            }
+          }
+        }
+      },
+      "intent.repro_aceptacion_final": {
+        "type": "intention",
+        "label": "Aceptación final",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto', selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra cosa sin la frase exacta, selecciona 'Repetir'.",
+        "prompt": "¿Usted acepta efectuar la reprogramación de su cita pendiente en los términos ya descritos? En el caso de que acepte, por favor responda con un fuerte y claro: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_cierre_formal"
+          },
+          "Repetir": {
+            "goto": "intent.repro_aceptacion_repregunta"
+          }
+        }
+      },
+      "intent.repro_aceptacion_repregunta": {
+        "type": "intention",
+        "label": "Repregunta aceptación final (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'No acepta'.",
+        "prompt": "Disculpe, para que la grabación sea legalmente válida ante auditoría, necesito que responda exactamente con la frase de aceptación obligatoria: Sí, acepto. ¿Usted acepta efectuar la reprogramación de su cita pendiente en los términos ya descritos?",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_cierre_formal"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_proximo_contacto"
+          }
+        }
+      },
+      "intent.repro_cierre_formal": {
+        "type": "intention",
+        "label": "Cierre formal (reprogramación)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Siendo hoy {today_date}, la reprogramación de su crédito con folio terminado en {folio_p1_palabras} será cursada respetando todas las condiciones antes mencionadas, previo a evaluación de esta grabación. Ante cualquier rechazo se le notificará por esta vía o mediante correo electrónico dentro de las cuarenta y ocho horas hábiles. Esta información quedará reflejada en nuestros sistemas en cuarenta y ocho horas hábiles. Le informo que dentro de los diez días posteriores a esta operación, usted podrá retractarse de lo contratado, acudiendo a cualquier sucursal de MedPlaza donde se le generará un número de ticket. Las condiciones finales serán detalladas en una carta normativa que enviaremos a su correo electrónico.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "reprogramación",
+            "goto": "final.end_refinanciamiento"
+          }
+        }
+      },
+      "intent.repro_multi_apertura_grabacion": {
+        "type": "intention",
+        "label": "Apertura de grabación y mandato (multiproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar el mandato respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto', selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra cosa sin la frase exacta, selecciona 'Repetir'.",
+        "prompt": "Para su respaldo y seguridad, a partir de este momento esta conversación está siendo grabada. Para comenzar, {nombre_deudor_completo}, necesitamos que usted acepte el mandato de canales remotos, el cual nos autoriza a organizar la gestión de reprogramación durante esta llamada. En el caso de que acepte, por favor responda con un fuerte y claro: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "goto": "task.collect_email_multi"
+          },
+          "Repetir": {
+            "goto": "intent.repro_multi_mandato_repregunta"
+          }
+        }
+      },
+      "intent.repro_multi_mandato_repregunta": {
+        "type": "intention",
+        "label": "Repregunta mandato multiproducto (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'No acepta'.",
+        "prompt": "Disculpe, para que la grabación sea legalmente válida ante auditoría, necesito que responda exactamente con la frase de aceptación obligatoria: Sí, acepto. Le repito la pregunta: ¿Acepta el mandato de canales remotos?",
+        "on": {
+          "Acepta": {
+            "goto": "task.collect_email_multi"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_proximo_contacto"
+          }
+        }
+      },
+      "task.collect_email_multi": {
+        "type": "task",
+        "label": "Recolectar correo electrónico (multiproducto)",
+        "task_type": "FormTask",
+        "params": {
+          "intro": "Me indica su correo electrónico para hacer envío del mandato de canal remoto.",
+          "schema": [
+            {
+              "name": "correo_electronico",
+              "type": "email",
+              "label": "su correo electrónico",
+              "required": false
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto": "intent.validacion_equifax"
+          },
+          "Cancelado": {
+            "goto": "intent.validacion_equifax"
+          },
+          "MaxTriesExceeded": {
+            "goto": "intent.validacion_equifax"
+          }
+        }
+      },
+      "intent.repro_multi_detalle": {
+        "type": "intention",
+        "label": "Lectura del detalle de las reprogramaciones (multiproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "cuotas_elegidas",
+          "cases": {
+            "12": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_12} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "24": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_24} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "36": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_36} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "48": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_48} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto.",
+            "60": "Se procede a informar el detalle de las reprogramaciones aprobadas para sus productos. {detalle_repro_multi_60} Finalmente, le informo que todo proceso de coordinación de agenda está sujeto al cumplimiento de la normativa vigente según los lineamientos de la Superintendencia de Seguridad Social. En caso de existir descuento por concepto de crédito social en su liquidación de sueldo de este mes, por este acto consiente a que el mismo especialidad se abone al turno del crédito reprogramado en este acto."
+          },
+          "default": "En este momento no logramos recuperar las condiciones exactas de sus reprogramaciones."
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "cuotas_elegidas",
+              "cases": {
+                "12": "intent.repro_multi_aceptacion",
+                "24": "intent.repro_multi_aceptacion",
+                "36": "intent.repro_multi_aceptacion",
+                "48": "intent.repro_multi_aceptacion",
+                "60": "intent.repro_multi_aceptacion"
+              },
+              "default": "intent.regrab_sin_dato_cuotas"
+            }
+          }
+        }
+      },
+      "intent.repro_multi_aceptacion": {
+        "type": "intention",
+        "label": "Aceptación final multiproducto",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto', selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra cosa sin la frase exacta, selecciona 'Repetir'.",
+        "prompt": "¿Usted acepta efectuar las reprogramaciones de sus deudas en los términos ya descritos para sus créditos informados? En el caso de que acepte, por favor responda con un fuerte y claro: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_multi_cierre_formal"
+          },
+          "Repetir": {
+            "goto": "intent.repro_multi_aceptacion_repregunta"
+          }
+        }
+      },
+      "intent.repro_multi_aceptacion_repregunta": {
+        "type": "intention",
+        "label": "Repregunta aceptación final multiproducto (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si ahora responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad, selecciona 'No acepta'.",
+        "prompt": "Disculpe, para que la grabación sea legalmente válida ante auditoría, necesito que responda exactamente con la frase de aceptación obligatoria: Sí, acepto. ¿Usted acepta efectuar las reprogramaciones de sus deudas en los términos ya descritos?",
+        "on": {
+          "Acepta": {
+            "goto": "intent.repro_multi_cierre_formal"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Próximo contacto",
+            "goto": "final.end_proximo_contacto"
+          }
+        }
+      },
+      "intent.repro_multi_cierre_formal": {
+        "type": "intention",
+        "label": "Cierre formal multiproducto",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Siendo hoy {today_date}, sus reprogramaciones de los créditos informados serán cursadas respetando todas las condiciones antes mencionadas, previo a evaluación de esta grabación. Ante cualquier rechazo se le notificará por esta vía o mediante correo electrónico dentro de las cuarenta y ocho horas hábiles. Esta información quedará reflejada en nuestros sistemas en cuarenta y ocho horas hábiles. Le informo que dentro de los diez días posteriores a esta operación, usted podrá retractarse de lo contratado, acudiendo a cualquier sucursal de MedPlaza donde se le generará un número de ticket. Las condiciones finales serán detalladas en una carta normativa que enviaremos a su correo electrónico.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "reprogramación",
+            "goto": "final.end_refinanciamiento"
+          }
+        }
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele al titular que MedPlaza intentó ponerse en contacto con él.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_refinanciamiento": {
+        "type": "final",
+        "label": "Despedida (reprogramación / reprogramación)",
+        "delivery": "say",
+        "prompt": "Le deseamos un excelente día y muchas gracias por su tiempo."
+      },
+      "final.end_proximo_contacto": {
+        "type": "final",
+        "label": "Despedida (próximo contacto)",
+        "delivery": "say",
+        "prompt": "No se preocupe. Necesitamos poder realizarlo con tiempo, por lo que lo llamaremos más tarde para continuar con la lectura del contrato y formalizar la reprogramación. Que tenga un buen día."
+      },
+      "final.end_sin_compromiso_validacion": {
+        "type": "final",
+        "label": "Despedida (error validación identidad)",
+        "delivery": "say",
+        "prompt": "Lo siento, no pudimos validar su identidad en esta ocasión, por lo que no podemos continuar con la gestión. Lo contactaremos nuevamente. Que tenga un buen día."
+      },
+      "final.end_equifax_dos_fallidas": {
+        "type": "final",
+        "label": "Despedida (dos preguntas de seguridad fallidas)",
+        "delivery": "say",
+        "prompt": "Lo siento, como dos de las preguntas no han sido correctas, no podremos avanzar en la formalización de la reprogramación. Lo llamaremos en otro momento para su finalización. Que tenga un buen día."
+      },
+      "final.end_equifax_todas_fallidas": {
+        "type": "final",
+        "label": "Despedida (todas las preguntas de seguridad fallidas)",
+        "delivery": "say",
+        "prompt": "Lo siento, las respuestas no han sido correctas, motivo por el cual no podremos avanzar en la formalización de la reprogramación. Lo invitamos a tomar la reprogramación de forma presencial en cualquiera de las sucursales de MedPlaza. Que tenga un buen día."
+      },
+      "final.end_regrab_inconclusa": {
+        "type": "final",
+        "label": "Despedida (regrabación inconclusa)",
+        "delivery": "say",
+        "prompt": "Necesitamos poder realizarlo con tiempo, por lo que lo llamaremos más tarde para realizar la lectura del contrato y formalizar la reprogramación. Que tenga un buen día."
+      }
+    }
+  }
+}

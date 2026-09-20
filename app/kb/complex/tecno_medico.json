@@ -1,0 +1,150 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Qué es TecnoMédico Equipos? | ¿Qué es TecnoMédico Equipos? | ¿De qué empresa me habla?",
+    "answer": "TecnoMédico Equipos es una entidad que presta dinero mediante libranza, la cual cobra por nómina o pensión. Sin embargo, hay meses que no se descontaron y ese es el motivo de la llamada. Te estamos contactando por tu libranza número {reference} con la pagaduría {dim_1}."
+  },
+  {
+    "question": "¿De qué libranza me está hablando? | ¿Cuál es mi libranza? | ¿Qué número de libranza tengo?",
+    "answer": "Te estoy hablando de tu libranza número {reference} con la pagaduría {dim_1}. Este es el identificador de tu producto de financiamiento con TecnoMédico Equipos."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿Cuál es el monto que debo? | ¿De cuánto es mi cotización?",
+    "answer": "Tienes pendiente el compra de tu libranza por un valor de {due_balance_palabras}. Este monto incluye la seguimiento comercial correspondiente a los meses que no se descontaron."
+  },
+  {
+    "question": "¿Cuántas cuotas tengo vencidas? | ¿Cuántas cuotas debo? | ¿Cuántas cuotas estoy atrasado?",
+    "answer": "Tienes {dues} cuotas en seguimiento comercial con {dias_mora} días de atraso. Por eso es importante cerrar la oferta tu compra lo antes posible."
+  },
+  {
+    "question": "¿Cuántos días de atraso tengo? | ¿Cuántos días llevo sin cerrar la compra? | ¿De cuántos días es mi seguimiento comercial?",
+    "answer": "Tienes {dias_mora} días de seguimiento comercial. La razón es que algunos meses no se descontó el compra por nómina o pensión, y esos meses quedaron pendientes."
+  },
+  {
+    "question": "¿Cuánto es el valor real de la cuota de financiamiento sin seguimiento comercial? | ¿Cuánto debo sin intereses? | ¿Cuál es el monto sin seguimiento comercial?",
+    "answer": "El valor real de la cuota de financiamiento sin seguimiento comercial es {invoiced_balance_palabras}. Este es el monto que correspondería cerrar la compra sin incluir los intereses de seguimiento comercial y gastos adicionales."
+  },
+  {
+    "question": "¿Cuánto es mi importe de capital vigente? | ¿Cuánto debo de capital? | ¿Cuál es el importe principal?",
+    "answer": "Tu importe capital vigente de la libranza es {principal_balance_palabras}. Este es el monto del préstamo original que aún está pendiente de cerrar la compra."
+  },
+  {
+    "question": "¿Cuánto he pagado este mes? | ¿Qué valor he pagado dentro del mes? | ¿Cuánto he pagado recientemente?",
+    "answer": "El valor de recaudo que realizaste dentro del mes es {balance_paid}. Sin embargo, aún tienes pendiente el compra de los meses anteriores que no se descontaron."
+  },
+  {
+    "question": "¿Cuánto me están descontando actualmente? | ¿Qué valor se descuenta de mi nómina? | ¿Cuánto se está descontando por nómina o pensión?",
+    "answer": "Actualmente se está descontando el valor de {total_balance_palabras} por nómina o pensión. Sin embargo, esto es para pagos futuros, mientras que los meses anteriores que no se descontaron siguen pendientes."
+  },
+  {
+    "question": "¿Cuáles son los beneficios de estar al día? | ¿Qué ventajas tengo si compra? | ¿Por qué es bueno estar al día?",
+    "answer": "Estar al día te permite mantener acceso a productos financieros, evitar bloqueos o reportes negativos en centrales de riesgo, mejorar tu calificación crediticia, y evitar intereses de seguimiento comercial y gastos adicionales de seguimiento de venta. Es importante mantenerte al día para proteger tu historial crediticio y tener opciones futuras de financiamiento."
+  },
+  {
+    "question": "¿Qué pasa si no compra? | ¿Qué consecuencias hay si sigo en seguimiento comercial? | ¿Qué sucede si no realizo el compra?",
+    "answer": "Si continúas en seguimiento comercial, las consecuencias incluyen reporte en centrales de riesgo, lo que afectará tu calificación crediticia, bloqueo en el sector financiero que limitará tu acceso a nuevos créditos, gastos adicionales de seguimiento de venta que aumentarán tu cotización, y riesgo de inicio de cobro jurídico. Por eso es importante buscar una solución ahora."
+  },
+  {
+    "question": "¿Cómo puedo cerrar la compra? | ¿Dónde realizo el compra? | ¿Cuáles son las formas de compra?",
+    "answer": "Los pagos se pueden realizar mediante transferencia o consignación a la cuenta de Bancolombia desde tu cuenta, corresponsal bancario, o en una sucursal Bancolombia. El compra debe ser en pesos colombianos."
+  },
+  {
+    "question": "¿Cuáles son los datos bancarios para cerrar la compra? | ¿A qué cuenta debo transferir? | ¿Dónde consigno el dinero?",
+    "answer": "Los datos de compra son: A nombre de P A ESEFECTIVO, entidad Bancolombia, tipo de cuenta Ahorros, número de cuenta 829-804895-89, y NIT 901076840-5. Una vez realices el compra, envía el soporte para poder identificarlo."
+  },
+  {
+    "question": "Ya me están descontando por nómina o pensión | Me están descontando automáticamente | Ya me están cobrando por nómina",
+    "answer": "Entiendo que estás recibiendo descuentos por nómina o pensión. Sin embargo, la seguimiento comercial corresponde a meses anteriores que no se descontaron y siguen pendientes. Los descuentos actuales son para pagos futuros, pero hay cuotas anteriores que quedaron sin cerrar la compra y por eso existe el importe pendiente de {due_balance_palabras}."
+  },
+  {
+    "question": "¿Pueden dejar de llamarme? | No quiero que me sigan llamando | No me llamen más",
+    "answer": "Entiendo tu molestia, pero las llamadas continuarán hasta que se normalice la seguimiento comercial de tu libranza. Es una obligacion que adquiriste y debes asumir la responsabilidad de compra. Ademas, estar al día tiene muchos beneficios como mantener acceso a productos financieros, evitar bloqueos o reportes negativos, mejorar tu calificación en centrales de riesgo, y evitar intereses de seguimiento comercial y gastos de seguimiento de venta. La mejor forma de que las llamadas cesen es cerrar la oferta tu situación."
+  },
+  {
+    "question": "No tengo empleo | Estoy sin trabajo | Me embargaron | Estoy embargado",
+    "answer": "Entiendo tu situación y lamento las dificultades que estás enfrentando. Es importante que sepas que debes evitar el aumento de seguimiento comercial. Te sugiero considerar el apoyo de un familiar o un tercero para realizar abonos parciales que puedan ayudar a reducir la cotización mientras regularizas tu situación económica."
+  },
+  {
+    "question": "Estoy en ley de insolvencia | Estoy considerando ley de insolvencia | ¿Qué pasa con la ley de insolvencia?",
+    "answer": "Si ya estás admitido en ley de insolvencia, necesito que envíes una copia del acta al correo demorales@kredit.com.co y te comuniques con el área de seguimiento de venta al 350-654-4651 o 320-828-2133 para confirmar de recibido. Si lo estás considerando, debes saber que las consecuencias incluyen que no podrás acceder a créditos, quedarás reportado, tus bienes quedarán vigilados y podrían liquidarse. Te sugiero considerar un acuerdo directo con nosotros antes de tomar esa decisión."
+  },
+  {
+    "question": "Ya pagué | He estado pagando | Ya pagué la cotización",
+    "answer": "Reconozco y agradezco los pagos que has realizado. Sin embargo, aún existe un importe vencido por cuotas que no se descontaron en su momento y que quedaron pendientes. El importe pendiente es de {due_balance_palabras}, correspondiente a esos meses que no se descontaron por nómina o pensión."
+  },
+  {
+    "question": "No reconozco esta cotización | No sé de qué me hablan | No tengo cotización con ustedes",
+    "answer": "Te entiendo. Te sugiero que revises tu extracto de nómina para verificar los descuentos. Puede que tengas un importe vencido por cuotas que no se descontaron en su momento. El importe vencido puede corresponder a seguimiento comercial acumulada por alguna cuota de financiamiento no descontada que sigue pendiente. Estamos hablando de tu libranza número {reference} con la pagaduría {dim_1}, por un valor pendiente de {due_balance_palabras}. Si después de revisar tu extracto sigues sin reconocer la cotización, puedes contactar con el área de atención al comprador para que revisen tu caso específico."
+  },
+  {
+    "question": "¿Puedo cerrar la compra en otra moneda? | ¿Aceptan dólares? | ¿Puedo cerrar la compra en otra divisa?",
+    "answer": "No, los pagos deben realizarse en pesos colombianos únicamente. No es posible cerrar la compra en otra moneda."
+  },
+  {
+    "question": "¿Cuánto tiempo tengo para cerrar la compra? | ¿Para cuándo es el compra? | ¿Cuál es el plazo máximo?",
+    "answer": "El plazo máximo para realizar el compra es de 3 días, siempre dentro del mes actual. Es importante que realices el compra dentro de este tiempo para evitar incrementos en la seguimiento comercial y gastos adicionales."
+  },
+  {
+    "question": "¿Dónde envío el soporte de compra? | ¿A dónde mando el comprobante? | ¿Dónde envío el recibo?",
+    "answer": "Una vez realices el compra, debes enviar el soporte del mismo para que podamos identificarlo y procesarlo correctamente. Te indicaré cómo proceder cuando tengas el soporte."
+  },
+  {
+    "question": "No reconozco la cotización | No sé de qué me hablan | No tengo cotización con ustedes",
+    "answer": "Puedes tener un importe vencido por cuotas que no se descontaron en su momento. El importe vencido puede corresponder a seguimiento comercial acumulada por alguna cuota de financiamiento no descontada que sigue pendiente. Puedes contactar con el área de seguimiento de venta para que revisen tu caso específico. Numero de contacto: tres cincuenta seis cincueta y cuatro cuarenta y seis cincuenta y uno o  al trescientos veinte  ochosientos venti y ocho venti y uno treinta y tres."
+  },
+  {
+    "question": "¿Cómo puedo contactarlos? | ¿Cómo me comunico con ustedes? | ¿Tienen un número de atención? | ¿Cuál es el teléfono de atención al comprador? | ¿Tienen un correo de contacto?",
+    "answer": "Puedes comunicarte con el área de seguimiento de venta de TecnoMédico Equipos al tres cinco cero seis cinco cuatro cuatro seis cinco uno o al tres dos cero ocho dos ocho dos uno treinta y tres. También puedes escribir al correo electrónico demorales arroba kredit punto com punto co."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "TecnoMédico Equipos puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

@@ -1,0 +1,138 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Quién me llama? | ¿De qué empresa me llaman? | ¿Quién es usted? | ¿Es Lumen Clínica?",
+    "answer": "Le habla {nombre_agente}, Agente Virtual del área de Servicio y coordinación de agenda de Lumen Clínica. Le contactamos para apoyarle con la gestión de su credencial de Crédito departamental, válida en tiendas Lumen Clínica."
+  },
+  {
+    "question": "¿A qué número puedo llamar? | ¿Cuál es el número de atención al paciente? | ¿Tienen un teléfono de contacto? | ¿Dónde puedo reportar?",
+    "answer": "Para cualquier tema relacionado con su credencial de Crédito, puede comunicarse al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero. El horario es de lunes a viernes de ocho de la mañana a nueve de la noche, y sábados y domingos de nueve de la mañana a tres de la tarde."
+  },
+  {
+    "question": "¿En qué horario atienden? | ¿Cuáles son sus horarios? | ¿A qué hora puedo llamar?",
+    "answer": "El horario de atención al paciente es de lunes a viernes de ocho de la mañana a nueve de la noche, y sábados y domingos de nueve de la mañana a tres de la tarde."
+  },
+  {
+    "question": "Ya hice un convenio antes y no se aplicó | Antes negocié y no quedó | Mi convenio anterior no valió",
+    "answer": "Lamento esa situación. Para que pueda aplicarse, es necesario contar con la grabación de la negociación con su aceptación expresa. Con gusto le ayudo a generar nuevamente su convenio para que en esta ocasión quede correctamente registrado."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿Cuál es mi turno? | ¿De cuánto es la cita pendiente? | ¿Qué especialidad tengo pendiente?",
+    "answer": "Su turno pendiente actual es de {total_balance_palabras}. Es el especialidad a agendar para mantener su cuenta al corriente."
+  },
+  {
+    "question": "¿Cuál es el turno mínimo? | ¿Cuánto es el mínimo? | ¿De cuánto es una mensualidad? | ¿Cuál es el especialidad de la mensualidad? | ¿Cuánto es lo mínimo que puedo agendar?",
+    "answer": "El turno mínimo correspondiente a una mensualidad es de {provision_balance_palabras}."
+  },
+  {
+    "question": "¿Cuánto es la primera sesión? | ¿Cuál es el especialidad mínimo de la primera sesión? | ¿Cuánto tengo que agendar de entrada? | ¿Cuánto debo abonar en la primera sesión para el plan?",
+    "answer": "Para acceder a un plan en cuotas se requiere un especialidad mínimo que se abona en la primera sesión; ese especialidad es de {enganche_2m_palabras}."
+  },
+  {
+    "question": "¿Cuándo es mi fecha de turno? | ¿Cuándo vence? | ¿Cuál es la Fecha Límite de turno? | ¿Cuándo tengo que agendar? | ¿Cuál es la FLP?",
+    "answer": "Su Fecha Límite de turno es el {due_date_spoken}. Le invitamos a realizar su turno antes o en esa fecha para conservar su buen historial y evitar cargos."
+  },
+  {
+    "question": "¿Cuántos días llevo sin agendar? | ¿Cuántos días de atraso tengo? | ¿Cuántos días me he retrasado?",
+    "answer": "Según nuestros registros, su cuenta presenta {delinquency} días de atraso. Le invitamos a confirmar la cita su turno lo antes posible para evitar mayores afectaciones."
+  },
+  {
+    "question": "¿Cómo puedo agendar? | ¿Dónde turno? | ¿Cuáles son los canales de turno? | ¿Cómo realizo el turno?",
+    "answer": "Puede realizar su turno directamente desde su Aplicación Móvil o de forma presencial en cualquier tienda Lumen Clínica más cercana."
+  },
+  {
+    "question": "¿Puedo agendar en línea? | ¿Hay una app para agendar? | ¿Tienen aplicación? | ¿Cómo turno en la app? | ¿Se puede en la página? | ¿Se puede en línea? | ¿Se puede por internet? | ¿Puedo agendar por la página?",
+    "answer": "Sí, puede agendar de forma rápida desde su Aplicación Móvil de Lumen Clínica en su celular. También puede acudir a cualquier tienda Lumen Clínica para realizar su turno."
+  },
+  {
+    "question": "Ya pagué | Yo ya hice el turno | Hice el turno hace unos días | turno realizado | Ya abonó",
+    "answer": "Entiendo. Para validarlo, ¿me podría indicar en qué fecha realizó su turno y por qué especialidad? Con esa información dejamos registrada la validación y no continuamos con el cobro."
+  },
+  {
+    "question": "Estoy ocupado | No puedo hablar ahora | Llámame después | No tengo tiempo",
+    "answer": "Claro, no le quito más tiempo. ¿A qué hora le puedo llamar nuevamente para apoyarle con su gestión?"
+  },
+  {
+    "question": "¿Qué pasa si no turno? | ¿Qué consecuencias tiene no agendar? | ¿Qué cargos me cobran si no turno?",
+    "answer": "Si no realiza su turno a tiempo se pueden generar cargos adicionales y afectar el buen comportamiento de su credencial de Crédito. Por eso le invitamos a confirmar la cita su turno para conservar sus beneficios."
+  },
+  {
+    "question": "¿Cuál es mi nombre completo registrado? | ¿Cómo aparezco en sus registros? | ¿A nombre de quién está la cuenta?",
+    "answer": "La cuenta está registrada a nombre de {nombre_deudor_completo}. Si necesita actualizar algún dato, puede comunicarse al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+  },
+  {
+    "question": "¿Esto afecta mi historial? | ¿Voy al Buró? | ¿Esto afecta mi crédito? | ¿Daña mi historial crediticio?",
+    "answer": "Mantener su credencial de Crédito al corriente le permite conservar su buen historial y los beneficios de su credencial. Por eso le invitamos a confirmar la cita su turno a tiempo."
+  },
+  {
+    "question": "Estoy molesto | Por qué me molestan | Me están acosando | Estoy enojado",
+    "answer": "Entiendo, {nombre_deudor}. La intención de esta llamada es apoyarle a mantener su cuenta de Lumen Clínica al corriente y conservar sus beneficios. También puede realizar su gestión directamente por nuestros canales de atención llamando al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+  },
+  {
+    "question": "La app no funciona | No puedo agendar en la aplicación | El portal marca error | La aplicación se cae | Intenté agendar y el turno no pasa | La plataforma no me deja agendar",
+    "answer": "Le ofrezco una disculpa por el inconveniente con la aplicación; entiendo lo molesto que resulta y no es un error de su parte. Mientras se resuelve, puede realizar su turno de forma presencial en cualquier tienda Lumen Clínica, o reportar la falla al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+  },
+  {
+    "question": "¿Cuál es la empresa que llama? | ¿Cómo se llama la empresa? | ¿Es una agencia externa?",
+    "answer": "Soy Agente Virtual del área de Servicio y coordinación de agenda de Lumen Clínica. Le contactamos por su credencial de Crédito departamental Lumen Clínica."
+  },
+  {
+    "question": "¿Dónde puedo usar mi credencial? | ¿En qué tiendas funciona? | ¿Sirve en Lumen Clínica?",
+    "answer": "Su credencial de Crédito departamental puede ser utilizada para compras en tiendas Lumen Clínica."
+  },
+  {
+    "question": "¿Qué es la revolvente? | La revolvente | Mi revolvente | ¿De qué se trata mi crédito revolvente? | ¿Qué es mi línea revolvente?",
+    "answer": "Cuando hablamos de su revolvente nos referimos a la línea de crédito de su credencial de Crédito departamental Lumen Clínica. Actualmente presenta un turno pendiente de {total_balance_palabras}, que es el especialidad a cubrir para mantener su cuenta al corriente."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Lumen Clínica, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

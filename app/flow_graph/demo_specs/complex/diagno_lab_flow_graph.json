@@ -1,0 +1,1110 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "diagno_lab_flow",
+    "visible_name": "DiagnoLab Equipos",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (18 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/diagno_lab.json",
+      "company_id": "diagno_lab-demo",
+      "description": "Base de conocimiento de DiagnoLab Equipos."
+    },
+    "company_id": "diagno_lab-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "sicrea_mx_flow_graph.json",
+      "node_count": 18,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "DiagnoLab Equipos",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí, soy yo",
+            "soy yo",
+            "con él habla",
+            "con ella habla",
+            "sí, dígame",
+            "dígame",
+            "sí, adelante",
+            "adelante",
+            "sí, correcto",
+            "correcto",
+            "sí, soy el titular",
+            "soy el titular",
+            "así es",
+            "sí claro",
+            "claro",
+            "ajá",
+            "sí"
+          ],
+          "identity_pregunta": "{saludo_por_horario}, ¿tengo el gusto con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le habla {nombre_agente}, agente de DiagnoLab Equipos.",
+          "identity_repregunta": "Para poder continuar, ¿me confirma que estoy hablando con {nombre_deudor_completo}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura — motivo por segmento",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "sicrea_segment",
+          "cases": {
+            "mono_nodom_preventiva": "Hola {nombre_deudor}, mi nombre es {nombre_agente}, le llamo de DiagnoLab Equipos. El motivo de mi llamada es para recordarle que su {producto1_producto} con terminación {producto1_terminacion_spelled} tiene un compra próximo a vencer el {due_date_spoken} por {invoiced_balance_palabras}. Vamos a ver qué día le acomoda cubrirlo.",
+            "mono_nodom_vigente": "Hola {nombre_deudor}, mi nombre es {nombre_agente}, le llamo de DiagnoLab Equipos. El motivo de mi llamada es para informarle que su {producto1_producto} con terminación {producto1_terminacion_spelled}, presenta un importe vencido desde el {due_date_spoken} por {due_balance_palabras}. Busquemos una fecha para ponerse al corriente.",
+            "mono_dom_preventiva": "Hola {nombre_deudor}, mi nombre es {nombre_agente}, le llamo de DiagnoLab Equipos. El motivo de mi llamada es para recordarle que su {producto1_producto} con terminación {producto1_terminacion_spelled} tiene un compra próximo a vencer el {due_date_spoken} por {invoiced_balance_palabras}. Le recordamos disponibilizar el monto en su cuenta bancaria para poder realizar el cobro de manera automática.",
+            "mono_dom_vigente": "Hola {nombre_deudor}, mi nombre es {nombre_agente}, le llamo de DiagnoLab Equipos. El motivo de mi llamada es para informarle que su {producto1_producto} con terminación {producto1_terminacion_spelled}, presenta un importe vencido desde el {due_date_spoken} por {due_balance_palabras}. Procedamos a acordar cuándo puede disponibilizar el monto.",
+            "multi_preventiva": "Hola {nombre_deudor}, mi nombre es {nombre_agente}, le llamo de DiagnoLab Equipos. El motivo de mi llamada es para recordarle que actualmente cuenta con {num_productos_palabras} contratos activos con nosotros. Voy a revisar cada uno brevemente. {productos_apertura_detalle_preventiva} Definamos una fecha para regularizarlo.",
+            "multi_vigente": "Hola {nombre_deudor}, mi nombre es {nombre_agente}, le llamo de DiagnoLab Equipos. El motivo de mi llamada es para informarle que actualmente registra {num_productos_palabras} créditos con compra pendiente de regularización, por un total de {total_deuda_palabras}. Voy a revisar cada uno para validar su situación. {productos_apertura_detalle_vigente} Acordemos cómo regularizarlo."
+          },
+          "default": "Hola {nombre_deudor}, mi nombre es {nombre_agente}, le llamo de DiagnoLab Equipos. El motivo de mi llamada es para informarle que su {producto1_producto} con terminación {producto1_terminacion_spelled} presenta un importe pendiente. Pasemos a revisar una fecha para ponerlo al día."
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "sicrea_segment",
+              "cases": {
+                "mono_nodom_preventiva": "task.negotiation_mono_nodom_preventiva",
+                "mono_nodom_vigente": "task.negotiation_mono_nodom_vigente",
+                "mono_dom_preventiva": "task.negotiation_mono_dom_preventiva",
+                "mono_dom_vigente": "task.negotiation_mono_dom_vigente",
+                "multi_preventiva": "task.negotiation_multi_preventiva",
+                "multi_vigente": "task.negotiation_multi_vigente"
+              },
+              "default": "final.end_skeleton"
+            }
+          }
+        }
+      },
+      "task.negotiation_mono_nodom_preventiva": {
+        "type": "task",
+        "label": "Negociación mono sin domiciliación (preventiva)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "{max_dias_preventiva}",
+          "max_attempts": 1,
+          "monto_deuda": "{invoiced_balance}",
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "restrict_to_current_month": true,
+          "accept_out_of_window_as_intention": true,
+          "out_of_window_warning_message": "Esa fecha queda fuera del plazo que podemos agendar en esta gestión. El pedido debe realizarse dentro del mes en curso, es decir, a más tardar el último día del mes. ¿Le funciona algún día dentro de ese plazo?",
+          "commitment_windows": {
+            "default": {
+              "confirmation_message": "Perfecto, entonces confirmamos su pedido de compra para su {producto1_producto} por un valor de {invoiced_balance_palabras} para el día {date}."
+            }
+          },
+          "benefit_hints": [
+            "mantener su cuenta al corriente",
+            "realizar su compra a tiempo"
+          ],
+          "custom_instructions": "Español mexicano formal (usted). No tutee. No ofrezca transferir ni derivar con un especialista. Gestión preventiva: el compra aún no vence. Si el comprador indica que ya compró, elija Pagado. Si el comprador indica que ya tiene un acuerdo, convenio o plan de compra previo con Sicrea, no genere un nuevo pedido. Evite reiteraciones innecesarias al confirmar la fecha. No acepte pagos parciales.",
+          "objection_handlers": [
+            {
+              "objection": "Ya tengo un acuerdo con SICREA | Ya hice un convenio | Ya llegué a un arreglo | Me dieron un plazo | Ya negocié directamente con SICREA | Tengo una fecha acordada | Quedé de cerrar la compra en una fecha específica | Ya tengo un pedido con ustedes | Me autorizaron cerrar la compra después | Ya tengo un plan de compra | Ya tengo un acuerdo especial de compra | Ya tengo un acuerdo previo",
+              "answer": "Gracias por confirmarme que ya cuenta con un acuerdo de compra con DiagnoLab Equipos. Es importante mantener las condiciones y la fecha establecidas en dicho acuerdo. Le recuerdo ingresar a la página oficial, sicrea punto com punto eme equis, para realizar su compra oportunamente.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Pedido previo"
+            },
+            {
+              "objection": "No tengo dinero | No tengo dinero en este momento | Ahorita no traigo dinero | Estoy muy apretado | No me alcanza | Ando corto de lana | No tengo cómo cerrar la compra",
+              "answer": "Comprendemos su situación. Nuestro objetivo es ayudarle a encontrar una alternativa para mantener su cuenta al corriente. ¿Podría indicarme cuándo estima contar con disponibilidad para realizar el compra?"
+            },
+            {
+              "objection": "Estoy desempleado | Perdí mi empleo | Me quedé sin trabajo | Actualmente estoy desempleado",
+              "answer": "Lamentamos conocer su situación. Es importante mantener comunicación para evaluar posibles alternativas. ¿Podría indicarnos si espera recibir ingresos próximamente?"
+            },
+            {
+              "objection": "Necesito más tiempo | Déme unos días más | Necesito un poco más de tiempo | Espéreme a la quincena",
+              "answer": "Entendemos su solicitud. Para evitar que la cotización continúe acumulando cargos o afectaciones adicionales, busquemos una fecha tentativa de compra.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra"
+            },
+            {
+              "objection": "Pagaré cuando tenga dinero | Cuando tenga dinero le compra",
+              "answer": "Gracias por informarlo. Recuerde que realizando su compra a tiempo evita posibles activaciones de alarmas o bloqueos del vehículo, ¿podría indicarnos una fecha estimada en la que considere posible realizar el compra?"
+            },
+            {
+              "objection": "La cotización ya está muy alta | La cotización es muy alta | Está muy caro | El importe está muy alto",
+              "answer": "Entendemos su preocupación. Precisamente por ello es importante buscar una solución lo antes posible para evitar que continúen generándose cargos adicionales."
+            },
+            {
+              "objection": "No reconozco esa cotización | Esa cotización no es mía | No reconozco ese cobro | Nunca he tenido cuenta con ustedes",
+              "answer": "Con gusto podemos revisar la información de su cuenta. Para ello, puede comunicarse al área de seguimiento de venta llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido"
+            },
+            {
+              "objection": "Ya pagué | Ya hice el depósito | Ya transferí el dinero | Ya quedó liquidado | Ya me puse al corriente",
+              "answer": "Gracias por informarlo. De ser posible, también puede comunicarse al área de seguimiento de venta para actualizar su información, llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya compró"
+            },
+            {
+              "objection": "Estoy esperando que me paguen | Estoy esperando un ingreso | Cuando me depositen | Cuando me paguen le deposito",
+              "answer": "Comprendemos. Mientras recibe ese ingreso, ¿podría indicarnos una fecha estimada para programar el compra y mantener registrada su intención?"
+            },
+            {
+              "objection": "Estoy fuera de la ciudad | Estoy fuera del país | Estoy de viaje | Ando de viaje",
+              "answer": "Gracias por informarlo. Actualmente existen diversos canales que permiten realizar pagos de forma remota. ¿Desea que le compartamos las opciones disponibles?"
+            },
+            {
+              "objection": "Tengo otros gastos más importantes | Tengo otras prioridades | Apenas estoy sacando los gastos | Tengo otros compromisos",
+              "answer": "Entendemos que pueda estar enfrentando múltiples compromisos financieros. Mantener su crédito al día le ayudará a conservar su cuenta en buen estado. ¿Qué fecha específica podría comprometer para realizar el compra?"
+            },
+            {
+              "objection": "He tenido gastos médicos | Tuve problemas de salud | Estuve enfermo | Gastos médicos y no puedo cerrar la compra",
+              "answer": "Lamentamos la situación que está atravesando. Nuestro interés es encontrar una alternativa viable. ¿Existe la posibilidad de realizar un compra o establecer una fecha tentativa?"
+            },
+            {
+              "objection": "No me llamen más | Dejen de llamar | Ya no me llamen | No quiero más llamadas",
+              "answer": "Entendemos su solicitud. Las comunicaciones tienen como finalidad brindarle información sobre su cuenta y las opciones disponibles para regularizarla. Podemos continuar la gestión por los canales autorizados y mantener actualizada su situación."
+            },
+            {
+              "objection": "Mi familiar realizará el compra | Lo va a cerrar la compra un familiar | Mi esposa va a cerrar la compra | Mi esposo va a cerrar la compra | Un familiar se hará cargo",
+              "answer": "Gracias por informarlo. ¿Podría indicarnos la fecha estimada en que se realizará el compra para mantener el seguimiento correspondiente?"
+            },
+            {
+              "objection": "No puedo cerrar la compra todo | No completo todo el monto | Solo puedo abonar | ¿Aceptan pagos parciales? | No me alcanza para el total",
+              "answer": "Entendemos, es importante buscar una solución lo antes posible para evitar que continúen generándose cargos adicionales y posibles activaciones de alarmas o bloqueos del vehículo."
+            },
+            {
+              "objection": "Los intereses son demasiado altos | Los cargos son muy altos | Están cobrando de más | No estoy de acuerdo con los intereses",
+              "answer": "Comprendemos su inquietud. Los cargos aplicados corresponden a las condiciones establecidas en el contrato del crédito. Nuestro objetivo es ayudarle a cerrar la oferta la cuenta y evitar que continúen acumulándose nuevos cargos."
+            },
+            {
+              "objection": "No sé cuándo voy a cerrar la compra | No sé cuándo pueda | Luego lo veo | Ahorita no puedo hablar de eso",
+              "answer": "Comprendemos que actualmente no cuente con una fecha definida. Recuerde que realizando su compra a tiempo evita posibles activaciones de alarmas o bloqueos del vehículo. ¿Le parece si realizamos un seguimiento en los próximos días?"
+            },
+            {
+              "objection": "¿Cuáles son los medios de compra? | ¿Cómo puedo cerrar la compra? | ¿Dónde puedo cerrar la compra? | ¿Cómo realizo el compra? | ¿A qué cuenta deposito? | ¿Puedo cerrar la compra por transferencia? | ¿Aceptan compra en OXXO? | ¿Tienen convenio en tiendas? | ¿Me pasa la referencia? | ¿Me puede enviar la línea de captura? | ¿En qué bancos puedo cerrar la compra? | ¿Puedo cerrar la compra en BBVA? | ¿Puedo cerrar la compra en Banamex?",
+              "answer": "{sicrea_medios_pago_mensaje}"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.commitment_scheduled"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Pedido previo": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Otro",
+            "goto": "final.end_no_commitment"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.negotiation_mono_nodom_vigente": {
+        "type": "task",
+        "label": "Negociación mono sin domiciliación (vigente)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": 5,
+          "max_attempts": 2,
+          "monto_deuda": "{due_balance}",
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": true,
+          "restrict_to_current_month": true,
+          "accept_out_of_window_as_intention": true,
+          "out_of_window_warning_message": "Esa fecha queda fuera del plazo que podemos agendar en esta gestión. El pedido debe realizarse dentro del mes en curso, es decir, a más tardar el último día del mes. ¿Le funciona algún día dentro de ese plazo?",
+          "commitment_windows": {
+            "default": {
+              "confirmation_message": "Perfecto, entonces confirmamos su pedido de compra para su {producto1_producto} por un valor de {due_balance_palabras} para el día {date}."
+            }
+          },
+          "benefit_hints": [
+            "cerrar la oferta su importe pendiente",
+            "evitar que la cotización continue",
+            "mantener su crédito al corriente"
+          ],
+          "custom_instructions": "Español mexicano formal (usted). No tutee. No ofrezca transferir ni derivar con un especialista. Si el comprador indica que ya compró, elija Pagado. Si el comprador indica que ya tiene un acuerdo, convenio o plan de compra previo con Sicrea, no genere un nuevo pedido. Evite reiteraciones innecesarias al confirmar la fecha. No acepte pagos parciales.",
+          "objection_handlers": [
+            {
+              "objection": "Ya tengo un acuerdo con SICREA | Ya hice un convenio | Ya llegué a un arreglo | Me dieron un plazo | Ya negocié directamente con SICREA | Tengo una fecha acordada | Quedé de cerrar la compra en una fecha específica | Ya tengo un pedido con ustedes | Me autorizaron cerrar la compra después | Ya tengo un plan de compra | Ya tengo un acuerdo especial de compra | Ya tengo un acuerdo previo",
+              "answer": "Gracias por confirmarme que ya cuenta con un acuerdo de compra con DiagnoLab Equipos. Es importante mantener las condiciones y la fecha establecidas en dicho acuerdo. Le recuerdo ingresar a la página oficial, sicrea punto com punto eme equis, para realizar su compra oportunamente.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Pedido previo"
+            },
+            {
+              "objection": "No tengo dinero | No tengo dinero en este momento | Ahorita no traigo dinero | Estoy muy apretado | No me alcanza | Ando corto de lana | No tengo cómo cerrar la compra",
+              "answer": "Comprendemos su situación. Nuestro objetivo es ayudarle a encontrar una alternativa para mantener su cuenta al corriente. ¿Podría indicarme cuándo estima contar con disponibilidad para realizar el compra?"
+            },
+            {
+              "objection": "Estoy desempleado | Perdí mi empleo | Me quedé sin trabajo | Actualmente estoy desempleado",
+              "answer": "Lamentamos conocer su situación. Es importante mantener comunicación para evaluar posibles alternativas. ¿Podría indicarnos si espera recibir ingresos próximamente?"
+            },
+            {
+              "objection": "Necesito más tiempo | Déme unos días más | Necesito un poco más de tiempo | Espéreme a la quincena",
+              "answer": "Entendemos su solicitud. Para evitar que la cotización continúe acumulando cargos o afectaciones adicionales, busquemos una fecha tentativa de compra.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra"
+            },
+            {
+              "objection": "Pagaré cuando tenga dinero | Cuando tenga dinero le compra",
+              "answer": "Gracias por informarlo. Recuerde que realizando su compra a tiempo evita posibles activaciones de alarmas o bloqueos del vehículo, ¿podría indicarnos una fecha estimada en la que considere posible realizar el compra?"
+            },
+            {
+              "objection": "La cotización ya está muy alta | La cotización es muy alta | Está muy caro | El importe está muy alto",
+              "answer": "Entendemos su preocupación. Precisamente por ello es importante buscar una solución lo antes posible para evitar que continúen generándose cargos adicionales."
+            },
+            {
+              "objection": "No reconozco esa cotización | Esa cotización no es mía | No reconozco ese cobro | Nunca he tenido cuenta con ustedes",
+              "answer": "Con gusto podemos revisar la información de su cuenta. Para ello, puede comunicarse al área de seguimiento de venta llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido"
+            },
+            {
+              "objection": "Ya pagué | Ya hice el depósito | Ya transferí el dinero | Ya quedó liquidado | Ya me puse al corriente",
+              "answer": "Gracias por informarlo. De ser posible, también puede comunicarse al área de seguimiento de venta para actualizar su información, llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya compró"
+            },
+            {
+              "objection": "Estoy esperando que me paguen | Estoy esperando un ingreso | Cuando me depositen | Cuando me paguen le deposito",
+              "answer": "Comprendemos. Mientras recibe ese ingreso, ¿podría indicarnos una fecha estimada para programar el compra y mantener registrada su intención?"
+            },
+            {
+              "objection": "Estoy fuera de la ciudad | Estoy fuera del país | Estoy de viaje | Ando de viaje",
+              "answer": "Gracias por informarlo. Actualmente existen diversos canales que permiten realizar pagos de forma remota. ¿Desea que le compartamos las opciones disponibles?"
+            },
+            {
+              "objection": "Tengo otros gastos más importantes | Tengo otras prioridades | Apenas estoy sacando los gastos | Tengo otros compromisos",
+              "answer": "Entendemos que pueda estar enfrentando múltiples compromisos financieros. Mantener su crédito al día le ayudará a conservar su cuenta en buen estado. ¿Qué fecha específica podría comprometer para realizar el compra?"
+            },
+            {
+              "objection": "He tenido gastos médicos | Tuve problemas de salud | Estuve enfermo | Gastos médicos y no puedo cerrar la compra",
+              "answer": "Lamentamos la situación que está atravesando. Nuestro interés es encontrar una alternativa viable. ¿Existe la posibilidad de realizar un compra o establecer una fecha tentativa?"
+            },
+            {
+              "objection": "No me llamen más | Dejen de llamar | Ya no me llamen | No quiero más llamadas",
+              "answer": "Entendemos su solicitud. Las comunicaciones tienen como finalidad brindarle información sobre su cuenta y las opciones disponibles para regularizarla. Podemos continuar la gestión por los canales autorizados y mantener actualizada su situación."
+            },
+            {
+              "objection": "Mi familiar realizará el compra | Lo va a cerrar la compra un familiar | Mi esposa va a cerrar la compra | Mi esposo va a cerrar la compra | Un familiar se hará cargo",
+              "answer": "Gracias por informarlo. ¿Podría indicarnos la fecha estimada en que se realizará el compra para mantener el seguimiento correspondiente?"
+            },
+            {
+              "objection": "No puedo cerrar la compra todo | No completo todo el monto | Solo puedo abonar | ¿Aceptan pagos parciales? | No me alcanza para el total",
+              "answer": "Entendemos, es importante buscar una solución lo antes posible para evitar que continúen generándose cargos adicionales y posibles activaciones de alarmas o bloqueos del vehículo."
+            },
+            {
+              "objection": "Los intereses son demasiado altos | Los cargos son muy altos | Están cobrando de más | No estoy de acuerdo con los intereses",
+              "answer": "Comprendemos su inquietud. Los cargos aplicados corresponden a las condiciones establecidas en el contrato del crédito. Nuestro objetivo es ayudarle a cerrar la oferta la cuenta y evitar que continúen acumulándose nuevos cargos."
+            },
+            {
+              "objection": "No sé cuándo voy a cerrar la compra | No sé cuándo pueda | Luego lo veo | Ahorita no puedo hablar de eso",
+              "answer": "Comprendemos que actualmente no cuente con una fecha definida. Recuerde que realizando su compra a tiempo evita posibles activaciones de alarmas o bloqueos del vehículo. ¿Le parece si realizamos un seguimiento en los próximos días?"
+            },
+            {
+              "objection": "¿Cuáles son los medios de compra? | ¿Cómo puedo cerrar la compra? | ¿Dónde puedo cerrar la compra? | ¿Cómo realizo el compra? | ¿A qué cuenta deposito? | ¿Puedo cerrar la compra por transferencia? | ¿Aceptan compra en OXXO? | ¿Tienen convenio en tiendas? | ¿Me pasa la referencia? | ¿Me puede enviar la línea de captura? | ¿En qué bancos puedo cerrar la compra? | ¿Puedo cerrar la compra en BBVA? | ¿Puedo cerrar la compra en Banamex?",
+              "answer": "{sicrea_medios_pago_mensaje}"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.commitment_scheduled"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Pedido previo": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Otro",
+            "goto": "final.end_no_commitment"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.negotiation_mono_dom_preventiva": {
+        "type": "task",
+        "label": "Negociación mono con domiciliación (preventiva)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "{max_dias_preventiva}",
+          "max_attempts": 1,
+          "monto_deuda": "{invoiced_balance}",
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "restrict_to_current_month": true,
+          "accept_out_of_window_as_intention": true,
+          "out_of_window_warning_message": "Esa fecha queda fuera del plazo que podemos agendar en esta gestión. El pedido debe realizarse dentro del mes en curso, es decir, a más tardar el último día del mes. ¿Le funciona algún día dentro de ese plazo?",
+          "commitment_windows": {
+            "default": {
+              "confirmation_message": "Perfecto, entonces confirmamos su pedido para su {producto1_producto} por un valor de {invoiced_balance_palabras} disponibles en su cuenta bancaria para el día {date}."
+            }
+          },
+          "benefit_hints": [
+            "mantener su cuenta al corriente",
+            "disponibilizar el monto para el cobro automático"
+          ],
+          "custom_instructions": "Español mexicano formal (usted). No tutee. No ofrezca transferir ni derivar con un especialista. Gestión PREVENTIVA con DOMICILIACIÓN ACTIVA: el comprador NO paga manualmente; el cobro se realiza de manera automática desde su cuenta bancaria. Nunca use expresiones como 'realizar el compra', 'depositar' o 'transferir'; en su lugar, solicite al comprador 'disponibilizar el monto en su cuenta bancaria' antes de la fecha de vigencia de oferta. Solicite una fecha en la que el dinero estará disponible en la cuenta. Si el comprador indica que ya compró, elija Pagado. Si el comprador indica que ya tiene un acuerdo, convenio o plan de compra previo con Sicrea, no genere un nuevo pedido. Evite reiteraciones innecesarias al confirmar la fecha. No acepte pagos parciales.",
+          "objection_handlers": [
+            {
+              "objection": "Ya tengo un acuerdo con SICREA | Ya hice un convenio | Ya llegué a un arreglo | Me dieron un plazo | Ya negocié directamente con SICREA | Tengo una fecha acordada | Quedé de cerrar la compra en una fecha específica | Ya tengo un pedido con ustedes | Me autorizaron cerrar la compra después | Ya tengo un plan de compra | Ya tengo un acuerdo especial de compra | Ya tengo un acuerdo previo",
+              "answer": "Gracias por confirmarme que ya cuenta con un acuerdo de compra con DiagnoLab Equipos. Es importante mantener las condiciones y la fecha establecidas en dicho acuerdo. Le recuerdo ingresar a la página oficial, sicrea punto com punto eme equis, para realizar su compra oportunamente.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Pedido previo"
+            },
+            {
+              "objection": "No tengo dinero | No tengo dinero en este momento | Ahorita no traigo dinero | Estoy muy apretado | No me alcanza | Ando corto de lana | No tengo cómo cerrar la compra",
+              "answer": "Comprendemos su situación. Nuestro objetivo es ayudarle a encontrar una alternativa para que pueda disponibilizar el monto en su cuenta bancaria y el cobro se realice de manera automática. ¿Podría indicarme cuándo estima contar con el dinero disponible en su cuenta?"
+            },
+            {
+              "objection": "Estoy desempleado | Perdí mi empleo | Me quedé sin trabajo | Actualmente estoy desempleado",
+              "answer": "Lamentamos conocer su situación. Es importante mantener comunicación para evaluar posibles alternativas. ¿Podría indicarnos si espera recibir ingresos próximamente que le permitan tener el monto disponible en su cuenta?"
+            },
+            {
+              "objection": "Necesito más tiempo | Déme unos días más | Necesito un poco más de tiempo | Espéreme a la quincena",
+              "answer": "Entendemos su solicitud. Para evitar que la cotización continúe acumulando cargos o afectaciones adicionales, busquemos una fecha tentativa en la que pueda tener el monto disponible en su cuenta.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra"
+            },
+            {
+              "objection": "Pagaré cuando tenga dinero | Cuando tenga dinero le compra",
+              "answer": "Gracias por informarlo. Recuerde que tener el monto disponible en su cuenta a tiempo evita posibles activaciones de alarmas o bloqueos del vehículo. ¿Podría indicarnos una fecha estimada en la que considere posible disponibilizar el monto?"
+            },
+            {
+              "objection": "La cotización ya está muy alta | La cotización es muy alta | Está muy caro | El importe está muy alto",
+              "answer": "Entendemos su preocupación. Precisamente por ello es importante buscar una solución lo antes posible para evitar que continúen generándose cargos adicionales."
+            },
+            {
+              "objection": "No reconozco esa cotización | Esa cotización no es mía | No reconozco ese cobro | Nunca he tenido cuenta con ustedes",
+              "answer": "Con gusto podemos revisar la información de su cuenta. Para ello, puede comunicarse al área de seguimiento de venta llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido"
+            },
+            {
+              "objection": "Ya pagué | Ya hice el depósito | Ya transferí el dinero | Ya quedó liquidado | Ya me puse al corriente",
+              "answer": "Gracias por informarlo. De ser posible, también puede comunicarse al área de seguimiento de venta para actualizar su información, llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya compró"
+            },
+            {
+              "objection": "Estoy esperando que me paguen | Estoy esperando un ingreso | Cuando me depositen | Cuando me paguen le deposito",
+              "answer": "Comprendemos. Mientras recibe ese ingreso, ¿podría indicarnos una fecha estimada para tener el monto disponible en su cuenta y mantener registrada su intención?"
+            },
+            {
+              "objection": "Estoy fuera de la ciudad | Estoy fuera del país | Estoy de viaje | Ando de viaje",
+              "answer": "Gracias por informarlo. Como el cobro se realiza de manera automática desde su cuenta bancaria, únicamente necesita disponibilizar el monto en la cuenta antes del vigencia de oferta. ¿Podemos contar con ello?"
+            },
+            {
+              "objection": "Tengo otros gastos más importantes | Tengo otras prioridades | Apenas estoy sacando los gastos | Tengo otros compromisos",
+              "answer": "Entendemos que pueda estar enfrentando múltiples compromisos financieros. Mantener su crédito al día le ayudará a conservar su cuenta en buen estado. ¿Qué fecha específica podría comprometer para tener el monto disponible en su cuenta?"
+            },
+            {
+              "objection": "He tenido gastos médicos | Tuve problemas de salud | Estuve enfermo | Gastos médicos y no puedo cerrar la compra",
+              "answer": "Lamentamos la situación que está atravesando. Nuestro interés es encontrar una alternativa viable. ¿Existe la posibilidad de disponibilizar el monto en su cuenta o establecer una fecha tentativa?"
+            },
+            {
+              "objection": "No me llamen más | Dejen de llamar | Ya no me llamen | No quiero más llamadas",
+              "answer": "Entendemos su solicitud. Las comunicaciones tienen como finalidad brindarle información sobre su cuenta y las opciones disponibles para regularizarla. Podemos continuar la gestión por los canales autorizados y mantener actualizada su situación."
+            },
+            {
+              "objection": "Mi familiar realizará el compra | Lo va a cerrar la compra un familiar | Mi esposa va a cerrar la compra | Mi esposo va a cerrar la compra | Un familiar se hará cargo",
+              "answer": "Gracias por informarlo. Como el cobro se realiza de manera automática desde su cuenta bancaria, únicamente se requiere que el monto esté disponible el día del vigencia de oferta. ¿Podría indicarnos la fecha estimada en la que el dinero estará disponible?"
+            },
+            {
+              "objection": "No puedo cerrar la compra todo | No completo todo el monto | Solo puedo abonar | ¿Aceptan pagos parciales? | No me alcanza para el total",
+              "answer": "Entendemos, sin embargo el cobro automático se ejecuta por el monto completo. Es importante buscar una solución lo antes posible para evitar cargos adicionales y posibles activaciones de alarmas o bloqueos del vehículo."
+            },
+            {
+              "objection": "Los intereses son demasiado altos | Los cargos son muy altos | Están cobrando de más | No estoy de acuerdo con los intereses",
+              "answer": "Comprendemos su inquietud. Los cargos aplicados corresponden a las condiciones establecidas en el contrato del crédito. Nuestro objetivo es ayudarle a cerrar la oferta la cuenta y evitar que continúen acumulándose nuevos cargos."
+            },
+            {
+              "objection": "No sé cuándo voy a cerrar la compra | No sé cuándo pueda | Luego lo veo | Ahorita no puedo hablar de eso",
+              "answer": "Comprendemos que actualmente no cuente con una fecha definida. Recuerde que tener el monto disponible en su cuenta a tiempo evita posibles activaciones de alarmas o bloqueos del vehículo. ¿Le parece si realizamos un seguimiento en los próximos días?"
+            },
+            {
+              "objection": "¿Cuáles son los medios de compra? | ¿Cómo puedo cerrar la compra? | ¿Dónde puedo cerrar la compra? | ¿Cómo realizo el compra? | ¿A qué cuenta deposito? | ¿Puedo cerrar la compra por transferencia? | ¿Aceptan compra en OXXO? | ¿Tienen convenio en tiendas? | ¿Me pasa la referencia? | ¿Me puede enviar la línea de captura? | ¿En qué bancos puedo cerrar la compra? | ¿Puedo cerrar la compra en BBVA? | ¿Puedo cerrar la compra en Banamex?",
+              "answer": "Su cuenta tiene domiciliación activa, por lo que el cobro se realiza de manera automática desde su cuenta bancaria; únicamente debe asegurarse de tener el monto disponible antes del vigencia de oferta. De todas formas, si desea realizar un compra manual, {sicrea_medios_pago_mensaje}"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.commitment_scheduled"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Pedido previo": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Otro",
+            "goto": "final.end_no_commitment"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.negotiation_mono_dom_vigente": {
+        "type": "task",
+        "label": "Negociación mono con domiciliación (vigente)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": 5,
+          "max_attempts": 2,
+          "monto_deuda": "{due_balance}",
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": true,
+          "restrict_to_current_month": true,
+          "accept_out_of_window_as_intention": true,
+          "out_of_window_warning_message": "Esa fecha queda fuera del plazo que podemos agendar en esta gestión. El pedido debe realizarse dentro del mes en curso, es decir, a más tardar el último día del mes. ¿Le funciona algún día dentro de ese plazo?",
+          "commitment_windows": {
+            "default": {
+              "confirmation_message": "Perfecto, entonces confirmamos su pedido para su {producto1_producto} por un valor de {due_balance_palabras} disponibles en su cuenta bancaria para el día {date}."
+            }
+          },
+          "benefit_hints": [
+            "cerrar la oferta su importe pendiente",
+            "disponibilizar el monto para el cobro automático",
+            "mantener su crédito al corriente"
+          ],
+          "custom_instructions": "Español mexicano formal (usted). No tutee. No ofrezca transferir ni derivar con un especialista. Gestión VIGENTE con DOMICILIACIÓN ACTIVA: el comprador NO paga manualmente; el cobro se realiza de manera automática desde su cuenta bancaria. Nunca use expresiones como 'realizar el compra', 'depositar' o 'transferir'; en su lugar, solicite al comprador 'disponibilizar el monto en su cuenta bancaria' para que se pueda ejecutar el cargo automático. Solicite una fecha en la que el dinero estará disponible en la cuenta. Si el comprador indica que ya compró, elija Pagado. Si el comprador indica que ya tiene un acuerdo, convenio o plan de compra previo con Sicrea, no genere un nuevo pedido. Evite reiteraciones innecesarias al confirmar la fecha. No acepte pagos parciales.",
+          "objection_handlers": [
+            {
+              "objection": "Ya tengo un acuerdo con SICREA | Ya hice un convenio | Ya llegué a un arreglo | Me dieron un plazo | Ya negocié directamente con SICREA | Tengo una fecha acordada | Quedé de cerrar la compra en una fecha específica | Ya tengo un pedido con ustedes | Me autorizaron cerrar la compra después | Ya tengo un plan de compra | Ya tengo un acuerdo especial de compra | Ya tengo un acuerdo previo",
+              "answer": "Gracias por confirmarme que ya cuenta con un acuerdo de compra con DiagnoLab Equipos. Es importante mantener las condiciones y la fecha establecidas en dicho acuerdo. Le recuerdo ingresar a la página oficial, sicrea punto com punto eme equis, para realizar su compra oportunamente.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Pedido previo"
+            },
+            {
+              "objection": "No tengo dinero | No tengo dinero en este momento | Ahorita no traigo dinero | Estoy muy apretado | No me alcanza | Ando corto de lana | No tengo cómo cerrar la compra",
+              "answer": "Comprendemos su situación. Nuestro objetivo es ayudarle a encontrar una alternativa para que pueda disponibilizar el monto en su cuenta bancaria y el cobro se realice de manera automática. ¿Podría indicarme cuándo estima contar con el dinero disponible en su cuenta?"
+            },
+            {
+              "objection": "Estoy desempleado | Perdí mi empleo | Me quedé sin trabajo | Actualmente estoy desempleado",
+              "answer": "Lamentamos conocer su situación. Es importante mantener comunicación para evaluar posibles alternativas. ¿Podría indicarnos si espera recibir ingresos próximamente que le permitan tener el monto disponible en su cuenta?"
+            },
+            {
+              "objection": "Necesito más tiempo | Déme unos días más | Necesito un poco más de tiempo | Espéreme a la quincena",
+              "answer": "Entendemos su solicitud. Para evitar que la cotización continúe acumulando cargos o afectaciones adicionales, busquemos una fecha tentativa en la que pueda tener el monto disponible en su cuenta.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra"
+            },
+            {
+              "objection": "Pagaré cuando tenga dinero | Cuando tenga dinero le compra",
+              "answer": "Gracias por informarlo. Recuerde que tener el monto disponible en su cuenta a tiempo evita posibles activaciones de alarmas o bloqueos del vehículo. ¿Podría indicarnos una fecha estimada en la que considere posible disponibilizar el monto?"
+            },
+            {
+              "objection": "La cotización ya está muy alta | La cotización es muy alta | Está muy caro | El importe está muy alto",
+              "answer": "Entendemos su preocupación. Precisamente por ello es importante buscar una solución lo antes posible para evitar que continúen generándose cargos adicionales."
+            },
+            {
+              "objection": "No reconozco esa cotización | Esa cotización no es mía | No reconozco ese cobro | Nunca he tenido cuenta con ustedes",
+              "answer": "Con gusto podemos revisar la información de su cuenta. Para ello, puede comunicarse al área de seguimiento de venta llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido"
+            },
+            {
+              "objection": "Ya pagué | Ya hice el depósito | Ya transferí el dinero | Ya quedó liquidado | Ya me puse al corriente",
+              "answer": "Gracias por informarlo. De ser posible, también puede comunicarse al área de seguimiento de venta para actualizar su información, llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya compró"
+            },
+            {
+              "objection": "Estoy esperando que me paguen | Estoy esperando un ingreso | Cuando me depositen | Cuando me paguen le deposito",
+              "answer": "Comprendemos. Mientras recibe ese ingreso, ¿podría indicarnos una fecha estimada para tener el monto disponible en su cuenta y mantener registrada su intención?"
+            },
+            {
+              "objection": "Estoy fuera de la ciudad | Estoy fuera del país | Estoy de viaje | Ando de viaje",
+              "answer": "Gracias por informarlo. Como el cobro se realiza de manera automática desde su cuenta bancaria, únicamente necesita disponibilizar el monto en la cuenta. ¿Podemos contar con ello?"
+            },
+            {
+              "objection": "Tengo otros gastos más importantes | Tengo otras prioridades | Apenas estoy sacando los gastos | Tengo otros compromisos",
+              "answer": "Entendemos que pueda estar enfrentando múltiples compromisos financieros. Mantener su crédito al día le ayudará a conservar su cuenta en buen estado. ¿Qué fecha específica podría comprometer para tener el monto disponible en su cuenta?"
+            },
+            {
+              "objection": "He tenido gastos médicos | Tuve problemas de salud | Estuve enfermo | Gastos médicos y no puedo cerrar la compra",
+              "answer": "Lamentamos la situación que está atravesando. Nuestro interés es encontrar una alternativa viable. ¿Existe la posibilidad de disponibilizar el monto en su cuenta o establecer una fecha tentativa?"
+            },
+            {
+              "objection": "No me llamen más | Dejen de llamar | Ya no me llamen | No quiero más llamadas",
+              "answer": "Entendemos su solicitud. Las comunicaciones tienen como finalidad brindarle información sobre su cuenta y las opciones disponibles para regularizarla. Podemos continuar la gestión por los canales autorizados y mantener actualizada su situación."
+            },
+            {
+              "objection": "Mi familiar realizará el compra | Lo va a cerrar la compra un familiar | Mi esposa va a cerrar la compra | Mi esposo va a cerrar la compra | Un familiar se hará cargo",
+              "answer": "Gracias por informarlo. Como el cobro se realiza de manera automática desde su cuenta bancaria, únicamente se requiere que el monto esté disponible en la cuenta. ¿Podría indicarnos la fecha estimada en la que el dinero estará disponible?"
+            },
+            {
+              "objection": "No puedo cerrar la compra todo | No completo todo el monto | Solo puedo abonar | ¿Aceptan pagos parciales? | No me alcanza para el total",
+              "answer": "Entendemos, sin embargo el cobro automático se ejecuta por el monto completo. Es importante buscar una solución lo antes posible para evitar cargos adicionales y posibles activaciones de alarmas o bloqueos del vehículo."
+            },
+            {
+              "objection": "Los intereses son demasiado altos | Los cargos son muy altos | Están cobrando de más | No estoy de acuerdo con los intereses",
+              "answer": "Comprendemos su inquietud. Los cargos aplicados corresponden a las condiciones establecidas en el contrato del crédito. Nuestro objetivo es ayudarle a cerrar la oferta la cuenta y evitar que continúen acumulándose nuevos cargos."
+            },
+            {
+              "objection": "No sé cuándo voy a cerrar la compra | No sé cuándo pueda | Luego lo veo | Ahorita no puedo hablar de eso",
+              "answer": "Comprendemos que actualmente no cuente con una fecha definida. Recuerde que tener el monto disponible en su cuenta a tiempo evita posibles activaciones de alarmas o bloqueos del vehículo. ¿Le parece si realizamos un seguimiento en los próximos días?"
+            },
+            {
+              "objection": "¿Cuáles son los medios de compra? | ¿Cómo puedo cerrar la compra? | ¿Dónde puedo cerrar la compra? | ¿Cómo realizo el compra? | ¿A qué cuenta deposito? | ¿Puedo cerrar la compra por transferencia? | ¿Aceptan compra en OXXO? | ¿Tienen convenio en tiendas? | ¿Me pasa la referencia? | ¿Me puede enviar la línea de captura? | ¿En qué bancos puedo cerrar la compra? | ¿Puedo cerrar la compra en BBVA? | ¿Puedo cerrar la compra en Banamex?",
+              "answer": "Su cuenta tiene domiciliación activa, por lo que el cobro se realiza de manera automática desde su cuenta bancaria; únicamente debe asegurarse de tener el monto disponible. De todas formas, si desea realizar un compra manual, {sicrea_medios_pago_mensaje}"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.commitment_scheduled"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Pedido previo": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Otro",
+            "goto": "final.end_no_commitment"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.negotiation_multi_preventiva": {
+        "type": "task",
+        "label": "Negociación multiproducto (preventiva)",
+        "task_type": "MultiProductNegotiationTask",
+        "params": {
+          "max_products": "{num_productos}",
+          "announce_first_product": true,
+          "continue_after_commitment": true,
+          "auto_advance_on_decline": true,
+          "shared_negotiation_kwargs": {
+            "max_dias": "{max_dias_preventiva}",
+            "max_attempts": 1,
+            "empresa": "DiagnoLab Equipos",
+            "deudor": "{nombre_deudor}",
+            "currency": "MXN",
+            "allow_partial_payments": false,
+            "require_confirmation": true,
+            "collect_payment_method": false,
+            "ask_nonpayment_reason": false,
+            "restrict_to_current_month": true,
+            "accept_out_of_window_as_intention": true,
+            "out_of_window_warning_message": "Esa fecha queda fuera del plazo que podemos agendar en esta gestión. El pedido para este contrato debe realizarse dentro del mes en curso, es decir, a más tardar el último día del mes. ¿Le funciona algún día dentro de ese plazo?",
+            "benefit_hints": [
+              "mantener sus cuentas al corriente",
+              "evitar cargos adicionales por cada contrato"
+            ],
+            "custom_instructions": "Español mexicano formal (usted). No tutee. No ofrezca transferir ni derivar con un especialista. Gestión preventiva multiproducto: está negociando VARIOS contratos del comprador, UNO A LA VEZ; el sistema le llevará al siguiente. La cotización total ya se mencionó en la apertura, no la repita. En su primera intervención sobre cada producto NO repita saludo ni motivo: vaya directo a anclar fecha para ese contrato. DOMICILIACIÓN POR CONTRATO (CRÍTICO): cada producto puede o no tener domiciliación. Modo actual: producto 1 {producto1_modo_gestion}; producto 2 {producto2_modo_gestion}; producto 3 {producto3_modo_gestion}. Si el contrato en curso tiene domiciliación, NUNCA diga 'realizar el compra', 'depositar' o 'transferir'; pida 'disponibilizar el monto en su cuenta bancaria' para el cobro automático. Si NO tiene domiciliación, hable de 'realizar el compra'. REGLA DE MONTO (ESTRICTA): el único monto que puede agendar para el contrato actual es el importe COMPLETO por vencer (no acepte pagos parciales). Si el comprador propone cerrar la compra solo una parte, explíquele que el compra mínimo es el monto completo de la cuota de financiamiento del contrato y ofrezca pasar al siguiente contrato si prefiere empezar por otro. USO DE HERRAMIENTAS: registre el pedido SOLO para el contrato actual con su fecha propia; si el comprador menciona monto o fecha de OTRO contrato, indíquele que enseguida lo revisan y el sistema retomará los datos automáticamente. Si el comprador indica que ya tiene un acuerdo, convenio o plan de compra previo con Sicrea, no genere un nuevo pedido. Evite reiteraciones innecesarias al confirmar la fecha.",
+            "flow_objection_handlers": [
+              {
+                "objection": "Ya tengo un acuerdo con SICREA | Ya hice un convenio | Ya llegué a un arreglo | Me dieron un plazo | Ya negocié directamente con SICREA | Tengo una fecha acordada | Quedé de cerrar la compra en una fecha específica | Ya tengo un pedido con ustedes | Me autorizaron cerrar la compra después | Ya tengo un plan de compra | Ya tengo un acuerdo especial de compra | Ya tengo un acuerdo previo",
+                "answer": "Gracias por confirmarme que ya cuenta con un acuerdo de compra con DiagnoLab Equipos. Es importante mantener las condiciones y la fecha establecidas en dicho acuerdo. Le recuerdo ingresar a la página oficial, sicrea punto com punto eme equis, para realizar su compra oportunamente.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Pedido previo"
+              },
+              {
+                "objection": "No tengo dinero | No tengo dinero en este momento | Ahorita no traigo dinero | Estoy muy apretado | No me alcanza | Ando corto de lana | No tengo cómo cerrar la compra",
+                "answer": "Comprendemos su situación. Nuestro objetivo es ayudarle a encontrar una alternativa para mantener sus cuentas al corriente. ¿Podría indicarme cuándo estima contar con disponibilidad para realizar el compra de este contrato?"
+              },
+              {
+                "objection": "Necesito más tiempo | Déme unos días más | Necesito un poco más de tiempo | Espéreme a la quincena",
+                "answer": "Entendemos su solicitud. Para evitar que la cotización continúe acumulando cargos, busquemos una fecha tentativa de compra para este contrato.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Intención de compra"
+              },
+              {
+                "objection": "No reconozco esa cotización | Esa cotización no es mía | No reconozco ese cobro",
+                "answer": "Con gusto podemos revisar la información de su cuenta. Para ello, puede comunicarse al área de seguimiento de venta llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Sin pedido"
+              },
+              {
+                "objection": "Ya pagué | Ya hice el depósito | Ya transferí el dinero | Ya quedó liquidado | Ya me puse al corriente",
+                "answer": "Gracias por informarlo. De ser posible, también puede comunicarse al área de seguimiento de venta para actualizar su información, llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Ya compró"
+              },
+              {
+                "objection": "No puedo cerrar la compra todo | No completo todo el monto | Solo puedo abonar | ¿Aceptan pagos parciales?",
+                "answer": "Entendemos. Puede avanzar contrato por contrato: cada compra debe cubrir el monto completo de la cuota de financiamiento de un contrato y no es posible aceptar un abono menor. ¿Le acomoda cubrir completa la cuota de financiamiento de este contrato o prefiere que empecemos por la de otro de sus contratos?"
+              },
+              {
+                "objection": "¿Cuáles son los medios de compra? | ¿Cómo puedo cerrar la compra? | ¿Dónde puedo cerrar la compra? | ¿A qué cuenta deposito?",
+                "answer": "Depende del contrato: si tiene domiciliación activa, el cobro es automático y solo debe disponibilizar el monto en su cuenta bancaria. Si no tiene domiciliación: {sicrea_medios_pago_mensaje}"
+              },
+              {
+                "objection": "¿Qué productos tengo? | ¿Cuáles son mis contratos? | ¿Qué créditos tengo con ustedes? | Dime todos mis productos",
+                "answer": "{productos_info_mensaje}"
+              }
+            ]
+          },
+          "products": [
+            {
+              "label": "su {producto1_producto} con terminación {producto1_terminacion_spelled}",
+              "output_key": "Compromiso1",
+              "output": {
+                "id_producto": "{producto1_id_producto}",
+                "Producto": "{producto1_producto}"
+              },
+              "intro_prompt": "Empecemos con su {producto1_producto} con terminación {producto1_terminacion_spelled}. ¿Qué día podría {producto1_pregunta_accion_preventiva} {producto1_venci_mes_palabras}?",
+              "negotiation": {
+                "monto_deuda": "{producto1_venci_mes}",
+                "commitment_windows": {
+                  "default": {
+                    "confirmation_message": "Perfecto, entonces {producto1_confirm_prefijo} su {producto1_producto} con terminación {producto1_terminacion_spelled} por un valor de {producto1_venci_mes_palabras} {producto1_confirm_sufijo} {date}."
+                  }
+                }
+              }
+            },
+            {
+              "label": "su {producto2_producto} con terminación {producto2_terminacion_spelled}",
+              "output_key": "Compromiso2",
+              "output": {
+                "id_producto": "{producto2_id_producto}",
+                "Producto": "{producto2_producto}"
+              },
+              "intro_prompt": "Ahora respecto a su {producto2_producto} con terminación {producto2_terminacion_spelled}. ¿Qué día podría {producto2_pregunta_accion_preventiva} {producto2_venci_mes_palabras}?",
+              "negotiation": {
+                "monto_deuda": "{producto2_venci_mes}",
+                "commitment_windows": {
+                  "default": {
+                    "confirmation_message": "Perfecto, entonces {producto2_confirm_prefijo} su {producto2_producto} con terminación {producto2_terminacion_spelled} por un valor de {producto2_venci_mes_palabras} {producto2_confirm_sufijo} {date}."
+                  }
+                }
+              }
+            },
+            {
+              "label": "su {producto3_producto} con terminación {producto3_terminacion_spelled}",
+              "output_key": "Compromiso3",
+              "output": {
+                "id_producto": "{producto3_id_producto}",
+                "Producto": "{producto3_producto}"
+              },
+              "intro_prompt": "Por último, respecto a su {producto3_producto} con terminación {producto3_terminacion_spelled}. ¿Qué día podría {producto3_pregunta_accion_preventiva} {producto3_venci_mes_palabras}?",
+              "negotiation": {
+                "monto_deuda": "{producto3_venci_mes}",
+                "commitment_windows": {
+                  "default": {
+                    "confirmation_message": "Perfecto, entonces {producto3_confirm_prefijo} su {producto3_producto} con terminación {producto3_terminacion_spelled} por un valor de {producto3_venci_mes_palabras} {producto3_confirm_sufijo} {date}."
+                  }
+                }
+              }
+            }
+          ],
+          "custom_instructions": "Sos asesor comercial de equipos médicos. Presentá beneficios, plazos de entrega y opciones de financiamiento. No inventes precios fuera de la KB. Cerrá con pedido o próximo contacto."
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.commitment_scheduled"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Pedido previo": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Otro",
+            "goto": "final.end_no_commitment"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.negotiation_multi_vigente": {
+        "type": "task",
+        "label": "Negociación multiproducto (vigente)",
+        "task_type": "MultiProductNegotiationTask",
+        "params": {
+          "max_products": "{num_productos}",
+          "announce_first_product": true,
+          "continue_after_commitment": true,
+          "auto_advance_on_decline": true,
+          "shared_negotiation_kwargs": {
+            "max_dias": 5,
+            "max_attempts": 2,
+            "empresa": "DiagnoLab Equipos",
+            "deudor": "{nombre_deudor}",
+            "currency": "MXN",
+            "allow_partial_payments": false,
+            "require_confirmation": true,
+            "collect_payment_method": false,
+            "ask_nonpayment_reason": true,
+            "restrict_to_current_month": true,
+            "accept_out_of_window_as_intention": true,
+            "out_of_window_warning_message": "Esa fecha queda fuera del plazo que podemos agendar en esta gestión. El pedido para este contrato debe realizarse dentro del mes en curso, es decir, a más tardar el último día del mes. ¿Le funciona algún día dentro de ese plazo?",
+            "benefit_hints": [
+              "cerrar la oferta su importe pendiente por cada contrato",
+              "evitar que la cotización continue creciendo",
+              "mantener su crédito al corriente"
+            ],
+            "custom_instructions": "Español mexicano formal (usted). No tutee. No ofrezca transferir ni derivar con un especialista. Gestión vigente multiproducto: está negociando VARIOS contratos con importe vencido del comprador, UNO A LA VEZ; el sistema le llevará al siguiente. La cotización total ya se mencionó en la apertura, no la repita. En su primera intervención sobre cada producto NO repita saludo ni motivo: vaya directo a anclar fecha para ese contrato. DOMICILIACIÓN POR CONTRATO (CRÍTICO): cada producto puede o no tener domiciliación. Modo actual: producto 1 {producto1_modo_gestion}; producto 2 {producto2_modo_gestion}; producto 3 {producto3_modo_gestion}. Si el contrato en curso tiene domiciliación, NUNCA diga 'realizar el compra', 'depositar' o 'transferir'; pida 'disponibilizar el monto en su cuenta bancaria' para el cobro automático. Si NO tiene domiciliación, hable de 'realizar el compra' o 'cerrar la oferta'. REGLA DE MONTO (ESTRICTA): el único monto que puede agendar para el contrato actual es el importe vencido COMPLETO (no acepte pagos parciales). Si el comprador propone cerrar la compra solo una parte, explíquele que el compra mínimo es el importe completo del contrato y ofrezca pasar al siguiente contrato si prefiere empezar por otro. USO DE HERRAMIENTAS: registre el pedido SOLO para el contrato actual con su fecha propia; si el comprador menciona monto o fecha de OTRO contrato, indíquele que enseguida lo revisan y el sistema retomará los datos automáticamente. Si el comprador indica que ya tiene un acuerdo, convenio o plan de compra previo con Sicrea, no genere un nuevo pedido. Evite reiteraciones innecesarias al confirmar la fecha.",
+            "flow_objection_handlers": [
+              {
+                "objection": "Ya tengo un acuerdo con SICREA | Ya hice un convenio | Ya llegué a un arreglo | Me dieron un plazo | Ya negocié directamente con SICREA | Tengo una fecha acordada | Quedé de cerrar la compra en una fecha específica | Ya tengo un pedido con ustedes | Me autorizaron cerrar la compra después | Ya tengo un plan de compra | Ya tengo un acuerdo especial de compra | Ya tengo un acuerdo previo",
+                "answer": "Gracias por confirmarme que ya cuenta con un acuerdo de compra con DiagnoLab Equipos. Es importante mantener las condiciones y la fecha establecidas en dicho acuerdo. Le recuerdo ingresar a la página oficial, sicrea punto com punto eme equis, para realizar su compra oportunamente.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Pedido previo"
+              },
+              {
+                "objection": "No tengo dinero | No tengo dinero en este momento | Ahorita no traigo dinero | Estoy muy apretado | No me alcanza | Ando corto de lana | No tengo cómo cerrar la compra",
+                "answer": "Comprendemos su situación. Nuestro objetivo es ayudarle a encontrar una alternativa para cerrar la oferta sus contratos. ¿Podría indicarme cuándo estima contar con disponibilidad para realizar el compra de este contrato?"
+              },
+              {
+                "objection": "Necesito más tiempo | Déme unos días más | Necesito un poco más de tiempo | Espéreme a la quincena",
+                "answer": "Entendemos su solicitud. Para evitar que la cotización continúe acumulando cargos, busquemos una fecha tentativa de compra para este contrato.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Intención de compra"
+              },
+              {
+                "objection": "No reconozco esa cotización | Esa cotización no es mía | No reconozco ese cobro",
+                "answer": "Con gusto podemos revisar la información de su cuenta. Para ello, puede comunicarse al área de seguimiento de venta llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Sin pedido"
+              },
+              {
+                "objection": "Ya pagué | Ya hice el depósito | Ya transferí el dinero | Ya quedó liquidado | Ya me puse al corriente",
+                "answer": "Gracias por informarlo. De ser posible, también puede comunicarse al área de seguimiento de venta para actualizar su información, llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres.",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Ya compró"
+              },
+              {
+                "objection": "No puedo cerrar la compra todo | No completo todo el monto | Solo puedo abonar | ¿Aceptan pagos parciales?",
+                "answer": "Entendemos. Puede avanzar contrato por contrato: cada compra debe cubrir el importe vencido completo de un contrato y no es posible aceptar un abono menor. ¿Le acomoda cubrir completo el importe de este contrato o prefiere que empecemos por el de otro de sus contratos?"
+              },
+              {
+                "objection": "¿Cuáles son los medios de compra? | ¿Cómo puedo cerrar la compra? | ¿Dónde puedo cerrar la compra? | ¿A qué cuenta deposito?",
+                "answer": "Depende del contrato: si tiene domiciliación activa, el cobro es automático y solo debe disponibilizar el monto en su cuenta bancaria. Si no tiene domiciliación: {sicrea_medios_pago_mensaje}"
+              },
+              {
+                "objection": "¿Qué productos tengo? | ¿Cuáles son mis contratos? | ¿Qué créditos tengo con ustedes? | Dime todos mis productos",
+                "answer": "{productos_info_mensaje}"
+              }
+            ]
+          },
+          "products": [
+            {
+              "label": "su {producto1_producto} con terminación {producto1_terminacion_spelled}",
+              "output_key": "Compromiso1",
+              "output": {
+                "id_producto": "{producto1_id_producto}",
+                "Producto": "{producto1_producto}"
+              },
+              "intro_prompt": "Empecemos con su {producto1_producto} con terminación {producto1_terminacion_spelled}. ¿Qué día podría {producto1_pregunta_accion_vigente} {producto1_deuda_palabras}?",
+              "negotiation": {
+                "monto_deuda": "{producto1_deuda}",
+                "commitment_windows": {
+                  "default": {
+                    "confirmation_message": "Perfecto, entonces {producto1_confirm_prefijo} su {producto1_producto} con terminación {producto1_terminacion_spelled} por un valor de {producto1_deuda_palabras} {producto1_confirm_sufijo} {date}."
+                  }
+                }
+              }
+            },
+            {
+              "label": "su {producto2_producto} con terminación {producto2_terminacion_spelled}",
+              "output_key": "Compromiso2",
+              "output": {
+                "id_producto": "{producto2_id_producto}",
+                "Producto": "{producto2_producto}"
+              },
+              "intro_prompt": "Ahora respecto a su {producto2_producto} con terminación {producto2_terminacion_spelled}. ¿Qué día podría {producto2_pregunta_accion_vigente} {producto2_deuda_palabras}?",
+              "negotiation": {
+                "monto_deuda": "{producto2_deuda}",
+                "commitment_windows": {
+                  "default": {
+                    "confirmation_message": "Perfecto, entonces {producto2_confirm_prefijo} su {producto2_producto} con terminación {producto2_terminacion_spelled} por un valor de {producto2_deuda_palabras} {producto2_confirm_sufijo} {date}."
+                  }
+                }
+              }
+            },
+            {
+              "label": "su {producto3_producto} con terminación {producto3_terminacion_spelled}",
+              "output_key": "Compromiso3",
+              "output": {
+                "id_producto": "{producto3_id_producto}",
+                "Producto": "{producto3_producto}"
+              },
+              "intro_prompt": "Por último, respecto a su {producto3_producto} con terminación {producto3_terminacion_spelled}. ¿Qué día podría {producto3_pregunta_accion_vigente} {producto3_deuda_palabras}?",
+              "negotiation": {
+                "monto_deuda": "{producto3_deuda}",
+                "commitment_windows": {
+                  "default": {
+                    "confirmation_message": "Perfecto, entonces {producto3_confirm_prefijo} su {producto3_producto} con terminación {producto3_terminacion_spelled} por un valor de {producto3_deuda_palabras} {producto3_confirm_sufijo} {date}."
+                  }
+                }
+              }
+            }
+          ],
+          "custom_instructions": "Sos asesor comercial de equipos médicos. Presentá beneficios, plazos de entrega y opciones de financiamiento. No inventes precios fuera de la KB. Cerrá con pedido o próximo contacto."
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.commitment_scheduled"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Pedido previo": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Otro",
+            "goto": "final.end_no_commitment"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.payment_intention_date": {
+        "type": "task",
+        "label": "Fecha tentativa de compra (intención)",
+        "task_type": "PaymentIntentionDateTask",
+        "params": {
+          "max_retries": 1
+        },
+        "on": {
+          "Fecha tentativa capturada": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "payment_intention_date": "result.tentative_date",
+            "payment_intention_raw": "result.raw_text",
+            "set_payment_intention": true,
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Sin fecha": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.commitment_scheduled": {
+        "type": "intention",
+        "label": "Confirmación final del pedido agendado",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Su pedido de compra quedó agendado. {sicrea_recordatorio_final_mensaje}",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment",
+            "set_agent_output": {
+              "final_status": "{multi_final_status}",
+              "substatus": "{multi_substatus}"
+            }
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Gracias por su tiempo y que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Gracias por su tiempo y que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Queda registrada su intención de compra. Gracias por su tiempo y que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por informarlo. De ser posible, también puede comunicarse al área de seguimiento de venta para actualizar su información, llamando al cinco cinco cuatro siete cuatro dos cinco cero cinco tres. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_skeleton": {
+        "type": "final",
+        "label": "Placeholder (otros segmentos pendientes)",
+        "prompt": "Gracias por su tiempo y que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Gracias por informarlo. Le ofrecemos una disculpa por las molestias. Por favor comuníquese al cinco cinco cinco tres cuatro cero uno cinco cero cero para que le brinden apoyo. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele al titular que lo contactamos de DiagnoLab Equipos. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

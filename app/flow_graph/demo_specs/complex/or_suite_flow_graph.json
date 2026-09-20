@@ -1,0 +1,464 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "or_suite_flow",
+    "visible_name": "OR Suite",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (18 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/or_suite.json",
+      "company_id": "or_suite-demo",
+      "description": "Base de conocimiento de OR Suite."
+    },
+    "company_id": "or_suite-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "nu_flow_graph.json",
+      "node_count": 18,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "OR Suite",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "cuéntame",
+            "contame",
+            "sí habla",
+            "sí señor",
+            "sí señora",
+            "dime",
+            "decime",
+            "habla",
+            "ajá",
+            "ajá dime",
+            "ajá cuéntame",
+            "a ver",
+            "a ver pues",
+            "dígame",
+            "qué se le ofrece",
+            "hable",
+            "dale",
+            "dale dime",
+            "bueno dime",
+            "listo dime",
+            "pues contame",
+            "dale contame",
+            "ajá qué pasó",
+            "eche qué pasó",
+            "ve dime",
+            "ve contame",
+            "contame ve",
+            "decime ve",
+            "dígame pues",
+            "bueno pues diga",
+            "el",
+            "ella",
+            "con él",
+            "con ella"
+          ],
+          "identity_pregunta": "Hola {saludo_por_horario}. ¿Habló con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Soy {nombre_agente}, de Colektia, agencia aliada de {nombre_empresa}.",
+          "identity_repregunta": "Para continuar, necesito confirmar que me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "portfolio_type",
+              "cases": {
+                "credit_card": "intent.opening"
+              },
+              "default": "intent.opening_nu_control"
+            },
+            "pay_confirmation": true,
+            "pay_confirmation_next": "intent.soft_close_paid",
+            "express_route": true,
+            "express_route_next": "task.negotiation"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening_nu_control": {
+        "type": "intention",
+        "label": "Apertura Nu Control",
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "prompt": "{nombre_deudor}, soy {nombre_agente}, tu asistente virtual de Colektia, aliados de Nu. Te informo que esta llamada es grabada.",
+        "on": {
+          "always": {
+            "goto": "intent.opening_nu_control_bridge"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "En cuanto el comprador responda cualquier cosa (positiva, negativa o neutra, incluso 'mal', 'nada' o 'no necesito nada'), avanza de inmediato con la opción 'Continuar'. NO repreguntes, NO indagues, NO pidas detalles ni ofrezcas ayuda. Solo si el comprador hace una pregunta concreta, respóndela con las preguntas frecuentes en una frase y avanza. Nunca insistas más de una vez.",
+        "prompt": "{nombre_deudor}, soy {nombre_agente}, tu asistente virtual de Colektia, aliados de Nu. Te informo que esta llamada es grabada. Antes de continuar, nos gustaría saber: ¿cómo ha sido tu experiencia con Nu últimamente?. ",
+        "on": {
+          "always": {
+            "goto": "intent.opening_bridge"
+          }
+        }
+      },
+      "intent.opening_nu_control_bridge": {
+        "type": "intention",
+        "label": "Bridge Nu Control",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "dias_mora",
+          "rules": [
+            {
+              "op": ">=",
+              "value": 31,
+              "template": "Te llamamos para apoyarte con tu compra. Tienes {dias_mora} días de retraso, si cubres el compra mínimo hoy de {monto_deuda_minimo_palabras}, recuperas el uso de tu tarjeta y proteges tu cupo disponible."
+            }
+          ],
+          "default": "Actualmente presentas {dias_mora} días de seguimiento comercial por el valor de {monto_deuda_minimo_palabras} de tu compra mínimo. Si realizas este compra ahora, desbloquearemos tu tarjeta para que sigas usándola y evitaremos reportes negativos."
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.opening_bridge": {
+        "type": "intention",
+        "label": "Apertura + Bridge",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "dias_mora",
+          "rules": [
+            {
+              "op": ">=",
+              "value": 31,
+              "template": "Gracias por tus comentarios. Te llamamos para apoyarte con tu compra. Tienes {dias_mora} días de retraso, si cubres el compra mínimo hoy de {monto_deuda_minimo_palabras}, recuperas el uso de tu tarjeta y proteges tu cupo disponible."
+            }
+          ],
+          "default": "Gracias por tus comentarios. Actualmente presentas {dias_mora} días de seguimiento comercial por el valor de {monto_deuda_minimo_palabras} de tu compra mínimo. Si realizas este compra ahora, desbloquearemos tu tarjeta para que sigas usándola y evitaremos reportes negativos."
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación V2 (Partial + Payment Method)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "{max_dias}",
+          "max_attempts": 3,
+          "allow_partial_payments": true,
+          "min_partial_amount": "{min_partial_amount}",
+          "min_partial_label": "el abono parcial mínimo aceptado es de {min_partial_amount_palabras}",
+          "partial_offer_message": "Si no puedes cubrir el compra mínimo completo, aceptamos abonos parciales.",
+          "collect_payment_method": true,
+          "payment_method_question": "¿A través de qué método realizarías el compra? Tenemos disponible efectivo o PSE.",
+          "payment_method_instructions": "RECONOCIMIENTO DE MEDIOS DE compra: Interpreta como PSE cualquier mención del comprador a pagos digitales, transferencia bancaria de compra, compra desde aplicación o banca virtual. Esto incluye expresiones exactas o similares a: PC, PSE, transferencia bancaria, transferencia de compra, compra por transferencia, haré el compra por transferencia, compra desde la aplicación, compra desde la App, lo voy a transferir por la App, lo compra por la App, lo transfiero desde mi aplicación bancaria, compra por la aplicación del banco, compra por banca virtual, banca en línea, banca móvil, compra desde el celular, compra desde mi celular, compra por internet, compra desde mi banco, lo hago desde mi banco, lo hago desde la aplicación, lo hago por la app, por la app, desde la app, por aplicativo, desde el aplicativo, desde mi aplicación bancaria, por la aplicación bancaria, por transferencia bancaria, lo transfiero, lo voy a transferir, hago una transferencia, voy a hacer una transferencia o voy a cerrar la compra en línea. En esos casos, registra el canal canónico como PSE usando confirmar_canal(canal='PSE'). Si el comprador menciona compra en efectivo, dinero en efectivo, punto físico, corresponsal, cajero, ventanilla o compra presencial, registra el canal canónico como Efectivo. Si el comprador pide que lo transfieran con un asesor, agente o humano, no lo interpretes como método de compra; usa solicitar_transferencia si aplica.",
+          "ask_nonpayment_reason": false,
+          "channel_options": [
+            "PSE",
+            "Efectivo"
+          ],
+          "benefit_hints": [
+            "recuperar historial crediticio",
+            "desbloquear tu tarjeta",
+            "mantener buen reporte crediticio"
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "compra hoy",
+              "hoy compra",
+              "lo compra hoy",
+              "hoy lo compra",
+              "compra al tiro",
+              "lo compra al tiro",
+              "al tiro compra",
+              "al tiro lo compra",
+              "compra ahora",
+              "lo compra ahora",
+              "compra ahorita",
+              "lo compra ahorita",
+              "compra en un rato",
+              "lo compra en un rato",
+              "compra en la tarde",
+              "lo compra en la tarde",
+              "hoy mismo compra",
+              "hoy mismo lo compra",
+              "de hoy no pasa",
+              "hoy le compra",
+              "hoy hago el compra",
+              "hoy cancelo",
+              "hoy le consigno",
+              "hoy le mando la plata",
+              "hoy me pongo al día",
+              "hoy sin falta compra",
+              "hoy más tarde compra",
+              "hoy en la tarde compra"
+            ],
+            "mañana": [
+              "compra mañana",
+              "mañana compra",
+              "lo compra mañana",
+              "mañana lo compra",
+              "mañana sin falta",
+              "mañana temprano compra",
+              "mañana temprano lo compra",
+              "mañana mismo compra",
+              "mañana mismo lo compra"
+            ],
+            "pasado_mañana": [
+              "compra pasado mañana",
+              "pasado mañana compra",
+              "lo compra pasado mañana",
+              "pasado mañana lo compra",
+              "pasado mañana sin falta",
+              "pasado mañana temprano compra",
+              "pasado mañana temprano lo compra"
+            ]
+          },
+          "custom_instructions": "ORIENTACIÓN CONVERSACIONAL DE MONTOS:\n- El monto que solicitas en la conversación es el compra mínimo de {monto_deuda_minimo_palabras} (mencionado en la apertura). NO menciones el importe total a menos que el comprador pregunte por él.\n- Si el comprador no puede cubrir el compra mínimo completo, ofrécele la posibilidad de un abono parcial de manera empática. Luego de ofrecer el monto parcial, si te preguntan cual es el monto minimo para poder cerrar la compra, responde con el monto minimo aceptado {min_partial_amount_palabras} ya que la pregunta hace referencia al abono parcial mínimo aceptado.\n- Si el comprador desea abonar más que el compra mínimo (hacia el importe total), acompáñalo con tono positivo.\n\nGUIÓN DE CONSULTAS DE compra (usa estas preguntas en este orden, una por intento):\n1. Primera consulta: ¿Cómo le gustaría proceder con el compra de tu cotización, {nombre_deudor}?\n2. Segunda consulta: ¿Tiene alguna fecha en mente para realizarlo?\n3. Tercera consulta: ¿Para qué fecha podrías realizar tu compra?\n\nFRASES DE APOYO (úsalas cuando el comprador muestre resistencia o dificultad para cerrar la compra):\n- ¿Hay algo en lo que podamos asistirte para facilitar tu compra?\n- Queremos apoyarte para que tu proceso sea más fácil.\n- Estamos aquí para ayudarte a completar tu compra sin complicaciones.\n- Sabemos que surgen imprevistos, y por eso te acompañamos en este proceso.\n",
+          "objection_handlers": [
+            {
+              "objection": "El comprador pregunta cual es el monto minimo para poder cerrar la compra LUEGO de que le ofreces el abono parcial mínimo aceptado",
+              "answer": "El abono parcial mínimo aceptado es de {min_partial_amount_palabras}"
+            },
+            {
+              "objection": "No puede cerrar la compra en mi app",
+              "answer": "Perfecto. También tenemos disponibles métodos de compra en efectivo a nivel nacional a través de Punto Red y en la región de Antioquia mediante Punto Gana. Adicionalmente, puedes comunicarte con la línea de atención para recibir apoyo en caso de presentar inconvenientes con tu aplicación."
+            },
+            {
+              "objection": "Estoy insatisfecho con el servicio/producto",
+              "answer": "Muchas gracias por compartirme la situación, dejaré tu opinión en nuestro sistema. De igual manera, recuerda que la línea de atención al comprador cuenta con atención 24/7, te puedes contactar para que el equipo especializado te brinde todo el soporte para tu caso."
+            },
+            {
+              "objection": "Yo solicité la tarjeta, pero no la he usado",
+              "answer": "Muchas gracias por comentarme la situación, es importante que te contactes lo más pronto posible con las líneas de atención al comprador de Nu."
+            },
+            {
+              "objection": "Tengo una reclamación pendiente",
+              "answer": "Muchas gracias por comentarme la situación, espero que pronto Nu te brinde respuesta, de igual forma lo dejaré registrado en el sistema para su validación, mientras tanto ¿te parece si validamos tu estado de cuenta y si es posible podemos registrar una fecha de tu próximo compra y así evitar que se generen más contactos de cobro? ¿Estás de acuerdo?"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_no_commitment"
+          },
+          "Ya compró": {
+            "goto": "intent.soft_close_paid"
+          },
+          "Transferencia": {
+            "action": "set_status",
+            "substatus": "transferencia",
+            "goto": "final.transfer"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.soft_close_paid": {
+        "type": "intention",
+        "label": "Cierre suave (pagado)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el comprador dice un valor igual o mayor a {monto_deuda_minimo} o menor a {monto_deuda_minimo}, selecciona esa misma opción para avanzar, calcula y decide. No le des importancia a la fecha (sea fecha absoluta o relativa) que menciona el comprador solo asegurate que mencione el monto que compra para elegir bien la opción. Espera a la respuesta del comprador",
+        "prompt": "{nombre_deudor}, gracias por comentarme el compra, en este caso me podrías confirmar el valor del compra y la fecha en la cual lo realizaste, esto con la finalidad de dejar la actualización en nuestro sistema y reducir contactos telefónicos posteriores.",
+        "on": {
+          "pago >= {monto_deuda_minimo}": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "intent.max_paid"
+          },
+          "pago < {monto_deuda_minimo}": {
+            "goto": "intent.min_paid"
+          }
+        }
+      },
+      "intent.max_paid": {
+        "type": "intention",
+        "label": "Valor igual o mayor al mínimo actual",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "{nombre_deudor}, gracias por brindarme la información, la dejó registrada en nuestro sistema, agradecemos tu pedido con el compra y tu tarjeta de crédito Nu. ",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.min_paid": {
+        "type": "intention",
+        "label": "Valor menor al mínimo pendiente",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "si el comprador nos indica que esta dispuesto a cerrar la compra su valor pendiente pasamos a ofrecer promesa de compra, de lo contrario pasamos a la despedida",
+        "prompt": "{nombre_deudor}, gracias por brindarme la información, te comento que en el sistema el compra mínimo actual para quedar al día es de {monto_deuda_minimo_palabras}, dado que me comentas que realizaste un compra inferior a este, te invito a validar el importe pendiente desde tu app de Nu, esto para que podamos garantizar que quedes al día, tu tarjeta sea desbloqueada y evitar posible reporte negativo ante centrales de riesgo. ¿quieres que lo veamos ahora?",
+        "on": {
+          "agendar compromiso": {
+            "goto": "task.negotiation"
+          },
+          "continuar con la despedida": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (pedido)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Responde SOLO si el comprador hace una pregunta puntual, y hazlo en una frase corta y directa. PROHIBIDO despedirte, agradecer, resumir el pedido, ofrecer ayuda adicional o agregar cualquier frase de cierre. Si el comprador no pregunta nada, avanza inmediatamente al siguiente paso sin decir absolutamente nada.",
+        "prompt_by": {
+          "field": "es_pago_parcial",
+          "cases": {
+            "True": "Perfecto, tu pedido quedó registrado para el día {commitment_date_spoken} por un abono parcial de {payment_amount_palabras} a través de {payment_method}. {mensaje_estado_cuenta_compromiso_parcial} ¿Hay algo más en lo que pueda ayudarte?"
+          },
+          "default": "Perfecto, tu pedido quedó registrado para el día {commitment_date_spoken} por un valor de {payment_amount_palabras} a través de {payment_method}. {mensaje_estado_cuenta_compromiso_total} ¿Hay algo más en lo que pueda ayudarte?"
+        },
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.transfer": {
+        "type": "final",
+        "label": "Transferencia",
+        "delivery": "say",
+        "prompt": "Te paso con un especialista para ayudarte mejor.",
+        "transfer": true,
+        "transfer_reason": "{transfer_reason}"
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Gracias por tu tiempo, te atendió {nombre_agente}, tu asistente virtual de Colektia, aliados de Nu.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Gracias por tu tiempo, te atendió {nombre_agente}, tu asistente virtual de Colektia, aliados de Nu.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo, te atendió {nombre_agente}, tu asistente virtual de Colektia, aliados de Nu.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpa la molestia. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comunícale al titular que lo contactamos. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intencion de compra para contactarnos en otra ocasión.",
+        "delivery": "say"
+      }
+    }
+  }
+}

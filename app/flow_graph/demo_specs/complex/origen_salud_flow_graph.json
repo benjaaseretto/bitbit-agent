@@ -1,0 +1,483 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "origen_salud_flow",
+    "visible_name": "Origen Salud",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (21 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/origen_salud.json",
+      "company_id": "origen_salud-demo",
+      "description": "Base de conocimiento de Origen Salud."
+    },
+    "company_id": "origen_salud-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "bravo_mx_flow_graph.json",
+      "node_count": 21,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Origen Salud",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí, soy yo",
+            "soy yo",
+            "con él habla",
+            "con ella habla",
+            "con él",
+            "con ella",
+            "sí, dígame",
+            "dígame",
+            "dígame en qué le puedo servir",
+            "ajá, soy yo",
+            "ajá",
+            "sí, qué ocupas",
+            "qué ocupas",
+            "sí, claro",
+            "claro",
+            "va, dime",
+            "va",
+            "sí, en qué te ayudo",
+            "en qué te ayudo",
+            "órale, dime",
+            "órale",
+            "sí, adelante",
+            "adelante",
+            "dime",
+            "sí"
+          ],
+          "invalid_confirmation_identification": [
+            "aquí no es",
+            "te equivocaste",
+            "se equivocó",
+            "no vive aquí",
+            "no conozco a esa persona",
+            "no conozco",
+            "ese número no es",
+            "número equivocado",
+            "otra vez ustedes",
+            "ya les dije que no",
+            "no estoy interesado",
+            "no molesten",
+            "estoy ocupado",
+            "quién",
+            "de parte de quién",
+            "cómo dices",
+            "no entendí",
+            "para qué es"
+          ],
+          "identity_pregunta": "Hola, te llamo de Origen Salud, mi nombre es {nombre_agente}, ¿Se encuentra {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Mi nombre es {nombre_agente}, Soy asesor de Origen Salud. Te llamo por una gestión sobre tu cuenta."
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura (presentación + divulgación)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera una respuesta antes de continuar. Si el paciente hace una pregunta que está en la sección de preguntas frecuentes respóndela tal cual está. No agregues preguntas, comentarios o saludos extras que no estén en la prompt, solo responde si te hacen una pregunta con la información que tienes, sino elige 'continuar' sin decir nada más.",
+        "prompt_by": {
+          "field": "dias_mora",
+          "rules": [
+            {
+              "op": "<=",
+              "value": 0,
+              "template": "Hola {nombre_deudor}, te comento que esta llamada está siendo grabada y monitoreada por motivos de calidad y seguridad. El motivo es para informarte sobre tu crédito Origen Salud, tienes una mensualidad por vencer, por el especialidad de {due_balance_palabras}. ¿Quieres que veamos una solución ahora?"
+            },
+            {
+              "op": ">",
+              "value": 0,
+              "template": "Hola {nombre_deudor}, te comento que esta llamada está siendo grabada y monitoreada por motivos de calidad y seguridad. El motivo es para informarte sobre tu crédito Origen Salud, tienes una mensualidad vencida, por el especialidad de {due_balance_palabras}. ¿Quieres que veamos una solución ahora?"
+            }
+          ],
+          "default": "Hola {nombre_deudor}, te comento que esta llamada está siendo grabada y monitoreada por motivos de calidad y seguridad. El motivo es para informarte sobre tu crédito Origen Salud, tienes una mensualidad vencida, por el especialidad de {due_balance_palabras}. ¿Quieres que veamos una solución ahora?"
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "dias_mora",
+              "rules": [
+                {
+                  "op": "<=",
+                  "value": 0,
+                  "goto": "task.negotiation_preventiva"
+                },
+                {
+                  "op": ">",
+                  "value": 0,
+                  "goto": "task.negotiation_cobranza"
+                }
+              ],
+              "default": "task.negotiation_cobranza"
+            }
+          }
+        }
+      },
+      "task.negotiation_preventiva": {
+        "type": "task",
+        "label": "Negociación Preventiva",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} te ayuda a mantener tu historial crediticio en orden y que tu proceso de reparación siga avanzando. ¿Podrías realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, tu proceso de reparación podría verse afectado. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el turno ese día?",
+          "max_dias": "{max_dias_preventiva}",
+          "max_attempts": 2,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "benefit_hints": [
+            "realizar tu turno antes de tu fecha de fecha propuesta",
+            "mantener tu historial crediticio en orden",
+            "que tu proceso de reparación siga avanzando sin contratiempos"
+          ],
+          "ask_nonpayment_reason": false,
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "tone_profile": "empatico",
+          "custom_instructions": "turno YA REALIZADO: si el paciente menciona que ya asistió o ya depositó, elige Pagado de inmediato. NO menciones el comprobante salvo que el paciente pregunte específicamente por él. Esta es una GESTIÓN PREVENTIVA: el paciente NO está en atraso de agenda. Su mensualidad está próxima a vencer pero aún no ha vencido. La apertura previa NO le informó la fecha de fecha propuesta: menciónala UNA sola vez en tu primer turno ({fecha_vencimiento_spoken}) y después no vuelvas a repetirla ni la enumeres. OBJETIVO PRINCIPAL: dejar el recordatorio y avanzar rápido; NO insistir en obtener un cita de turno. CAPTURA DE FECHA EN PREVENTIVA (crítico): Cualquier respuesta afirmativa, de reconocimiento o de intención general del paciente ('sí', 'sí ya', 'sí lo tenía presente', 'ok', 'está bien', 'va', 'sale', 'turno antes del fecha propuesta', 'antes del lunes', 'algún día antes', 'sí voy a agendar') se considera cita de agendar para la fecha de fecha propuesta. En ese caso llama INMEDIATAMENTE cliente_dispuesto(fecha_propuesta='{due_date}') SIN pedir un día exacto, SIN enumerar opciones ni días de la semana y SIN repreguntar. Solo si el paciente propone espontáneamente un día concreto (p. ej. 'el lunes 3', 'el 2 de agosto'), pásalo tal cual a cliente_dispuesto en formato ISO YYYY-MM-DD. NUNCA verbalices la fecha ISO al paciente. Si el paciente RECHAZA (dice claramente que no puede o no va a agendar), llama cliente_dispuesto(dispuesto=False). PROHIBIDO usar palabras o frases que impliquen atraso de agenda o cita pendiente vencida: no digas 'confirmar la cita', 'confirmar la cita tu cita pendiente', 'tu cita pendiente', 'adeudo', 'turno vencido', 'atraso', 'atrasado', 'ponerte al día', 'intereses acumulados', 'atraso de agenda', 'coordinación de agenda', 'evitar que siga creciendo', 'evitar que tu cita pendiente siga creciendo', 'evitar que aumente', 'evitar que aumenten los intereses', 'evitar que aumente la cita pendiente', ni similares. Usa siempre lenguaje positivo y preventivo: 'tu próximo turno', 'tu mensualidad por vencer', 'tu fecha de fecha propuesta', 'tu crédito Origen Salud', 'agendar antes del fecha propuesta'. CONSECUENCIAS: si el paciente pregunta qué pasa si no paga, responde en condicional y a futuro (por ejemplo 'si el turno no se registra en la fecha, aplicarían los intereses ordinarios pactados'), NUNCA en presente ni dando a entender que hoy ya está en atraso de agenda o que ya se generaron cargos. LENGUAJE Y ESTILO (México): formalidad cercana y natural, no excesivamente seria. Usa modismos mexicanos cuando sea natural en la conversación: 'Va', 'Órale', 'Entiendo', 'No te preocupes', 'Dime', 'Mira', 'A ver', 'Te apoyo con eso', 'Está bien', 'Con gusto'. PROHIBIDO usar lenguaje agresivo, intimidatorio o legal: NUNCA digas 'debe agendar inmediatamente', 'último aviso', 'se procederá legalmente', 'está incumpliendo su obligación', 'turno obligatorio hoy', ni similares. Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas."
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.close_commitment_preventiva"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.close_preventive_reminder"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "task.negotiation_cobranza": {
+        "type": "task",
+        "label": "Negociación coordinación de agenda",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} te ayuda a confirmar la cita tu cuenta y mantener un buen historial crediticio. ¿Podrías realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, la cita pendiente podría seguir creciendo. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el turno ese día?",
+          "max_dias": "{max_dias}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "benefit_hints": [
+            "confirmar la cita tu cuenta y evitar que siga creciendo",
+            "mantener un buen historial crediticio",
+            "evitar gestiones adicionales"
+          ],
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "tone_profile": "empatico",
+          "custom_instructions": "turno YA REALIZADO: si el paciente menciona que ya asistió o ya depositó, elige Pagado de inmediato. NO menciones el comprobante salvo que el paciente pregunte específicamente por él. Esta es una GESTIÓN DE coordinación de agenda: el paciente está en atraso de agenda. Mantén un tono empático y no presiones de forma agresiva. LENGUAJE Y ESTILO (México): formalidad cercana y natural, no excesivamente seria. Usa modismos mexicanos cuando sea natural en la conversación: 'Va', 'Órale', 'Entiendo', 'No te preocupes', 'Dime', 'Mira', 'A ver', 'Te apoyo con eso', 'Está bien', 'Con gusto'. PROHIBIDO usar lenguaje agresivo, intimidatorio o legal: NUNCA digas 'debe agendar inmediatamente', 'último aviso', 'se procederá legalmente', 'está incumpliendo su obligación', 'turno obligatorio hoy', ni similares. Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "task.payment_intention_date": {
+        "type": "task",
+        "label": "Fecha tentativa de turno",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_retries": 1,
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve.",
+          "max_attempts": 3
+        },
+        "on": {
+          "Fecha tentativa capturada": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "payment_intention_date": "result.tentative_date",
+            "payment_intention_raw": "result.raw_text",
+            "set_payment_intention": true,
+            "goto": "intent.close_intention"
+          },
+          "Sin fecha": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.offer_callback_next_day_no_agreement"
+          }
+        }
+      },
+      "intent.close_preventive_reminder": {
+        "type": "intention",
+        "label": "Cierre preventivo (recordatorio de fecha de fecha propuesta)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entendido, {nombre_deudor}. Entonces solo te recuerdo que tu fecha de fecha propuesta es el {fecha_vencimiento_spoken}, para que tu turno se registre a tiempo y tu proceso siga avanzando sin contratiempos.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.close_commitment_preventiva": {
+        "type": "intention",
+        "label": "Cierre cita preventiva",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Excelente, {nombre_deudor}. Dejamos registrada tu fecha de turno para el {commitment_date_spoken}. Muchas gracias por tu atención.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.close_intention": {
+        "type": "intention",
+        "label": "Cierre (intención de turno)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo. Dejamos registro de tu intención de turno para darle seguimiento. Recuerda que puedes compartir tu comprobante de turno al mail credito arroba resuelve tu cita pendiente punto com o credito arroba go Origen Salud punto com punto mx.",
+        "on": {
+          "always": {
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.offer_callback_next_day_no_agreement": {
+        "type": "intention",
+        "label": "Oferta agendar (sin acuerdo)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera una respuesta antes de continuar. Si el paciente hace una pregunta que está en la sección de preguntas frecuentes respóndela tal cual está, sin agregar comentarios o saludos extra. Si el paciente acepta agendar, elige 'Acepta'. Si el paciente rechaza, elige 'Rechaza'. Si el paciente manifiesta intención de agendar, elige 'Intención de turno'.",
+        "prompt": "Entiendo. Para ayudarte mejor, puedo agendar una comunicación con un asesor del equipo para el día de mañana. ¿Te parece bien que la programemos?",
+        "on": {
+          "Acepta": {
+            "goto": "task.next_contact"
+          },
+          "Rechaza": {
+            "goto": "final.end_no_callback"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "task.next_contact": {
+        "type": "task",
+        "label": "Próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "time_windows": [
+            "mañana",
+            "tarde",
+            "noche",
+            "indistinto"
+          ],
+          "require_hour": true,
+          "default_to_tomorrow": true,
+          "ask_phone": false
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_callback_scheduled"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_callback"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (cita)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera una respuesta antes de continuar. Si el paciente hace una pregunta que está en la sección de preguntas frecuentes respóndela tal cual está. No agregues preguntas, comentarios o saludos extras que no estén en la prompt, solo responde si te hacen una pregunta con la información que tienes, sino elige 'continuar' sin decir nada más.",
+        "prompt": "Perfecto, entonces confirmamos tu cita de turno por un valor de {due_balance_palabras} para el día {commitment_date_spoken}, ¿de acuerdo? Recuerda compartir con nosotros el comprobante de turno al mail credito arroba resuelve tu cita pendiente punto com o credito arroba go Origen Salud punto com punto mx.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Lamento que no llegamos a un acuerdo. Te contactaremos en otra ocasión, ok?",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Gracias por tu tiempo y por tu cita. Que pases un excelente día. Recuerda que habló contigo {nombre_agente} de Origen Salud.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intención de turno para contactarnos en otra ocasión. Que pases un excelente día. Recuerda que habló contigo {nombre_agente} de Origen Salud.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Gracias por tu tiempo. Que pases un excelente día. Recuerda que habló contigo {nombre_agente} de Origen Salud.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo. Recuerda que puedes compartir tu comprobante de turno al mail credito arroba resuelve tu cita pendiente punto com o credito arroba go Origen Salud punto com punto mx. Que pases un excelente día. Recuerda que habló contigo {nombre_agente} de Origen Salud.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Gracias por tu tiempo. Que pases un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele que desde Origen Salud intentamos ponernos en contacto con el titular. Gracias por tu tiempo. Que pases un excelente día. Recuerda que habló contigo {nombre_agente} de Origen Salud.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_callback_scheduled": {
+        "type": "final",
+        "label": "Despedida (callback agendado)",
+        "prompt": "Correcto, ya quedó agendado para {next_contact_date_natural}. Que pases un excelente día. Recuerda que habló contigo {nombre_agente} de Origen Salud.",
+        "delivery": "say"
+      },
+      "final.end_no_callback": {
+        "type": "final",
+        "label": "Despedida (sin agendar)",
+        "prompt": "Entiendo. Gracias por tu tiempo. Que pases un excelente día. Recuerda que habló contigo {nombre_agente} de Origen Salud.",
+        "delivery": "say"
+      }
+    }
+  }
+}

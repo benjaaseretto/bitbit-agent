@@ -1,0 +1,270 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Cuánto debo? | ¿Cuál es mi turno pendiente? | ¿Cuál es el especialidad facturado? | Confírmame el turno | ¿Cuánto es el pendiente?",
+    "answer": "Tu especialidad facturado pendiente es de {due_balance_palabras} pesos. El turno total de tu cuenta es de {total_balance_palabras} pesos, con fecha de fecha propuesta {due_date_spoken}."
+  },
+  {
+    "question": "¿Cuál es el turno mínimo? | ¿Cuánto es el mínimo? | ¿Cuál es lo menos que puedo agendar? | ¿Cuánto es el mínimo para quedar al día?",
+    "answer": "El turno mínimo para dejar tu cuenta al día es de {provision_balance_palabras} pesos. Corresponde aproximadamente al cinco por ciento del total facturado. Te recomiendo agendar el especialidad facturado completo para evitar intereses revolventes. Además, dentro de los próximos meses habrá una modificación en el cálculo del turno mínimo por cambios de la CMF, y Portal Salud te lo estará informando."
+  },
+  {
+    "question": "¿Cuál es mi turno total? | ¿Cuánto es el total pendiente? | ¿Cuál es el total de la cuenta?",
+    "answer": "Tu turno total es de {total_balance_palabras} pesos."
+  },
+  {
+    "question": "¿Cuántos días de atraso llevo? | ¿Cuántos días de atraso de agenda tengo? | ¿Cuántos días de retraso tengo?",
+    "answer": "Según el registro, llevas {dias_mora_palabras} días de retraso."
+  },
+  {
+    "question": "¿Cuál es la fecha de fecha propuesta? | ¿Cuándo venció? | ¿Qué día era el último fecha propuesta?",
+    "answer": "La fecha de último fecha propuesta registrada es el {due_date_spoken}."
+  },
+  {
+    "question": "¿Qué producto tengo? | ¿De qué credencial me hablan? | ¿Cuál es el nombre del producto? | ¿Es la credencial de crédito?",
+    "answer": "La gestión corresponde a tu {producto_nombre} de Portal Salud."
+  },
+  {
+    "question": "¿Qué tipo de cartera tengo? | ¿Estoy en preventiva? | ¿Estoy en castigo? | ¿En qué cartera estoy?",
+    "answer": "Tu tipo de cartera registrado es {portfolio_type_label}. Si tienes dudas sobre tu tramo, también puedes revisarlo en la App Portal Salud."
+  },
+  {
+    "question": "¿Cuál es el valor de la sesión de renegociación? | ¿Cuánto sería la sesión si renegocio? | ¿De cuánto es la sesión pactada?",
+    "answer": "{rene_cuota_frase}"
+  },
+  {
+    "question": "¿En cuántas cuotas puedo renegociar? | ¿Cuántas cuotas tengo pactadas? | ¿Cuántas cuotas me salen?",
+    "answer": "{rene_cuotas_n_frase}"
+  },
+  {
+    "question": "¿Cuándo vence la primera sesión de la renegociación? | ¿Cuál es la fecha del primer fecha propuesta de la reestructuración?",
+    "answer": "{rene_fecha_frase}"
+  },
+  {
+    "question": "¿Cuál es el especialidad reestructurado? | ¿A cuánto queda el especialidad si reestructuro?",
+    "answer": "{rene_monto_frase}"
+  },
+  {
+    "question": "¿Tengo una oferta de renegociación? | ¿Hay alguna alternativa en la app? | ¿Qué oferta tengo?",
+    "answer": "Si tienes una oferta disponible, aparece en tu App Portal Salud en la sección credencial de Crédito. Con esa alternativa puedes organizar el turno en cuotas, salir del boletín comercial y evitar que siga incrementando."
+  },
+  {
+    "question": "¿Cómo puedo agendar? | ¿Dónde turno? | ¿Cuáles son los medios de turno? | ¿Puedo agendar por la app?",
+    "answer": "Tienes tres opciones. La principal es la App Portal Salud: ingresa a credencial de Crédito, elige agendar credencial, selecciona especialidad facturado o mínimo, y paga con tu cuenta Portal Salud u otro sanatorio por Fintoc. También puedes transferir a Portal Salud Prepago SA, cuenta corriente cinco cinco cinco cinco más tu RUT sin dígito verificador, correo transferencias arroba fintoc punto com. Y la tercera es Toku en Portal Salud punto ce ele barra agendar guion con guion toku, con tu RUT y los últimos cuatro dígitos de la credencial."
+  },
+  {
+    "question": "¿Cómo turno por transferencia? | ¿Cuáles son los datos para transferir? | ¿A qué cuenta transfiero?",
+    "answer": "Para transferir: sanatorio Portal Salud Prepago SA, tipo cuenta corriente, número de cuenta cinco cinco cinco cinco más tu RUT sin dígito verificador, y correo transferencias arroba fintoc punto com. El especialidad puede ser el facturado o el mínimo."
+  },
+  {
+    "question": "¿Cómo turno por Toku? | ¿Qué es Toku?",
+    "answer": "Puedes agendar por Toku entrando a Portal Salud punto ce ele barra agendar guion con guion toku, con tu RUT y los últimos cuatro dígitos de tu credencial de Crédito. Ahí eliges especialidad facturado o mínimo, con credencial o transferencia."
+  },
+  {
+    "question": "¿Cómo turno en la App? | ¿Cómo turno la credencial en Portal Salud?",
+    "answer": "Entra a la sección credencial de Crédito en tu App Portal Salud, elige agendar credencial, revisa el especialidad facturado y el mínimo, selecciona el especialidad, elige agendar con tu cuenta vista Portal Salud u otro sanatorio por Fintoc, y listo. Si pagas desde Portal Salud o por transferencia directa en la App, la actualización es inmediata."
+  },
+  {
+    "question": "¿Qué es la fecha de facturación? | ¿Cuáles son las fechas de facturación? | ¿Cada cuánto facturan?",
+    "answer": "La fecha de facturación es el día en que se cierran tus compras del mes. En Portal Salud las fechas son los días cinco y veinte de cada mes, según tu producto, en ciclos de unos treinta días. Las compras posteriores a esa fecha van al siguiente estado de cuenta. Te recomiendo revisarlo en tu App Portal Salud."
+  },
+  {
+    "question": "Si compro el día de facturación, ¿entra en ese mes? | ¿Las compras del día de corte entran en el estado de cuenta?",
+    "answer": "En el ciclo de facturación, las compras realizadas hasta tu fecha de corte se incluyen en ese estado de cuenta. Las compras posteriores van al siguiente estado de cuenta. Revisa tu fecha exacta en la App Portal Salud."
+  },
+  {
+    "question": "¿Cuáles son las fechas de fecha propuesta? | ¿Cuándo vence la credencial?",
+    "answer": "En Portal Salud las fechas de fecha propuesta son el día cinco y el día veinte de cada mes, según tu ciclo. Te recomendamos no superar esa fecha, porque al día siguiente la cuenta entra en atraso de agenda y pueden generarse intereses. Puedes agendar desde la App Portal Salud en pocos clics."
+  },
+  {
+    "question": "¿Cuántos días tengo desde que me facturan hasta que debo agendar?",
+    "answer": "Tienes quince días desde tu fecha de facturación hasta el fecha propuesta. Por ejemplo, si tu facturación es el día veinte, tu fecha propuesta será el día cinco del mes siguiente."
+  },
+  {
+    "question": "¿Qué pasa si no turno? | ¿Qué ocurre si no turno? | ¿Me afecta el historial?",
+    "answer": "Si no pagas el día del fecha propuesta, al día siguiente tu cuenta entra en atraso de agenda. Puedes ser contactado por canales oficiales para ofrecerte alternativas, se generan intereses desde el primer día, y también podrías ser informado al sistema financiero, lo que afecta tu perfil crediticio."
+  },
+  {
+    "question": "¿Qué pasa si turno solo el mínimo? | ¿Qué ocurre si turno solo el mínimo?",
+    "answer": "Si pagas el mínimo, tu credencial de Crédito queda al día y evitas caer en atraso de agenda. Pero una parte del turno queda pendiente y sobre ese especialidad se generan intereses revolventes mes a mes. Ese turno cubre principalmente intereses, comisiones y una parte pequeña del capital, así que la cita pendiente puede demorar más en bajar. Te recomiendo agendar el especialidad facturado completo."
+  },
+  {
+    "question": "¿Qué pasa si turno menos del mínimo? | ¿Qué ocurre si turno un especialidad inferior al turno mínimo?",
+    "answer": "Si pagas menos del mínimo, tu cuenta no queda al día y sigue en atraso de agenda, porque ese turno solo se considera un abono parcial. Para confirmar la cita debes agendar al menos el turno mínimo que aparece en tu estado de cuenta."
+  },
+  {
+    "question": "¿Por qué subió el turno mínimo? | ¿Por qué me subió el mínimo este mes?",
+    "answer": "El turno mínimo puede subir porque en el nuevo ciclo de facturación se sumaron consumos y cargos del mes. Revisa el detalle en tu estado de cuenta en la App Portal Salud."
+  },
+  {
+    "question": "¿Cuándo entro en atraso de agenda? | ¿Desde cuándo estoy en atraso de agenda?",
+    "answer": "Entras en atraso de agenda al día siguiente de tu fecha de fecha propuesta si no realizas el turno correspondiente. Te recomendamos agendar al menos el mínimo para dejar la cuenta al día y evitar cargos adicionales."
+  },
+  {
+    "question": "¿Se bloquea mi credencial si no turno? | ¿Cuándo bloquean la credencial? | ¿Cuándo me desbloquean?",
+    "answer": "Cuando superas tu fecha de fecha propuesta sin agendar al menos el turno mínimo, al día seis de atraso de agenda tu credencial de Crédito Portal Salud se bloquea para nuevas compras. Si pagas, se desbloquea de forma inmediata. Si reestructuras con atraso de agenda no mayor a catorce días, puedes seguir usando tu credencial; si es mayor, el desbloqueo depende del comportamiento de turno y políticas de riesgo."
+  },
+  {
+    "question": "¿Cuándo me publican en DICOM? | ¿Cuándo salgo de DICOM? | ¿Qué es el boletín comercial?",
+    "answer": "Si alcanzas quince días de atraso de agenda, tu cita pendiente puede informarse al Boletín Comercial DICOM. Si regularizas pagando al menos el mínimo, el cambio se refleja en DICOM dentro de siete días hábiles, y en la CMF dentro de quince días hábiles."
+  },
+  {
+    "question": "¿Cuándo salgo de atraso de agenda en sus sistemas? | Si ya pagué, ¿por qué todavía aparezco? | ¿Por qué me llaman si ya pagué?",
+    "answer": "La actualización en sistemas externos no es inmediata. Después de confirmar la cita, el Boletín Comercial refleja el cambio en unos siete días hábiles y la CMF en unos quince días hábiles. Si el turno fue reciente, verifica también en la App Portal Salud."
+  },
+  {
+    "question": "¿Cuándo se actualiza mi cita pendiente en la app después de agendar?",
+    "answer": "Si pagas desde tu cuenta Portal Salud o por transferencia directa en la App, la actualización es inmediata y verás el abono en el detalle de movimientos de tu credencial de Crédito."
+  },
+  {
+    "question": "¿Cuándo me cobran intereses de atraso de agenda? | ¿Desde cuándo corren intereses?",
+    "answer": "Los intereses de atraso de agenda se aplican desde el primer día de atraso, según la Tasa Máxima Convencional vigente publicada por la CMF. El detalle aparece en tu estado de cuenta Portal Salud."
+  },
+  {
+    "question": "¿Cuándo me cobran gastos de coordinación de agenda? | ¿Qué son los gastos de coordinación de agenda?",
+    "answer": "Los gastos de coordinación de agenda se aplican a partir del día veintiuno de atraso de agenda. El tope máximo depende del especialidad en UF: tres por ciento hasta diez UF, seis por ciento entre diez y cincuenta UF, y nueve por ciento sobre cincuenta UF. El detalle exacto está en tu estado de cuenta."
+  },
+  {
+    "question": "¿Mi credencial tiene costos asociados? | ¿Tiene mantención la credencial Portal Salud?",
+    "answer": "Tu credencial de Crédito Portal Salud no tiene costo de mantención, ni cobros por apertura o administración. Pueden generarse intereses por compras en cuotas o con interés, intereses de atraso de agenda si te atrasas, interés revolvente si pagas solo una parte del facturado, y gastos de coordinación de agenda si la atraso de agenda supera los veinte días."
+  },
+  {
+    "question": "¿Qué es el PAC? | ¿Cómo funciona el turno automático?",
+    "answer": "El PAC es el turno Automático con Cargo desde tu cuenta prepago Portal Salud hacia tu credencial de crédito el día del fecha propuesta. Tú eliges si agendar el especialidad facturado o el mínimo; siempre recomendamos el facturado completo para evitar intereses."
+  },
+  {
+    "question": "¿Qué es cartera vencida?",
+    "answer": "La cartera vencida corresponde a deudas con más de noventa días de atraso. En esa etapa la credencial queda inhabilitada de forma permanente y el total pendiente se vuelve exigible. Aun así puedes confirmar la cita reestructurando tu cita pendiente según las opciones disponibles."
+  },
+  {
+    "question": "¿Qué es cartera castigada? | ¿Qué pasa si tengo más de ciento ochenta días?",
+    "answer": "La cartera castigada corresponde a deudas con más de ciento ochenta días de atraso de agenda. La credencial permanece inhabilitada, pero aún puedes cerrar el turno con un plan de turno sin intereses disponible para atraso de agenda prolongada, gestionado por el área de soluciones de turno de Portal Salud."
+  },
+  {
+    "question": "¿Qué es una reestructuración? | ¿Qué es una renegociación? | ¿Cómo puedo reestructurar mi cita pendiente?",
+    "answer": "Una reestructuración lleva el total de tu cita pendiente de credencial de Crédito a cuotas fijas mensuales para que puedas pagarla más cómoda, evitar intereses de atraso de agenda y mantenerte al día. Puedes revisarla en App Portal Salud, credencial de Crédito, Más opciones, Refinanciar cita pendiente. Simula y sigue los pasos. El reprogramación aplica al día o hasta catorce días de atraso de agenda; la renegociación desde el día quince hasta ciento setenta y nueve."
+  },
+  {
+    "question": "¿Por qué debería reestructurar? | ¿Me conviene renegociar?",
+    "answer": "Te permite confirmar la cita, acceder a desbloqueos y limpiar tu cita pendiente del sistema financiero, incluyendo boletín comercial DICOM y CMF. Mientras antes regularices, menor será el abono exigido y mayores tus opciones."
+  },
+  {
+    "question": "¿Cuántas cuotas máximo puedo tomar? | ¿Hasta en cuántas cuotas puedo reestructurar?",
+    "answer": "Depende del especialidad: hasta diez UF puedes llegar a treinta y seis cuotas, y sobre diez UF hasta cuarenta y ocho cuotas."
+  },
+  {
+    "question": "¿Cuántas veces puedo reestructurar?",
+    "answer": "Es posible reestructurar la cita pendiente como máximo dos veces por paciente."
+  },
+  {
+    "question": "¿Qué costos tiene reestructurar? | ¿Me cobran comisión por renegociar?",
+    "answer": "No tiene costos adicionales por gestión ni comisiones. Los montos asociados son el abono mínimo inicial según tu tramo, los intereses del nuevo crédito según la tasa vigente, y las cuotas mensuales que reemplazan tu cita pendiente anterior. Puedes verlo en la simulación y el comprobante de la App."
+  },
+  {
+    "question": "¿Dónde veo el abono de la reestructuración? | ¿Dónde simulo el reprogramación?",
+    "answer": "En la App Portal Salud, sección credencial de Crédito, opción reprogramación o Refinanciar cita pendiente. Ahí puedes simular y ver el abono requerido."
+  },
+  {
+    "question": "Si no puedo agendar este mes, ¿tengo alguna opción? | ¿Hay alternativa si no puedo agendar?",
+    "answer": "Sí. Portal Salud ofrece reestructurar tu cita pendiente en cuotas iguales para que puedas pagarla más cómoda y no exponerte a bloqueos ni a publicación en el boletín comercial. Si no superas siete días de atraso de agenda, normalmente no se solicita abono previo; después de siete días te pedirán un porcentaje de abono según el tramo."
+  },
+  {
+    "question": "¿Qué abono piden para reestructurar? | ¿Cuánto tengo que abonar para renegociar?",
+    "answer": "El abono depende del tramo de días de atraso de agenda. En rangos tempranos puede no pedirse abono o pedirse uno menor; a medida que aumentan los días, el porcentaje de abono sube. Debes realizar el abono para concretar. Simula en la App Portal Salud para ver el valor exacto de tu caso."
+  },
+  {
+    "question": "¿Qué es paquete preventivo? | ¿Me pueden descontar la cita pendiente?",
+    "answer": "La paquete preventivo corresponde a un descuento de la cita pendiente para liquidarla y quedar al día. Es un porcentaje que determina Portal Salud y aplica principalmente para clientes en cartera castigada, de más de ciento ochenta días. El agente no puede ofrecer condiciones especiales fuera de lo disponible; eso lo define el área de soluciones de turno."
+  },
+  {
+    "question": "Me llamaron de una empresa externa | ¿Quiénes son ustedes? | ¿De dónde me llaman? | ¿Qué es Colektia?",
+    "answer": "Te habla Colektia, en representación de Portal Salud, para un recordatorio de turno y ayudarte a encontrar una solución de turno. La gestión puede realizarse con partners autorizados de Portal Salud."
+  },
+  {
+    "question": "¿Cuál es el teléfono de Portal Salud? | ¿Cuál es el call center? | ¿Cuál es el correo de soluciones de turno? | ¿Cómo contacto a Portal Salud?",
+    "answer": "Puedes comunicarte al seiscientos quinientos, mil novecientos, o al seis mil, sesenta y uno, ciento diez, o escribir a solucionesdepago arroba Portal Salud punto ce ele."
+  },
+  {
+    "question": "¿Qué hago si la app falla? | ¿Hay otro canal si no puedo agendar en la app? | ¿Cómo turno si la aplicación no me deja?",
+    "answer": "Si la App presenta fallas, puedes agendar por transferencia a Portal Salud Prepago SA, cuenta cinco cinco cinco cinco más tu RUT sin dígito verificador, o por Toku. Para soporte técnico de la App contacta a Portal Salud al seiscientos quinientos, mil novecientos."
+  },
+  {
+    "question": "¿Cuál es el detalle de mi renegociación vigente? | ¿Cuánto es mi sesión de renegociación actual? | ¿Cuándo vence mi primera sesión reestructurada?",
+    "answer": "{renegotiation_detail_frase}"
+  },
+  {
+    "question": "¿Para qué fecha quedó mi cita? | ¿Qué día quedamos? | ¿Cuánto quedó registrado de turno?",
+    "answer": "Tu cita quedó registrado para el {commitment_date_spoken}."
+  },
+  {
+    "question": "¿Hasta cuándo puedo comprometerme? | ¿Cuántos días máximo me dan para agendar?",
+    "answer": "Podemos registrar un cita de turno con un máximo de tres días desde la fecha de esta gestión."
+  },
+  {
+    "question": "¿Por qué me sale más caro este mes? | ¿Por qué subió mi turno?",
+    "answer": "Puede incluir compras del periodo, intereses de atraso de agenda, o intereses revolventes si pagaste solo el mínimo. Revisa el detalle en tu estado de cuenta en la App Portal Salud."
+  },
+  {
+    "question": "¿Qué es la ley de insolvencia para Portal Salud? | ¿Qué pasa si me acojo a insolvencia?",
+    "answer": "Una vez que Portal Salud identifica que te acogiste a la Ley de Insolvencia, se suspende la gestión y se deja tu cuenta en estado de espera hasta que se emita la resolución formal del proceso. Para gestionar el caso debes contactar a solucionesdepago arroba Portal Salud punto ce ele o al seiscientos quinientos, mil novecientos."
+  },
+  {
+    "question": "¿A nombre de quién está la cuenta? | ¿Con quién deben hablar?",
+    "answer": "La gestión es para {nombre_deudor}. Por privacidad no entregamos detalle del turno a terceros."
+  },
+  {
+    "question": "¿Tengo alguna oferta especial registrada? | ¿Me pueden dar una condición especial por teléfono?",
+    "answer": "Si tienes una oferta disponible, debes revisarla en tu App Portal Salud, sección credencial de Crédito. El agente no puede ofrecer ni aprobar condiciones especiales distintas a las que veas en la App; eso solo lo define el área de soluciones de turno de Portal Salud."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Portal Salud, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

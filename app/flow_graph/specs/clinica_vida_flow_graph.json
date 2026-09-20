@@ -1,0 +1,202 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "clinica_vida_flow",
+    "visible_name": "clinica_vida",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo de consultas médicas: confirmar paciente y agendar cita (stack OSS).",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre de la clínica",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "clinica_vida.json",
+      "company_id": "clinica-vida-demo",
+      "description": "FAQ de consultas médicas."
+    },
+    "company_id": "clinica-vida-demo"
+  },
+  "flow_config": {
+    "company_pronunciation": "Clínica Vida"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad del paciente",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_identificacion_breve": "Hola, buen día. Mi nombre es {nombre_agente}, le hablo de {nombre_empresa} para coordinar su consulta médica."
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "express_route": true,
+            "express_route_next": "task.negotiation"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura y motivo de llamada",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Hola {nombre_deudor}, soy {nombre_agente} de {nombre_empresa}. Lo contacto para agendar su consulta de {especialidad} con {nombre_medico} en {sucursal}. ¿Le vendría bien una cita esta semana, por ejemplo hoy o mañana?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Agendar consulta",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha queda fuera de la agenda disponible. Podemos ofrecerle turnos hasta el {fecha_limite}. ¿Prefiere otro día dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Para {especialidad} tenemos disponibilidad hasta el {fecha_limite}. ¿Le funciona alguna fecha dentro de ese rango?",
+          "max_dias": "{max_dias}",
+          "max_attempts": 3,
+          "custom_instructions": "Mantén un tono cordial, profesional y empático. Sos asistente de agenda médica, NO das diagnósticos ni recetas. Si el paciente describe síntomas, escuchá con empatía y ofrecé agendar cuanto antes con el especialista. Si no puede esa semana, ofrecé la fecha más cercana disponible. Confirmá siempre día y, si lo menciona, franja (mañana/tarde). Nunca inventes horarios exactos que no estén en la KB."
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya tenía cita": {
+            "action": "set_status",
+            "status": "Ya tenía cita",
+            "goto": "final.end_paid"
+          },
+          "Reagendar después": {
+            "action": "set_status",
+            "status": "Reagendar después",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar cita",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto. Queda agendada su consulta de {especialidad} con {nombre_medico} el día {commitment_date_spoken} en {sucursal}. Le pedimos llegar diez minutos antes con documento de identidad. ¿Tiene alguna otra consulta?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre sin cita",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo. Gracias por su tiempo. Cuando desee agendar, puede llamar a {nombre_empresa} o contactarnos por WhatsApp.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita agendada)",
+        "prompt": "Muchas gracias {nombre_deudor}. Lo esperamos el {commitment_date_spoken} en {sucursal}. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Gracias por su tiempo. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (ya tenía cita)",
+        "prompt": "Perfecto, entonces ya cuenta con su turno registrado. Gracias por confirmar. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor comuníquele que desde {nombre_empresa} llamamos para agendar su consulta médica.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (reagendar después)",
+        "prompt": "Gracias por su tiempo. Dejamos registro para volver a contactarlo y agendar su consulta más adelante.",
+        "delivery": "say"
+      }
+    }
+  }
+}

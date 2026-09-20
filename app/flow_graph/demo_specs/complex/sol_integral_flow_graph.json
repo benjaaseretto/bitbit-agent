@@ -1,0 +1,927 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "sol_integral_flow",
+    "visible_name": "Centro Sol Integral",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (32 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/sol_integral.json",
+      "company_id": "sol_integral-demo",
+      "description": "Base de conocimiento de Centro Sol Integral."
+    },
+    "company_id": "sol_integral-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "cashea_flow_graph.json",
+      "node_count": 32,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Centro Sol Integral",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "decision": "Si el paciente indica que el titular o la persona que intentan contactar falleció, murió o está fallecido (por ejemplo: 'falleció', 'está fallecido', 'la persona que buscan falleció', 'murió', 'ya no vive'), usa registrar_resultado_identidad con resultado='titular_fallecido' de inmediato. NO uses 'recado' ni 'persona_equivocada' en esos casos.",
+        "params": {
+          "max_retries": 2,
+          "allow_interruptions": true,
+          "enable_titular_fallecido": true,
+          "identificacion_flexible": false,
+          "identity_pregunta": "{saludo_por_horario}, te habla {nombre_agente}, agente virtual de Centro Sol Integral. ¿Hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Te llamo de {nombre_empresa}.",
+          "identity_repregunta": "Para poder continuar y brindarte la información, ¿me confirmas si hablo con el titular o responsable de la cuenta, {nombre_deudor_completo}?",
+          "invalid_confirmation_identification": [
+            "de parte",
+            "quien es",
+            "quién es",
+            "alo",
+            "alo buenas tardes",
+            "buenas tardes",
+            "buenas",
+            "Ajá",
+            "Vale",
+            "aja",
+            "vale",
+            "dime",
+            "dígame",
+            "digame",
+            "mande",
+            "bueno",
+            "qué pasa",
+            "que pasa"
+          ]
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "intent.opening_afectado"
+              },
+              "default": "intent.opening"
+            },
+            "express_route": true,
+            "express_route_next": "task.negotiation",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "intent.cliente_pagado"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          },
+          "Fallecido": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "substatus": "Fallecido",
+            "goto": "final.end_fallecido"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Hola {nombre_deudor}, te estamos llamando porque tienes un turno pendiente en Centro Sol Integral con {dias_mora} días de atraso. Al día de hoy, tu turno pendiente es de {monto_deuda_palabras}. Entendemos que estos pueden ser momentos difíciles, por lo que queremos ayudarte a ponerte al día para que puedas mantener tus beneficios activos en Centro Sol Integral. ¿Podrías comentarme qué fue lo que impidió que realizaras el turno?",
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "info_1",
+              "rules": [
+                {
+                  "op": ">",
+                  "value": 1,
+                  "goto": "task.negotiation"
+                }
+              ],
+              "default": "task.negotiation"
+            }
+          }
+        }
+      },
+      "intent.opening_afectado": {
+        "type": "intention",
+        "label": "Apertura (afectado por eventos recientes)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "dias_mora",
+          "rules": [
+            {
+              "op": "between",
+              "min": 45,
+              "max": 62,
+              "template": "Hola {nombre_deudor}, te hablamos del equipo de Centro Sol Integral. Primero que nada, ante los eventos recientes, esperamos que tú y los tuyos se encuentren bien. Te llamamos de forma muy breve para informarte que registras un turno pendiente en Centro Sol Integral con {dias_mora} días de atraso, por un valor de {monto_deuda_palabras}. Vemos que tu cuenta lleva varios días pausada. Sabemos que este puede ser un momento difícil y que ponerte al día no siempre es sencillo. Aun así, todavía podemos ayudarte a recuperar tus líneas de compra en Centro Sol Integral. ¿Crees que puedas realizar un turno en los próximos dias?"
+            },
+            {
+              "op": "between",
+              "min": 63,
+              "max": 92,
+              "template": "Hola {nombre_deudor}, te hablamos del equipo de Centro Sol Integral. Primero que nada, ante los eventos recientes, esperamos que tú y los tuyos se encuentren bien. Te llamamos de forma muy breve para informarte que registras un turno pendiente en Centro Sol Integral con {dias_mora} días de atraso, por un valor de {monto_deuda_palabras}. Tu cuenta lleva varios días pausada. Sabemos que este puede ser un momento difícil y que ponerte al día no siempre es sencillo. Sin embargo, mientras el turno continúe pendiente, tu línea de compra seguirá en pausa. ¿Crees que puedas realizar un turno en los próximos días para confirmar la cita esta situación?"
+            }
+          ],
+          "default": "Hola {nombre_deudor}, te hablamos del equipo de Centro Sol Integral. Primero que nada, ante los eventos recientes, esperamos que tú y los tuyos se encuentren bien. Te llamamos de forma muy breve para informarte que registras un turno pendiente en Centro Sol Integral con {dias_mora} días de atraso, por un valor de {monto_deuda_palabras}. Vemos que tu cuenta lleva varios días pausada. Sabemos que este puede ser un momento difícil y que ponerte al día no siempre es sencillo. Aun así, todavía podemos ayudarte a recuperar tus líneas de compra en Centro Sol Integral. ¿Crees que puedas realizar un turno en los próximos dias?"
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "info_1",
+              "rules": [
+                {
+                  "op": ">",
+                  "value": 1,
+                  "goto": "task.negotiation_afectado"
+                }
+              ],
+              "default": "task.negotiation_afectado"
+            }
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_days": "{max_dias}",
+          "allow_partial_payments": true,
+          "partial_payments_accept_only": true,
+          "allow_interruptions": true,
+          "max_attempts_negotiation": "1",
+          "tone_profile": "empatico",
+          "ask_nonpayment_reason": false,
+          "objection_handlers_builtin": true,
+          "skip_opening_generate_reply": true,
+          "empresa": "{nombre_empresa}",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{monto_deuda}",
+          "monto_deuda_palabras": "{monto_deuda_palabras}",
+          "require_confirmation": true,
+          "custom_instructions": "MOTIVO DE NO turno - PROCEDIMIENTO OBLIGATORIO DE DECISIÓN: cuando el paciente responda, NO respondas por tu cuenta ni continúes el guión de negociación (beneficio / ventana de turno) en ese turno. Evalúa EN ESTE ORDEN y usa la herramienta correspondiente de forma silenciosa, sin decir nada antes ni después (el mensaje oficial siempre lo dirá el sistema): 1) Si el paciente ACEPTA agendar o propone una fecha concreta → usa cliente_dispuesto. 2) Si PROPONE agendar una parte, un abono, un turno mínimo o un turno parcial, distingue según diga o no una cifra: 2a) si dice una cifra concreta (ej: 'puedo agendar veinte dólares', 'te abono cincuenta', 'la mitad son setenta y cinco') → cliente_dispuesto(dispuesto=True, es_parcial=True, monto_propuesto=<la cifra como número>), para que el sistema registre ESE especialidad y lo recapitule; 2b) si NO dice ninguna cifra (ej: 'puedo agendar una parte', 'algo te abono', 'un turno mínimo') → finalizar_objecion_terminal(etiqueta='Oferta sesión atrasada'). Ninguno de los dos casos cuenta como negativa: NUNCA digas que solo se acepta el especialidad completo ni digas el mensaje de consecuencias, y NUNCA ofrezcas vos un abono parcial: la iniciativa tiene que venir siempre del paciente. 3) Si dice que NO puede agendar todo junto, todo de una vez o el total en un solo turno, SIN proponer un abono ni un especialidad → finalizar_objecion_terminal(etiqueta='Oferta sesión atrasada (no todo junto)'). 4) Si el motivo coincide EXACTAMENTE con una de estas categorías, usa su etiqueta con finalizar_objecion_terminal: desempleo o falta de trabajo → 'Oferta sesión atrasada (desempleo)'; enfermedad o problemas de salud propios o de un familiar → 'Oferta sesión atrasada (enfermedad)'; cobra, le pagan o le depositan en otra fecha → 'Oferta sesión atrasada (cobra otra fecha)'; dice EXPLÍCITAMENTE que no tiene dinero, plata o fondos → 'Oferta sesión atrasada (sin dinero)'; afectado por el terremoto → 'Terremoto'; familiares desaparecidos → 'familiar desaparecido'; fallecimiento de un familiar → 'Fallecimiento de un familiar'. 5) Si está esperando dinero, un turno o una transferencia → manejar_objecion_especial(tipo='espera_dinero'). Esta ruta admite EXACTAMENTE DOS mensajes y ni uno más: 'espera_dinero' SIEMPRE va primero, incluso si el paciente ya suena insistente la primera vez; solo si después de ese mensaje vuelve a insistir en esperar la transferencia sin comprometerse a abonar antes → manejar_objecion_especial(tipo='espera_dinero_insiste') UNA SOLA VEZ; y si tampoco acepta, cierra con finalizar_objecion_terminal(etiqueta='Espera transferencia sin acuerdo') sin volver a pedir un turno y sin decir nada antes ni después. 6) CUALQUIER OTRO motivo que no esté en la lista anterior es GENÉRICO → manejar_objecion_especial(tipo='motivo_generico'), sin excepciones. IMPORTANTE (frontera del caso genérico): si el paciente solo cuenta en qué se le fue el dinero o por qué se atrasó (ej: 'estaba de viaje', 'se me olvidó', 'estaba ocupado', 'no me di cuenta', 'gasté en otra cosa', 'estaba remodelando o decorando mi casa') SIN afirmar que no puede agendar y SIN proponer agendar una parte, es motivo GENÉRICO: NO lo interpretes como 'no puede agendar el total' ni como 'sin dinero'. Ante la duda entre una categoría específica y el genérico, usa manejar_objecion_especial(tipo='motivo_generico'). REGLA DE SEGURIDAD Y CASOS SENSIBLES: Ante escenarios de alta sensibilidad (mención de fallecimientos, enfermedades críticas o situaciones de crisis personal), NUNCA insistas en el turno. Interrumpe inmediatamente la negociación y finaliza la llamada de forma empática.",
+          "objection_handlers": [
+            {
+              "objection": "El paciente, por iniciativa propia, ACEPTA o insiste en comprometerse a agendar o abonar ÚNICAMENTE la sesión vencida más atrasada (no el especialidad total) a través de la App de Centro Sol Integral, SIN decir ninguna cifra. Aplica aunque mencione una fecha concreta. NO aplica si el paciente dice un especialidad concreto: en ese caso usa cliente_dispuesto(dispuesto=True, es_parcial=True, monto_propuesto=<cifra>).",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de reprogramar"
+            },
+            {
+              "objection": "El paciente pregunta cuál es el especialidad de la cita pendiente o especialidad del turno pendiente",
+              "answer": "Te informo que registras un turno pendiente en Centro Sol Integral por un valor de {monto_deuda_palabras}."
+            },
+            {
+              "objection": "El paciente pregunta cuál es el especialidad de la sesión vencida más antigua, la sesión más atrasada, o cualquier detalle del que no tengas información",
+              "answer": "Ahorita no tengo esa información a la mano, pero puedes revisar fácilmente desde tu App Centro Sol Integral."
+            },
+            {
+              "objection": "No tengo trabajo | Estoy desempleado | Me quedé sin trabajo | Sin empleo | La cosa está apretada | La situación está fuerte",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Oferta sesión atrasada (desempleo)"
+            },
+            {
+              "objection": "Estoy enfermo | Tengo un familiar enfermo | Problemas de salud | Estoy en el hospital",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Oferta sesión atrasada (enfermedad)"
+            },
+            {
+              "objection": "El paciente PROPONE explícitamente agendar una parte, un abono, un turno mínimo o un turno parcial, SIN haber aceptado aún agendar la sesión más atrasada: 'solo puedo agendar una parte', 'puedo abonar algo', 'quiero agendar la mitad', 'puedo hacer un turno mínimo'. NO aplica si el paciente solo cuenta un motivo de atraso o dice que no puede agendar sin proponer nada",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Oferta reprogramación"
+            },
+            {
+              "objection": "Me pagan en otra fecha | Cobro el día tal | Me depositan más adelante",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Oferta sesión atrasada (cobra otra fecha)"
+            },
+            {
+              "objection": "Me afectó el terremoto | Problemas con el terremoto | Situación económica afectada por el terremoto | Perdí el trabajo por el terremoto",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Emergencia"
+            },
+            {
+              "objection": "No encuentro a mis familiares | mis familiares están desaparecidos | Mis familiares siguen desaparecidos ",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "familiar desaparecido"
+            },
+            {
+              "objection": "Fallecimiento de un familiar | falleció un familiar | tuve una pérdida familiar",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Fallecimiento de un familiar"
+            },
+            {
+              "objection": "Estoy esperando dinero | Estoy esperando una transferencia | Estoy esperando un turno | Me deben agendar | Me van a depositar",
+              "answer": "Perfecto, gracias por informarlo. En ese caso, podemos considerar ese ingreso. Si te es posible hacer un turno previo hoy o mañana, podrás ir avanzando y activar los beneficios de la campaña especial. ¿Te sería posible abonar mañana?",
+              "on_trigger": {
+                "tipo": "espera_dinero",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "SEGUNDO INTENTO, NUNCA EL PRIMERO: el sistema ya dijo antes en esta llamada el mensaje de 'espera_dinero' (el que ofrece hacer un turno previo hoy o mañana) y, después de escucharlo, el paciente vuelve a insistir en que primero tiene que llegarle la transferencia, el depósito o el turno, sin comprometerse a abonar antes. Si el paciente menciona por primera vez que espera dinero, esta entrada NO aplica: usa 'espera_dinero'",
+              "answer": "Entiendo. Mientras llega la transferencia, abonar una sesión pequeña te asegura que no pierdas tus puntos acumulados. ¿Podríamos agendar ese abono mínimo para mañana?",
+              "on_trigger": {
+                "tipo": "espera_dinero_insiste",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "CIERRE DE LA RUTA DE ESPERA DE DINERO: ya se dijeron los dos mensajes de espera de dinero ('espera_dinero' y 'espera_dinero_insiste') y el paciente sigue sin comprometerse a abonar antes de recibir la transferencia. No vuelvas a pedir un turno",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Espera transferencia sin acuerdo"
+            },
+            {
+              "objection": "No tengo dinero | no tengo plata | estoy sin fondos",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Oferta sesión atrasada (sin dinero)"
+            },
+            {
+              "objection": "No puedo agendar todo junto",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Oferta sesión atrasada (no todo junto)"
+            },
+            {
+              "objection": "El paciente comparte un motivo de no turno genérico (ej: 'estaba de viaje', 'se me olvidó', 'estaba ocupado', 'no me di cuenta') que NO encaja en ninguna otra categoría de esta lista",
+              "answer": "{penalizacion_mora}",
+              "catch_all": true,
+              "on_trigger": {
+                "tipo": "motivo_generico",
+                "speak_answer": true
+              }
+            }
+          ],
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.reactivation_after_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "final.end_no_commitment"
+              },
+              "default": "intent.oferta_cuota_atrasada"
+            }
+          },
+          "Oferta reprogramación": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "final.end_no_commitment"
+              },
+              "default": "intent.oferta_cuota_atrasada"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.cliente_pagado"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "Intención de reprogramar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "Emergencia": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fallecido",
+            "goto": "final.end_terremoto"
+          },
+          "familiar desaparecido": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fallecido",
+            "goto": "final.end_familiar_desaparecido"
+          },
+          "Fallecimiento de un familiar": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fallecido",
+            "goto": "final.end_fallecimiento_familiar"
+          },
+          "Oferta cuota atrasada (no todo junto)": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "final.end_no_commitment"
+              },
+              "default": "intent.oferta_cuota_atrasada_no_todo_junto"
+            }
+          },
+          "Oferta cuota atrasada (desempleo)": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "final.end_no_commitment"
+              },
+              "default": "intent.oferta_cuota_atrasada_desempleo"
+            }
+          },
+          "Oferta cuota atrasada (enfermedad)": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "final.end_no_commitment"
+              },
+              "default": "intent.oferta_cuota_atrasada_enfermedad"
+            }
+          },
+          "Oferta cuota atrasada (cobra otra fecha)": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "final.end_no_commitment"
+              },
+              "default": "intent.oferta_cuota_atrasada_cobra_otra_fecha"
+            }
+          },
+          "Oferta cuota atrasada (sin dinero)": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "final.end_no_commitment"
+              },
+              "default": "intent.oferta_cuota_atrasada_sin_dinero"
+            }
+          },
+          "Espera transferencia sin acuerdo": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "task.negotiation_afectado": {
+        "type": "task",
+        "label": "Negociación por eventos recientes",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_days": "{max_dias}",
+          "allow_partial_payments": true,
+          "partial_payments_accept_only": true,
+          "allow_interruptions": true,
+          "max_attempts_negotiation": "1",
+          "tone_profile": "empatico",
+          "ask_nonpayment_reason": false,
+          "objection_handlers_builtin": true,
+          "skip_opening_generate_reply": true,
+          "benefit_hints": [
+            "mantener tu línea activa y reactivar la app para seguir comprando con normalidad",
+            "conservar tus puntos y nivel en el Club Centro Sol Integral+ y los descuentos en farmacias, centros de salud y aliados",
+            "evitar cargos extra por atraso de agenda"
+          ],
+          "empresa": "{nombre_empresa}",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{monto_deuda}",
+          "monto_deuda_palabras": "{monto_deuda_palabras}",
+          "require_confirmation": true,
+          "custom_instructions": "paciente de zona afectada: sé informativo y empático, un solo intento y sin insistir. Si el paciente no puede ni quiere agendar nada, avanza a Sin cita sin repreguntar. Ante enfermedad, hospitalización o angustia NO uses 'caso_critico'; simplemente cierra sin insistir. PAGOS PARCIALES (REGLA ESTRICTA): NUNCA ofrezcas, sugieras ni menciones por iniciativa propia un abono o turno parcial, ni siquiera cuando el paciente diga que no puede agendar el total; la iniciativa de agendar una parte debe venir SIEMPRE del paciente. Si el paciente propone agendar una parte, un abono o menciona un especialidad menor al total, AUNQUE NO DIGA UNA CIFRA CONCRETA (ej: 'puedo agendar 50', 'por lo menos unos cincuenta, sesenta dólares', 'le abono la mitad', 'un turno mínimo', 'puedo hacer un turno mínimo', 'un abono pequeño'), NO lo trates como negativa y NUNCA le digas que solo se acepta el especialidad completo ni que los pagos parciales no están permitidos: acéptalo con normalidad llamando cliente_dispuesto(dispuesto=True, es_parcial=True, y monto_propuesto=<cantidad> solo si dijo una cifra concreta; si no dijo cifra, llámalo igual sin monto_propuesto).",
+          "objection_handlers": [
+            {
+              "objection": "El paciente muestra disposición a agendar la sesión vencida más antigua o la más atrasada a través de la App de Centro Sol Integral",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de reprogramar"
+            },
+            {
+              "objection": "El paciente dice que NO puede agendar, que no puede agendar el total, que no tiene dinero o que no le alcanza, SIN proponer ningún abono, especialidad ni alternativa de turno (ej: 'no puedo agendar', 'no puedo agendar el total', 'no tengo dinero', 'no me alcanza', 'ahorita no puedo', 'no tengo cómo'). NO ofrezcas abonos ni pagos parciales ante esto. IMPORTANTE: si el paciente propone un especialidad, un abono o dice que puede agendar una parte, NO uses este cierre; en ese caso acepta el abono con cliente_dispuesto",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "El paciente pregunta cuál es el especialidad de la cita pendiente o especialidad del turno pendiente",
+              "answer": "Te informo que registras un turno pendiente en Centro Sol Integral por un valor de {monto_deuda_palabras}."
+            },
+            {
+              "objection": "El paciente pregunta cuál es el especialidad de la sesión vencida más antigua, la sesión más atrasada, o cualquier detalle del que no tengas información",
+              "answer": "Ahorita no tengo esa información a la mano, pero puedes revisar fácilmente desde tu App Centro Sol Integral."
+            },
+            {
+              "objection": "Me afectó el terremoto | Problemas con el terremoto | Situación económica afectada por el terremoto | Perdí el trabajo por el terremoto | El lugar donde vivo está afectado por el terremoto | El lugar donde vivo sufrió daños | El lugar donde trabajo sufrió daños ",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Emergencia"
+            },
+            {
+              "objection": "No encuentro a mis familiares | mis familiares están desaparecidos | Mis familiares siguen desaparecidos ",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "familiar desaparecido"
+            },
+            {
+              "objection": "Fallecimiento de un familiar | falleció un familiar | tuve una pérdida familiar",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Fallecimiento de un familiar"
+            }
+          ],
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.reactivation_after_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "info_6",
+              "cases": {
+                "Cliente afectado": "final.end_no_commitment"
+              },
+              "default": "intent.oferta_cuota_atrasada"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.cliente_pagado"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "Intención de reprogramar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "Emergencia": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fallecido",
+            "goto": "final.end_terremoto"
+          },
+          "familiar desaparecido": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fallecido",
+            "goto": "final.end_familiar_desaparecido"
+          },
+          "Fallecimiento de un familiar": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fallecido",
+            "goto": "final.end_fallecimiento_familiar"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada": {
+        "type": "intention",
+        "label": "Oferta de turno de sesión más atrasada por App",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA ponerse al día con su sesión vencida más antigua, una parte o un abono parcial a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento', 'turno una parte', 'abono parcial', 'turno mínimo', 'turno mínimo hoy' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos.",
+        "prompt": "Entiendo que agendar el total sea complicado ahorita, {nombre_deudor}, pero si pagas al menos tu sesión más antigua hoy a través de la App, darás el primer paso para reactivar tu cuenta y estrenar de inmediato la campaña, con hasta seis cuotas e iniciales reducidas. ¿Te parece si registramos el cita para que pagues esa sesión hoy o a más tardar mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "goto": "intent.oferta_cuota_atrasada_intento_2"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_intento_2": {
+        "type": "intention",
+        "label": "Segundo intento (oferta sesión más atrasada)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA agendar la sesión más atrasada o hacer un abono parcial a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a insistir.",
+        "prompt": "Entiendo, {nombre_deudor}. No hace falta el especialidad completo: la app te permite abonar lo que tengas disponible y con ese primer paso tu cuenta ya empieza a regularizarse. ¿Te parece si dejamos registrado el cita de un abono parcial para mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_no_todo_junto": {
+        "type": "intention",
+        "label": "Oferta de turno de sesión más atrasada (paciente no puede agendar todo junto)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA ponerse al día con su sesión vencida más antigua, una parte o un abono parcial a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento', 'turno una parte', 'abono parcial', 'turno mínimo', 'turno mínimo hoy' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a preguntar si puede agendar una parte.",
+        "prompt": "No es necesario agendar el total en este momento. Puedes comenzar con la sesión más atrasada para ir regularizando tu cuenta y así empezar a disfrutar de inmediato la campaña de beneficios ampliados con más cuotas y turno inicial reducido en tiendas físicas y online. ¿Podrías agendar hoy o mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "goto": "intent.oferta_cuota_atrasada_no_todo_junto_intento_2"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_no_todo_junto_intento_2": {
+        "type": "intention",
+        "label": "Segundo intento (paciente no puede agendar todo junto)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA registrar el cita de un abono parcial o de la sesión más atrasada a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a insistir.",
+        "prompt": "Tranquilo, la app te permite abonar la cantidad que tengas disponible. ¿Te parece si dejamos registrado el cita de un abono parcial para mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_desempleo": {
+        "type": "intention",
+        "label": "Oferta de turno de sesión más atrasada (desempleo)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA ponerse al día con su sesión vencida más antigua, una parte o un abono parcial a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento', 'turno una parte', 'abono parcial', 'turno mínimo', 'turno mínimo hoy' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a preguntar si puede agendar una parte.",
+        "prompt": "Entiendo la situación, gracias por comentarlo. Te recuerdo que Centro Sol Integral tiene activa una campaña especial con más cuotas (hasta seis cuotas), menor turno inicial en todos los niveles y envío gratis online. Ponerte al día hoy te permitirá estrenar estos nuevos beneficios inmediatamente. ¿Podrías indicarme si te es posible realizar algún turno hoy o mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "goto": "intent.oferta_cuota_atrasada_desempleo_intento_2"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_desempleo_intento_2": {
+        "type": "intention",
+        "label": "Segundo intento (desempleo)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA agendar la sesión más atrasada o hacer un abono parcial a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a insistir.",
+        "prompt": "Comprendo. Recuerda que no necesitas agendar todo; para comenzar a confirmar la cita tu cuenta puedes hacer el turno únicamente de la sesión más atrasada o un abono parcial. ¿Te sería posible realizar ese turno parcial mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_enfermedad": {
+        "type": "intention",
+        "label": "Oferta de turno de sesión más atrasada (enfermedad)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA agendar la sesión más atrasada o hacer un abono parcial a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos.",
+        "prompt": "Lamento mucho la situación que estás atravesando. En estos casos entendemos que pueden surgir imprevistos, pero puedes realizar el turno de la sesión más atrasada. Recuerda que confirmar la cita tu cuenta y mantenerla al día te permite usar Centro Sol Integral en farmacias y centros de salud con descuentos especiales y cuotas ampliadas si lo necesitas. ¿Te sería posible realizar algún turno hoy o mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "goto": "intent.oferta_cuota_atrasada_enfermedad_intento_2"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_enfermedad_intento_2": {
+        "type": "intention",
+        "label": "Segundo intento (enfermedad)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA coordinar un turno mínimo o un abono a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a insistir.",
+        "prompt": "Entiendo. Hacer al menos un abono mínimo te ayudará a evitar cargos adicionales de reactivación. ¿Crees que podrías coordinar ese turno mínimo mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_cobra_otra_fecha": {
+        "type": "intention",
+        "label": "Oferta de turno de sesión más atrasada (cobra en otra fecha)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA ponerse al día con su sesión vencida más antigua, una parte o un abono parcial a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento', 'turno una parte', 'abono parcial', 'turno mínimo', 'turno mínimo hoy' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a preguntar si puede agendar una parte.",
+        "prompt": "Gracias por informarlo. Podemos considerar tu fecha de turno, pero para evitar recargos te recomendamos cubrir la sesión más atrasada primero. Ten en cuenta que si te pones al día hoy mismo, habilitas de inmediato los beneficios de la nueva campaña: compras físicas y online de hasta seis cuotas a partir de cien dólares, y envío gratis online en compras mayores a veinticinco dólares. ¿Podrías agendar la sesión más atrasada hoy o mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "goto": "intent.oferta_cuota_atrasada_cobra_otra_fecha_intento_2"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_cobra_otra_fecha_intento_2": {
+        "type": "intention",
+        "label": "Segundo intento (cobra en otra fecha)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA adelantar el turno de la sesión más antigua a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a insistir.",
+        "prompt": "Entiendo, tomaremos nota de tu fecha de cobro. Sin embargo, para evitar que la suspensión genere mayores gastos de reactivación, ¿habría forma de adelantar solo la sesión más antigua antes de esa fecha, hoy o mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_sin_dinero": {
+        "type": "intention",
+        "label": "Oferta de turno de sesión más atrasada (sin dinero)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA ponerse al día con su sesión vencida más antigua, una parte o un abono parcial a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento', 'turno una parte', 'abono parcial', 'turno mínimo', 'turno mínimo hoy' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos.",
+        "prompt": "Comprendo que ahora mismo no cuentas con el dinero completo. Aun así, lo más conveniente es agendar la sesión más atrasada para confirmar la cita tu cuenta. Además, si resuelves hoy, podrás aprovechar de inmediato la campaña temporal de Centro Sol Integral, que reduce el turno inicial en todos los niveles (¡hasta un cero por ciento en nivel seis!) y te habilita hasta seis cuotas de turno. ¿Te sería posible abonar hoy o mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "goto": "intent.oferta_cuota_atrasada_sin_dinero_intento_2"
+          }
+        }
+      },
+      "intent.oferta_cuota_atrasada_sin_dinero_intento_2": {
+        "type": "intention",
+        "label": "Segundo intento (sin dinero)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Si el paciente ACEPTA programar el abono de la sesión más atrasada a través de la App de Centro Sol Integral (dice 'sí', 'dale', 'ok', 'puedo', 'lo intento' o se compromete a hacerlo, aunque mencione una fecha), selecciona 'acepta sesión atrasada'. Si NO acepta, se niega, duda, evade o es ambiguo, selecciona 'no acepta'. NO pidas el especialidad ni registres compromisos, tampoco vuelvas a insistir.",
+        "prompt": "Te entiendo, {nombre_deudor}. Pero dar el primer paso con un abono parcial mantendrá tu cuenta cerca de reactivarse para cuando la necesites. ¿Podríamos programar el cita para abonar la sesión más atrasada mañana?",
+        "on": {
+          "Acepta reprogramación": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "cuota_mas_atrasada",
+            "goto": "intent.recap_cuota_atrasada"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.cliente_pagado": {
+        "type": "intention",
+        "label": "paciente indica que ya asistió - validar especialidad y fecha",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera la respuesta del paciente con el especialidad y/o la fecha del turno. Solo escucha brevemente para dejar registro y continúa con el flujo. NO repitas la pregunta ni respondas al detalle del turno.",
+        "prompt": "Perfecto, gracias por avisarme. Para dejar el registro y validarlo en la app, ¿podrías indicarme el especialidad y la fecha en que realizaste el turno?",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.reactivation_after_commitment": {
+        "type": "intention",
+        "label": "Confirmación de cita + medios de turno",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Selecciona 'confirma' cuando el paciente afirme el cita ('sí', 'de acuerdo', 'claro', 'está bien', 'correcto', 'dale') y también cuando pregunte algo, pida que repitas el dato o dude sin retractarse. Selecciona 'no confirma' ÚNICAMENTE si el paciente se retracta de forma explícita: dice que no va a agendar, que no puede agendar ese día o que ya no quiere dejar el cita registrado. Ante cualquier duda, selecciona 'confirma'. NO vuelvas a pedir la fecha ni el especialidad.",
+        "prompt": "Excelente, {nombre_deudor}. Para dejarlo registrado oficialmente: ¿me confirmas que realizarás el turno de {payment_amount_palabras} el día {commitment_date_spoken} a través de turno Móvil, transferencia o depósito bancario?",
+        "on": {
+          "confirma": {
+            "goto": "final.end_commitment"
+          },
+          "no confirma": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "clear_commitment": true,
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.recap_cuota_atrasada": {
+        "type": "intention",
+        "label": "Recapitulación y confirmación (intención de turno)",
+        "delivery": "generate",
+        "interruptible": true,
+        "decision": "Selecciona 'confirma' cuando el paciente afirme ('sí', 'de acuerdo', 'claro', 'está bien', 'correcto', 'dale') y también cuando pregunte algo, pida que repitas el dato, corrija el especialidad o la fecha, o dude sin retractarse. Selecciona 'no confirma' ÚNICAMENTE si el paciente se retracta de forma explícita: dice que no va a agendar o que no podrá hacerlo en ese plazo. Ante cualquier duda, selecciona 'confirma'.",
+        "prompt": "Recapitula el acuerdo en UNA SOLA intervención y pide confirmación explícita. Empieza con 'Excelente, {nombre_deudor}. Para dejarlo registrado oficialmente:' y preguntá si te confirma tres datos, en este orden: (1) especialidad: usá EXACTAMENTE la cifra que el paciente dijo en esta conversación (si dijo veinte dólares, decí 'el turno de veinte dólares'). Si el paciente NUNCA dijo una cifra, fijate qué fue lo que aceptó: si aceptó ponerse al día con la sesión vencida más antigua, decí 'el turno de tu sesión más atrasada'; si aceptó agendar sin precisar qué, decí 'el turno de tu cita pendiente pendiente'. En los dos casos aclará que el especialidad exacto lo ve en su App de Centro Sol Integral. NUNCA inventes, redondees ni estimes un especialidad, y NUNCA presentes el turno total de {monto_deuda_palabras} como si fuera lo que el paciente acordó agendar. (2) FECHA: usá la que dijo el paciente (hoy, mañana o el día concreto que mencionó); si no dijo ninguna, decí 'hoy o a más tardar mañana'. (3) MÉTODO: 'a través de turno Móvil, transferencia o depósito bancario'. Escribí los números en palabras (veinte dólares, nunca 20 dólares ni $20). Terminá con la pregunta de confirmación y no agregues nada más.",
+        "on": {
+          "confirma": {
+            "goto_by": {
+              "field": "substatus",
+              "cases": {
+                "cuota_mas_atrasada": "final.end_intencion_cuota_atrasada"
+              },
+              "default": "final.end_intencion_de_pago"
+            }
+          },
+          "no confirma": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Gracias por tu tiempo. Recuerda que confirmar la cita tu turno te permitirá tener tu línea activa y disfrutar de los beneficios de Centro Sol Integral. Que tengas un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Perfecto, queda registrada tu intención de turno. Recuerda que puedes agendar por turno Móvil, transferencia bancaria o depósito, en bolívares o en dólares, y todos los datos los encuentras en tu App de Centro Sol Integral. Gracias por tu tiempo. Recuerda que confirmar la cita tu turno te permitirá tener tu línea activa y disfrutar de los beneficios de Centro Sol Integral. Que tengas un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_cuota_atrasada": {
+        "type": "final",
+        "label": "Despedida (intención de turno - abono o sesión más atrasada)",
+        "prompt": "Perfecto, queda registrada tu intención de turno para empezar a confirmar la cita tu cuenta. En tu App de Centro Sol Integral encontrarás todos los datos para agendar por turno Móvil, transferencia bancaria o depósito, en bolívares o en dólares. Gracias por tu tiempo. Recuerda que confirmar la cita tu turno te permitirá tener tu línea activa y disfrutar de los beneficios de Centro Sol Integral. Que tengas un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "{despedida_sin_compromiso}",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Muchas gracias por regularizarte a tiempo. Vamos a estar verificando que efectivamente el turno esté validado en la app para que sigas contando con los beneficios del Club Centro Sol Integral+. Que tengas un feliz día y disculpa las molestias.",
+        "delivery": "say"
+      },
+      "final.end_familiar_desaparecido": {
+        "type": "final",
+        "label": "Despedida (familiar desaparecido)",
+        "prompt": "Lamentamos mucho esta situación. Si más adelante necesitas revisar la situación de tu cuenta, el equipo de Atención al paciente de Centro Sol Integral podrá orientarte a través de la aplicación. Esperamos que todo mejore pronto. Muchas gracias por tu tiempo. Que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_terremoto": {
+        "type": "final",
+        "label": "Despedida (terremoto)",
+        "prompt": "Entendemos la situación y lamentamos las dificultades que estás atravesando. Para poder orientarte de la mejor manera, te invitamos a comunicarte con atención al paciente. Puedes hacerlo a través de la aplicación de Centro Sol Integral de lunes a viernes de 9 a 18 horas. Esperamos que todo mejore pronto. Muchas gracias por tu tiempo. Que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_fallecimiento_familiar": {
+        "type": "final",
+        "label": "Despedida (fallecimiento de un familiar)",
+        "prompt": "Lamentamos mucho esta situación. Recibe nuestras más sinceras condolencias en este difícil momento. Si más adelante necesitas revisar la situación de tu cuenta, el equipo de Atención al paciente de Centro Sol Integral podrá orientarte a través de la aplicación. Esperamos que todo mejore pronto. Muchas gracias por tu tiempo. Que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_fallecido": {
+        "type": "final",
+        "label": "Despedida (fallecido)",
+        "prompt": "Lamentamos mucho esta situación. Vamos a registrar esta información para que el equipo correspondiente pueda revisarla. Recibe nuestras más sinceras condolencias. Esperamos que todo mejore pronto. Muchas gracias por tu tiempo. Que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele que desde {nombre_empresa} intentamos ponernos en contacto con el titular.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

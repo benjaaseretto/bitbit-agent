@@ -1,0 +1,1194 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "pacifico_med_flow",
+    "visible_name": "Sanatorio Pacífico",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (49 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/pacifico_med.json",
+      "company_id": "pacifico_med-demo",
+      "description": "Base de conocimiento de Sanatorio Pacífico."
+    },
+    "company_id": "pacifico_med-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "bravo_co_flow_graph.json",
+      "node_count": 49,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Sanatorio Pacífico",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_pregunta": "Hola, le habla {nombre_agente}, asesor de coordinación de agenda de Sanatorio Pacífico. ¿Hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Soy {nombre_agente}, asesor de coordinación de agenda de Sanatorio Pacífico.",
+          "identity_repregunta": "Para poder continuar, ¿me confirma que estoy hablando con {nombre_deudor_completo}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.close_paid",
+            "goto_by": {
+              "field": "bravo_cobranza_branch",
+              "cases": {
+                "mora_tardia_par_180": "intent.bloque_b_par180_descuento",
+                "mora_tardia_par_120": "intent.bloque_b_par120_monto_atrasado",
+                "mora_tardia_datos_incompletos": "final.end_missing_mora_tardia_data",
+                "preventiva": "intent.opening_preventiva",
+                "vigente": "intent.opening_vigente"
+              },
+              "default": "intent.opening_preventiva"
+            }
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening_preventiva": {
+        "type": "intention",
+        "label": "Apertura Preventiva",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bravo_opening_decision}",
+        "prompt_by": {
+          "field": "bravo_preventiva_segment",
+          "cases": {
+            "al_dia_negativo": "Hola {nombre_deudor}, espero que te encuentres bien el día de hoy. Te comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi llamado es para conversar y recordarte sobre el turno de tu sesión por {due_balance_palabras} que está próxima a vencer el día {fecha_vencimiento_spoken}. {bravo_opening_closing_question}",
+            "al_dia_cero": "Hola {nombre_deudor}, espero que te encuentres bien el día de hoy. Te comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi llamado es recordarte que tu sesión por {due_balance_palabras} vence el dia de hoy {fecha_vencimiento_spoken}. {bravo_opening_closing_question}",
+            "no_al_dia_negativo": "Hola {nombre_deudor}, espero que te encuentres bien el día de hoy. Te comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi llamada es recordarte que tienes {dim_1} sesión vencida y otra próxima a vencer el día {fecha_vencimiento_spoken}. El total suma un valor de {due_balance_palabras} {bravo_opening_closing_question}",
+            "no_al_dia_cero": "Hola {nombre_deudor}, espero que te encuentres bien el día de hoy. Te comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi llamada es informarte que tienes {dim_1} sesión en atraso de agenda y otra que vence el día de hoy {fecha_vencimiento_spoken}. El valor total pendiente es de {due_balance_palabras} {bravo_opening_closing_question}"
+          },
+          "default": "Hola {nombre_deudor}, espero que te encuentres bien el día de hoy. Te comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi llamado es recordarte que tu sesión por {due_balance_palabras} vence el dia de hoy {fecha_vencimiento_spoken}. {bravo_opening_closing_question}"
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation_preventiva"
+          }
+        }
+      },
+      "intent.opening_vigente": {
+        "type": "intention",
+        "label": "Apertura Vigente",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bravo_opening_decision}",
+        "prompt_by": {
+          "field": "bravo_mora_segment",
+          "cases": {
+            "dia_mora_positiva": "Hola {nombre_deudor}, espero que te encuentres bien el día de hoy. Te comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi llamado es para conversar y recordarte que tienes una sesión en atraso de agenda por {due_balance_palabras} con {delinquency} días de atraso de agenda. {bravo_opening_closing_question}",
+            "no_dia_mora_positiva": "Hola {nombre_deudor}, espero que te encuentres muy bien. Te informo que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi llamada es informarte que presentas {dim_1} cuotas en atraso de agenda por un total de {due_balance_palabras}, con {info_8} días de atraso de agenda desde el primer fecha propuesta. ¿Con qué fecha podemos contar para realizar el turno?"
+          },
+          "default": "Hola {nombre_deudor}, espero que te encuentres bien el día de hoy. Te comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi llamado es para conversar y recordarte que tienes una sesión en atraso de agenda por {due_balance_palabras} con {delinquency} días de atraso de agenda. {bravo_opening_closing_question}"
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation_vigente"
+          }
+        }
+      },
+      "task.negotiation_preventiva": {
+        "type": "task",
+        "label": "Negociación V2 (sesión preventiva)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "custom_instructions": "Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} te ayuda a evitar recargos adicionales y dejar este tema cerrado. ¿Podrías realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, el valor pendiente podría seguir incrementándose. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el turno ese día?",
+          "max_dias": "{max_dias}",
+          "max_attempts": "{bravo_negotiation_max_attempts}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "benefit_hints": [
+            "confirmar la cita tu situación en estos primeros días evita que el valor pendiente se incremente",
+            "Confirmar que realizarás un turno hoy o en los próximos días evitará recargos adicionales y dejará este tema completamente cerrado",
+            "evitar que la obligación avance a otra instancia de cobro"
+          ],
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.close_commitment_preventiva"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "bravo_eligible_cuota_atrasada",
+              "cases": {
+                "eligible": "intent.offer_partial_payment"
+              },
+              "default": "task.payment_intention_date"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "task.negotiation_vigente": {
+        "type": "task",
+        "label": "Negociación V2 (sesión vigente)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "custom_instructions": "Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a evitar el incremento de intereses por atraso de agenda y mantener un reporte positivo. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, los intereses por atraso de agenda seguirían incrementándose. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_dias}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "max_attempts": "{bravo_negotiation_max_attempts}",
+          "benefit_hints": [
+            "{nombre_deudor}, entiendo su postura. Sin embargo, si logra realizar el turno a más tardar el {commitment_limit_spoken}, evitará el incremento de intereses por atraso de agenda y mantendrá un reporte positivo.",
+            "Comprendo, {nombre_deudor}. Realizando su turno dentro del plazo disponible, asegura la disponibilidad de sus servicios y evita gestiones de cobro adicionales. agendar a más tardar el {commitment_limit_spoken} le permite mantener su cuenta al día sin complicaciones futuras.",
+            "evitar que la obligación avance a otra instancia de cobro"
+          ],
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "objection_handlers": [
+            {
+              "objection": "Estoy enfermo | Me quedé sin trabajo | Perdí el empleo | Estoy desempleado ",
+              "answer": "Lamento escuchar eso. Entiendo que es una prioridad para usted. Para evitar que la cita pendiente crezca, ¿podríamos fijar una fecha tentativa para realizar su turno?"
+            },
+            {
+              "objection": "Tengo intención de agendar pero no puedo ahora | Quiero cumplir pero está complicado | Estoy pasando por una situación difícil | Mi situación económica es complicada por crisis",
+              "answer": "Comprendo su situación y valoro su intención de cumplir. Para evitar cargos adicionales y mantener su cuenta protegida, ¿le parece si definimos una fecha tentativa para su turno?"
+            },
+            {
+              "objection": "Es prioridad para mí agendar | Sé que debo agendar | Ya sé que tengo esa cita pendiente pendiente | Es un tema importante para mí pero estoy complicado",
+              "answer": "Entiendo que este es un tema prioritario para usted. Para que pueda estar tranquilo y evitar que el turno se incremente, ¿qué día de esta semana cree que podría realizar un abono?"
+            },
+            {
+              "objection": "Mi cuenta bancaria tiene problemas | El sanatorio no me deja transferir | Mi credencial está bloqueada | Tengo problemas con mi cuenta personal del sanatorio | Falla mi medio de turno bancario",
+              "answer": "Lamento que esté presentando estas fallas con su medio de turno. Para su tranquilidad, ¿qué le parece si registramos un cita para los próximos días? Así garantizamos que su cuenta se mantenga al día mientras se normaliza su servicio bancario."
+            },
+            {
+              "objection": "La app no funciona | No puedo agendar por la app | La página de pagos no carga | Tengo problemas con la plataforma digital | Falla la app de Bravo | No me deja agendar por PSE",
+              "answer": "Entiendo perfectamente; los inconvenientes tecnológicos pueden ser frustrantes. Sin embargo, para que este problema técnico no afecte su historial crediticio, ¿podríamos fijar una fecha tentativa de turno para cuando estime que su acceso esté restablecido?"
+            },
+            {
+              "objection": "Tengo una queja | Voy a poner una reclamación | No estoy de acuerdo con el cobro | Tengo una inconformidad con el crédito | Quiero presentar un reclamo",
+              "answer": "Comprendo su punto y tomó nota de su inconformidad, sin embargo, para evitar que el turno siga aumentando por intereses de atraso de agenda mientras se revisa su caso, ¿le parece bien si establecemos una fecha tentativa para confirmar la cita la situación?"
+            },
+            {
+              "objection": "Ese no es el especialidad que debo | El turno está mal | Ese no es mi turno correcto | Hay un error en el especialidad | No estoy de acuerdo con el valor cobrado | El especialidad está inflado",
+              "answer": "Escucho su desacuerdo con el especialidad y entiendo su posición. Para que esta situación no genere cargos adicionales que compliquen más el proceso, ¿podríamos acordar una fecha de turno para el valor que usted reconoce, mientras se aclara la diferencia?"
+            },
+            {
+              "objection": "Se me olvidó agendar | No me acordé del turno | Olvidé la sesión | Con tantas cosas se me pasó | Se me fue de la cabeza",
+              "answer": "Descuide, suele pasar; con tantas responsabilidades es normal que un detalle se nos escape. Lo importante es que aún estamos a tiempo de evitar cargos extra. Le comparto que su turno es de {due_balance_palabras}. ¿Le queda bien realizar el turno hoy mismo para dejar este pendiente resuelto de una vez?"
+            },
+            {
+              "objection": "Se me pasó la fecha de turno | No me di cuenta del fecha propuesta | Lo olvidé por completo | No tenía presente el turno | No recordaba la fecha",
+              "answer": "Descuide, suele pasar. Por suerte, retomar el control es muy sencillo. Le comparto que su turno a la fecha es de {due_balance_palabras}. ¿Le queda bien realizar el turno hoy mismo? Así mantenemos su historial y evitamos cualquier reporte por atraso de agenda."
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.close_commitment_vigente"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "bravo_eligible_cuota_atrasada",
+              "cases": {
+                "eligible": "intent.offer_partial_payment"
+              },
+              "default": "task.payment_intention_date"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "intent.offer_partial_payment": {
+        "type": "intention",
+        "label": "Oferta turno sesión más atrasada",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bravo_opening_decision}",
+        "prompt": "Entiendo. Podrías ponerte al día comenzando con el turno de la sesión más atrasada por un valor de {info_9_palabras}. De esta manera, reactivas tu situación de inmediato y evitas mayores recargos. Luego, en los próximos días, puedes completar el turno de la diferencia restante de forma progresiva. Si realizas este primer turno hoy, ya estarías regularizando tu cuenta y manteniendo tus beneficios activos. ¿Qué día podrías realizar este turno?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation_partial"
+          }
+        }
+      },
+      "task.negotiation_partial": {
+        "type": "task",
+        "label": "Negociación V2 (sesión más atrasada)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "custom_instructions": "Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} te ayuda a reactivar tu cuenta y mantener tus beneficios activos. ¿Podrías realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, el valor pendiente podría seguir incrementándose. La fecha disponible es hasta {fecha_limite}. ¿Te sería posible realizar el turno ese día?",
+          "max_dias": "{max_dias}",
+          "monto_deuda": "{info_9}",
+          "monto_deuda_palabras": "{info_9_palabras}",
+          "benefit_hints": [
+            "con este primer turno ya estarías reactivando tu cuenta y manteniendo tus beneficios activos",
+            "confirmar la cita tu situación en estos primeros días evita que el valor pendiente se incremente",
+            "evitar que la obligación avance a otra instancia de cobro"
+          ],
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.close_commitment_partial"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "task.payment_intention_date"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          }
+        }
+      },
+      "intent.close_commitment_partial": {
+        "type": "intention",
+        "label": "Cierre (cita sesión más atrasada)",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "Perfecto, confirmamos tu cita de turno por {info_9_palabras} para el {commitment_date_spoken}. Puedes agendar por PSE en pagos punto bravocredito punto co o en Bancolombia, en sucursal o corresponsal. No olvides compartir el soporte al correo creditocol arroba respaldocolombia punto co. ¿Tienes alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "task.payment_intention_date": {
+        "type": "task",
+        "label": "Fecha tentativa de turno",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_retries": 1,
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve.",
+          "max_attempts": 3
+        },
+        "on": {
+          "Fecha tentativa capturada": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "payment_intention_date": "result.tentative_date",
+            "payment_intention_raw": "result.raw_text",
+            "set_payment_intention": true,
+            "goto": "final.close_intencion_de_pago"
+          },
+          "Sin fecha": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.offer_callback_next_day_no_agreement"
+          }
+        }
+      },
+      "intent.close_commitment_preventiva": {
+        "type": "intention",
+        "label": "Cierre (cita)",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "Perfecto, confirmamos tu cita de turno por {due_balance_palabras} para el {commitment_date_spoken}. Puedes agendar por PSE en pagos punto bravocredito punto co o en Bancolombia, en sucursal o corresponsal. No olvides compartir el soporte al correo creditocol arroba respaldocolombia punto co. ¿Tienes alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.close_commitment_vigente": {
+        "type": "intention",
+        "label": "Cierre (cita)",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt": "Perfecto, confirmamos tu cita de turno por {due_balance_palabras} para el {commitment_date_spoken}. Puedes agendar por PSE en pagos punto bravocredito punto co o en Bancolombia, en sucursal o corresponsal. No olvides compartir el soporte al correo creditocol arroba respaldocolombia punto co. ¿Tienes alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.offer_callback_next_day_no_agreement": {
+        "type": "intention",
+        "label": "Oferta agendar (sin acuerdo)",
+        "interruptible": false,
+        "prompt": "Entiendo. Para ayudarte mejor, puedo agendar una comunicación con un asesor del equipo. ¿Te parece bien que la programemos? ¿Qué día te queda mejor?",
+        "on": {
+          "Acepta": {
+            "goto": "task.next_contact"
+          },
+          "Rechaza": {
+            "goto": "final.end_no_callback"
+          }
+        }
+      },
+      "task.next_contact": {
+        "type": "task",
+        "label": "Próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "time_windows": [
+            "mañana",
+            "tarde",
+            "noche",
+            "indistinto"
+          ],
+          "require_hour": true,
+          "ask_phone": false
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_callback_scheduled"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_callback"
+          }
+        }
+      },
+      "intent.bloque_b_par180_descuento": {
+        "type": "intention",
+        "label": "PAR 180 - Oferta descuento por turno total (info_1)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bloque_b_offer_decision}",
+        "prompt": "Hola {nombre_deudor}, espero que se encuentre muy bien. Le comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi contacto es informarle que su obligación presenta un estado de atraso de agenda avanzada. Como primera alternativa de negociación, le informo sobre la posibilidad de acceder a un descuento exclusivo para el turno total y cancelación definitiva de su obligación por un valor de {info_1_palabras}. ¿Podríamos coordinar la fecha de turno para este valor?",
+        "on": {
+          "Acepta": {
+            "goto": "task.bloque_b_neg_descuento_par180"
+          },
+          "Rechaza": {
+            "goto": "task.bloque_b_form_propuesta_par180"
+          }
+        }
+      },
+      "task.bloque_b_neg_descuento_par180": {
+        "type": "task",
+        "label": "PAR 180 - Negociación descuento turno total",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a congelar cobros adicionales y evitar reportes negativos en centrales de riesgo. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, los intereses y costos de coordinación de agenda seguirían aumentando el valor total de la cita pendiente. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_days_dinamicos}",
+          "monto_deuda": "{info_1}",
+          "monto_deuda_palabras": "{info_1_palabras}",
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "restrict_to_current_month": true,
+          "custom_instructions": "{bloque_b_step_instructions} {bloque_b_objection_hints} Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "benefit_hints": [
+            "Es importante recordar que el no turno genera reportes negativos en centrales de riesgo, lo que afecta su historial crediticio y sus posibilidades de acceder a nuevos productos financieros en el futuro.",
+            "Tenga en cuenta que continuar en atraso de agenda ocasiona el incremento continuo de intereses corrientes, de atraso de agenda y costos asociados a la gestión de cobro, aumentando el valor total de la cita pendiente.",
+            "Normalizar su obligación hoy le permite congelar cobros adicionales, detener las consecuencias financieras y recuperar el control de su tranquilidad crediticia."
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "set_agent_output": {
+              "oferta_descuento_total": "{info_1}"
+            },
+            "goto": "intent.bloque_b_close_descuento"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "task.bloque_b_form_propuesta_par180"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.bloque_b_form_propuesta_par180"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          }
+        }
+      },
+      "task.bloque_b_form_propuesta_par180": {
+        "type": "task",
+        "label": "PAR 180 - Captura propuesta de turno total",
+        "task_type": "FormTask",
+        "params": {
+          "skip_confirmation": true,
+          "allow_interruptions": true,
+          "instructions": "Pregunta exactamente: 'Comprendo. En ese caso, ¿qué valor estaría dispuesto a agendar para cancelar totalmente la obligación? Esta información la recopilaré únicamente para su posterior evaluación.'. Registra cualquier especialidad numérico positivo que indique el paciente. Cancela únicamente si rechaza hacer una propuesta o no indica un valor.",
+          "schema": [
+            {
+              "name": "propuesta_pago_total",
+              "type": "number",
+              "label": "valor de su propuesta para cancelar totalmente la obligación",
+              "required": true,
+              "min": 1
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "Propuesta turno total",
+            "set_agent_output": {
+              "propuesta_pago_total": "{propuesta_pago_total}"
+            },
+            "goto": "intent.bloque_b_ack_propuesta_par180"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.bloque_b_par180_monto_atrasado"
+          }
+        }
+      },
+      "intent.bloque_b_ack_propuesta_par180": {
+        "type": "intention",
+        "label": "PAR 180 - Acuse propuesta y continuar cascada",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, he tomado nota de su propuesta por {propuesta_pago_total_palabras} para su posterior evaluación. Continuemos con las alternativas habituales para la regularización de su cuenta.",
+        "on": {
+          "always": {
+            "goto": "intent.bloque_b_par180_monto_atrasado"
+          }
+        }
+      },
+      "intent.bloque_b_par180_monto_atrasado": {
+        "type": "intention",
+        "label": "PAR 180 - Cobro especialidad atrasado (info_9)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bloque_b_offer_decision}",
+        "prompt": "Continuando con nuestro proceso, el valor requerido para confirmar la cita su situación y salir del atraso acumulado es de {info_9_palabras}. ¿Para qué fecha de este mes podríamos registrar este turno?",
+        "on": {
+          "Acepta": {
+            "goto": "task.bloque_b_neg_info_9_par180"
+          },
+          "Rechaza": {
+            "goto": "intent.bloque_b_par180_dos_cuotas"
+          }
+        }
+      },
+      "task.bloque_b_neg_info_9_par180": {
+        "type": "task",
+        "label": "PAR 180 - Negociación especialidad atrasado",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a congelar cobros adicionales y evitar reportes negativos en centrales de riesgo. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, los intereses y costos de coordinación de agenda seguirían aumentando el valor total de la cita pendiente. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_days_dinamicos}",
+          "monto_deuda": "{info_9}",
+          "monto_deuda_palabras": "{info_9_palabras}",
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "restrict_to_current_month": true,
+          "custom_instructions": "{bloque_b_step_instructions} {bloque_b_objection_hints} Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "benefit_hints": [
+            "Es importante recordar que el no turno genera reportes negativos en centrales de riesgo, lo que afecta su historial crediticio y sus posibilidades de acceder a nuevos productos financieros en el futuro.",
+            "Tenga en cuenta que continuar en atraso de agenda ocasiona el incremento continuo de intereses corrientes, de atraso de agenda y costos asociados a la gestión de cobro, aumentando el valor total de la cita pendiente.",
+            "Normalizar su obligación hoy le permite congelar cobros adicionales, detener las consecuencias financieras y recuperar el control de su tranquilidad crediticia."
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "set_agent_output": {
+              "monto_atrasado": "{info_9}"
+            },
+            "goto": "intent.bloque_b_close_monto_atrasado"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.bloque_b_par180_dos_cuotas"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.bloque_b_par180_dos_cuotas"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          }
+        }
+      },
+      "intent.bloque_b_par180_dos_cuotas": {
+        "type": "intention",
+        "label": "PAR 180 - turno equivalente a dos cuotas (info_4)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bloque_b_offer_decision}",
+        "prompt": "Entiendo que se le dificulte. Si no puede asumir el valor atrasado, la plataforma permite ofrecerle el turno equivalente a dos cuotas completas por un especialidad de {info_4_palabras} para reducir su nivel de atraso de agenda. ¿Le es posible realizar este turno en los próximos días?",
+        "on": {
+          "Acepta": {
+            "goto": "task.bloque_b_neg_info_4_par180"
+          },
+          "Rechaza": {
+            "goto": "intent.bloque_b_refi"
+          }
+        }
+      },
+      "task.bloque_b_neg_info_4_par180": {
+        "type": "task",
+        "label": "PAR 180 - Negociación dos cuotas completas",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a congelar cobros adicionales y evitar reportes negativos en centrales de riesgo. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, los intereses y costos de coordinación de agenda seguirían aumentando el valor total de la cita pendiente. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_days_dinamicos}",
+          "monto_deuda": "{info_4}",
+          "monto_deuda_palabras": "{info_4_palabras}",
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "restrict_to_current_month": true,
+          "custom_instructions": "{bloque_b_step_instructions} {bloque_b_objection_hints} Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "benefit_hints": [
+            "Es importante recordar que el no turno genera reportes negativos en centrales de riesgo, lo que afecta su historial crediticio y sus posibilidades de acceder a nuevos productos financieros en el futuro.",
+            "Tenga en cuenta que continuar en atraso de agenda ocasiona el incremento continuo de intereses corrientes, de atraso de agenda y costos asociados a la gestión de cobro, aumentando el valor total de la cita pendiente.",
+            "Normalizar su obligación hoy le permite congelar cobros adicionales, detener las consecuencias financieras y recuperar el control de su tranquilidad crediticia."
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "set_agent_output": {
+              "dos_cuotas_completas": "{info_4}"
+            },
+            "goto": "intent.bloque_b_close_dos_cuotas"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.bloque_b_refi"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.bloque_b_refi"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          }
+        }
+      },
+      "intent.bloque_b_par120_monto_atrasado": {
+        "type": "intention",
+        "label": "PAR 120 - Cobro especialidad atrasado (info_9)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bloque_b_offer_decision}",
+        "prompt": "Hola {nombre_deudor}, espero que se encuentre muy bien. Le comento que esta llamada está siendo grabada y monitoreada para efectos de calidad. El motivo de mi contacto es informarle que su obligación presenta un atraso. El valor requerido para confirmar la cita su cuenta es de {info_9_palabras}, correspondiente al especialidad atrasado. ¿Con qué fecha podemos contar para realizar este turno?",
+        "on": {
+          "Acepta": {
+            "goto": "task.bloque_b_neg_info_9_par120"
+          },
+          "Rechaza": {
+            "goto": "intent.bloque_b_par120_dos_cuotas"
+          }
+        }
+      },
+      "task.bloque_b_neg_info_9_par120": {
+        "type": "task",
+        "label": "PAR 120 - Negociación especialidad atrasado",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a congelar cobros adicionales y evitar reportes negativos en centrales de riesgo. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, los intereses y costos de coordinación de agenda seguirían aumentando el valor total de la cita pendiente. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_days_dinamicos}",
+          "monto_deuda": "{info_9}",
+          "monto_deuda_palabras": "{info_9_palabras}",
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "restrict_to_current_month": true,
+          "custom_instructions": "{bloque_b_step_instructions} {bloque_b_objection_hints} Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "benefit_hints": [
+            "Es importante recordar que el no turno genera reportes negativos en centrales de riesgo, lo que afecta su historial crediticio y sus posibilidades de acceder a nuevos productos financieros en el futuro.",
+            "Tenga en cuenta que continuar en atraso de agenda ocasiona el incremento continuo de intereses corrientes, de atraso de agenda y costos asociados a la gestión de cobro, aumentando el valor total de la cita pendiente.",
+            "Normalizar su obligación hoy le permite congelar cobros adicionales, detener las consecuencias financieras y recuperar el control de su tranquilidad crediticia."
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "set_agent_output": {
+              "monto_atrasado": "{info_9}"
+            },
+            "goto": "intent.bloque_b_close_monto_atrasado"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.bloque_b_par120_dos_cuotas"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.bloque_b_par120_dos_cuotas"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          }
+        }
+      },
+      "intent.bloque_b_par120_dos_cuotas": {
+        "type": "intention",
+        "label": "PAR 120 - turno equivalente a dos cuotas (info_4)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bloque_b_offer_decision}",
+        "prompt": "Entiendo. Si no puede realizar ese turno, le ofrecemos la alternativa de realizar un turno equivalente a dos cuotas completas por un valor de {info_4_palabras} para evitar que su atraso siga avanzando. ¿Podría asumir este valor en los próximos días?",
+        "on": {
+          "Acepta": {
+            "goto": "task.bloque_b_neg_info_4_par120"
+          },
+          "Rechaza": {
+            "goto": "intent.bloque_b_par120_descuento"
+          }
+        }
+      },
+      "task.bloque_b_neg_info_4_par120": {
+        "type": "task",
+        "label": "PAR 120 - Negociación dos cuotas completas",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a congelar cobros adicionales y evitar reportes negativos en centrales de riesgo. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, los intereses y costos de coordinación de agenda seguirían aumentando el valor total de la cita pendiente. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_days_dinamicos}",
+          "monto_deuda": "{info_4}",
+          "monto_deuda_palabras": "{info_4_palabras}",
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "restrict_to_current_month": true,
+          "custom_instructions": "{bloque_b_step_instructions} {bloque_b_objection_hints} Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "benefit_hints": [
+            "Es importante recordar que el no turno genera reportes negativos en centrales de riesgo, lo que afecta su historial crediticio y sus posibilidades de acceder a nuevos productos financieros en el futuro.",
+            "Tenga en cuenta que continuar en atraso de agenda ocasiona el incremento continuo de intereses corrientes, de atraso de agenda y costos asociados a la gestión de cobro, aumentando el valor total de la cita pendiente.",
+            "Normalizar su obligación hoy le permite congelar cobros adicionales, detener las consecuencias financieras y recuperar el control de su tranquilidad crediticia."
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "set_agent_output": {
+              "dos_cuotas_completas": "{info_4}"
+            },
+            "goto": "intent.bloque_b_close_dos_cuotas"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.bloque_b_par120_descuento"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.bloque_b_par120_descuento"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          }
+        }
+      },
+      "intent.bloque_b_par120_descuento": {
+        "type": "intention",
+        "label": "PAR 120 - Oferta turno total con descuento (info_1)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "{bloque_b_offer_decision}",
+        "prompt": "Comprendo. Le presento la posibilidad de acceder a una oferta especial de turno total con descuento por un valor de {info_1_palabras}, la cual aplica exclusivamente para la cancelación total y cierre definitivo de su cita pendiente. ¿Le es posible aprovechar este valor para cancelar la obligación?",
+        "on": {
+          "Acepta": {
+            "goto": "task.bloque_b_neg_descuento_par120"
+          },
+          "Rechaza": {
+            "goto": "task.bloque_b_form_propuesta_par120"
+          }
+        }
+      },
+      "task.bloque_b_neg_descuento_par120": {
+        "type": "task",
+        "label": "PAR 120 - Negociación descuento turno total",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a congelar cobros adicionales y evitar reportes negativos en centrales de riesgo. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, los intereses y costos de coordinación de agenda seguirían aumentando el valor total de la cita pendiente. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_days_dinamicos}",
+          "monto_deuda": "{info_1}",
+          "monto_deuda_palabras": "{info_1_palabras}",
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "restrict_to_current_month": true,
+          "custom_instructions": "{bloque_b_step_instructions} {bloque_b_objection_hints} Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "benefit_hints": [
+            "Es importante recordar que el no turno genera reportes negativos en centrales de riesgo, lo que afecta su historial crediticio y sus posibilidades de acceder a nuevos productos financieros en el futuro.",
+            "Tenga en cuenta que continuar en atraso de agenda ocasiona el incremento continuo de intereses corrientes, de atraso de agenda y costos asociados a la gestión de cobro, aumentando el valor total de la cita pendiente.",
+            "Normalizar su obligación hoy le permite congelar cobros adicionales, detener las consecuencias financieras y recuperar el control de su tranquilidad crediticia."
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "set_agent_output": {
+              "oferta_descuento_total": "{info_1}"
+            },
+            "goto": "intent.bloque_b_close_descuento"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "task.bloque_b_form_propuesta_par120"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.bloque_b_form_propuesta_par120"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.close_paid"
+          }
+        }
+      },
+      "task.bloque_b_form_propuesta_par120": {
+        "type": "task",
+        "label": "PAR 120 - Captura propuesta de turno total",
+        "task_type": "FormTask",
+        "params": {
+          "skip_confirmation": true,
+          "allow_interruptions": true,
+          "instructions": "Pregunta exactamente: 'Entiendo, {nombre_deudor}. En ese caso, ¿cuál sería su propuesta de turno para cancelar totalmente la obligación? Esta información será registrada únicamente para su posterior análisis.'. Registra cualquier especialidad numérico positivo que indique el paciente. Cancela únicamente si rechaza hacer una propuesta o no indica un valor.",
+          "schema": [
+            {
+              "name": "propuesta_pago_total",
+              "type": "number",
+              "label": "valor de su propuesta para cancelar totalmente la obligación",
+              "required": true,
+              "min": 1
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "Propuesta turno total",
+            "set_agent_output": {
+              "propuesta_pago_total": "{propuesta_pago_total}"
+            },
+            "goto": "intent.bloque_b_ack_propuesta_par120"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.bloque_b_refi"
+          }
+        }
+      },
+      "intent.bloque_b_ack_propuesta_par120": {
+        "type": "intention",
+        "label": "PAR 120 - Acuse propuesta y continuar a refinanciación",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Gracias por la información, he tomado nota de su propuesta por {propuesta_pago_total_palabras} para ser evaluada internamente.",
+        "on": {
+          "always": {
+            "goto": "intent.bloque_b_refi"
+          }
+        }
+      },
+      "intent.bloque_b_close_descuento": {
+        "type": "intention",
+        "label": "Bloque B - Cierre (oferta descuento total)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "{bloque_b_close_decision}",
+        "prompt": "Perfecto, confirmamos su cita de turno por {info_1_palabras} para el {commitment_date_spoken}. Puede generar su turno por PSE en pagos punto bravocredito punto co o en Bancolombia, en sucursal o corresponsal. No olvide compartir el soporte al correo creditocol arroba respaldocolombia punto co. ¿Tiene alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment_mora_tardia"
+          }
+        }
+      },
+      "intent.bloque_b_close_monto_atrasado": {
+        "type": "intention",
+        "label": "Bloque B - Cierre (especialidad atrasado)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "{bloque_b_close_decision}",
+        "prompt": "Perfecto, confirmamos su cita de turno por {info_9_palabras} para el {commitment_date_spoken}. Puede generar su turno por PSE en pagos punto bravocredito punto co o en Bancolombia, en sucursal o corresponsal. No olvide compartir el soporte al correo creditocol arroba respaldocolombia punto co. ¿Tiene alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment_mora_tardia"
+          }
+        }
+      },
+      "intent.bloque_b_close_dos_cuotas": {
+        "type": "intention",
+        "label": "Bloque B - Cierre (dos cuotas completas)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "{bloque_b_close_decision}",
+        "prompt": "Perfecto, confirmamos su cita de turno por {info_4_palabras} para el {commitment_date_spoken}. Puede generar su turno por PSE en pagos punto bravocredito punto co o en Bancolombia, en sucursal o corresponsal. No olvide compartir el soporte al correo creditocol arroba respaldocolombia punto co. ¿Tiene alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment_mora_tardia"
+          }
+        }
+      },
+      "intent.bloque_b_refi": {
+        "type": "intention",
+        "label": "Bloque B - Evaluación de refinanciación",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente acepta o muestra interés en registrar la solicitud de refinanciación, selecciona 'Acepta'. Si la rechaza definitivamente, selecciona 'Rechaza'. Ante dudas o evasivas, refuerza brevemente con los argumentos de centrales de riesgo, incremento de intereses o beneficios de normalizar, y vuelve a preguntar. NO continues la conversación por tu cuenta, solo selecciona una opción.",
+        "prompt_by": {
+          "field": "dim_8",
+          "cases": {
+            "PAR_180": "Comprendo. Le informo que existe la posibilidad de acceder a una refinanciación de su crédito, la cual será evaluada por un especialista. En caso de estar interesado, un asesor lo contactará el día de mañana para revisar esta alternativa. ¿Le interesa que registremos su caso para esta evaluación?",
+            "PAR_120": "Finalmente, le informo que existe la posibilidad de acceder a una refinanciación, la cual será evaluada por un especialista. De estar interesado, será contactado el día de mañana para continuar con el proceso. ¿Le gustaría que registremos su interés para ser contactado?"
+          },
+          "default": "Finalmente, le informo que existe la posibilidad de acceder a una refinanciación, la cual será evaluada por un especialista. De estar interesado, será contactado el día de mañana para continuar con el proceso. ¿Le gustaría que registremos su interés para ser contactado?"
+        },
+        "on": {
+          "Acepta": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "Refinanciacion",
+            "set_agent_output": {
+              "refinanciacion": true
+            },
+            "goto": "intent.bloque_b_close_refi_si"
+          },
+          "Rechaza": {
+            "set_agent_output": {
+              "refinanciacion": false
+            },
+            "goto_by": {
+              "field": "propuesta_pago_total",
+              "rules": [
+                {
+                  "op": ">",
+                  "value": 0,
+                  "goto": "intent.bloque_b_close_refi_no",
+                  "action": "set_status",
+                  "status": "Intención de agendar",
+                  "substatus": "Propuesta turno total"
+                }
+              ],
+              "default": {
+                "goto": "intent.bloque_b_close_refi_no",
+                "action": "set_status",
+                "status": "Sin cita",
+                "substatus": "Rechazo total atraso de agenda tardia"
+              }
+            }
+          }
+        }
+      },
+      "intent.bloque_b_close_refi_si": {
+        "type": "intention",
+        "label": "Bloque B - Cierre (refinanciación aceptada)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "dim_8",
+          "cases": {
+            "PAR_180": "Excelente, su solicitud de evaluación de refinanciación quedó registrada con éxito. Mañana mismo un especialista se pondrá en contacto con usted.",
+            "PAR_120": "Perfecto, su solicitud de evaluación ha sido registrada. Mañana un especialista se comunicará con usted."
+          },
+          "default": "Perfecto, su solicitud de evaluación ha sido registrada. Mañana un especialista se comunicará con usted."
+        },
+        "on": {
+          "always": {
+            "goto": "final.end_refinancing"
+          }
+        }
+      },
+      "intent.bloque_b_close_refi_no": {
+        "type": "intention",
+        "label": "Bloque B - Cierre (refinanciación rechazada)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "dim_8",
+          "cases": {
+            "PAR_180": "De acuerdo, gracias por confirmarlo. Dejamos el registro correspondiente en el sistema sobre lo conversado hoy. Agradezco mucho su atención.",
+            "PAR_120": "Entendido. Dejamos constancia de la gestión realizada el día de hoy. Muchas gracias por su tiempo."
+          },
+          "default": "Entendido. Dejamos constancia de la gestión realizada el día de hoy. Muchas gracias por su tiempo."
+        },
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment_mora_tardia"
+          }
+        }
+      },
+      "final.close_intencion_de_pago_mora_tardia": {
+        "type": "final",
+        "label": "Despedida (propuesta de turno total)",
+        "delivery": "say",
+        "prompt": "Que tenga un excelente día."
+      },
+      "final.close_intencion_de_pago_mora_tardia_fecha": {
+        "type": "final",
+        "label": "Despedida (fecha fuera de política en atraso de agenda tardía)",
+        "delivery": "say",
+        "prompt": "Registraremos la fecha que usted indicó como una intención de turno, sin formalizar un cita. Gracias por su tiempo. Que tenga un excelente día."
+      },
+      "final.end_refinancing": {
+        "type": "final",
+        "label": "Despedida (refinanciación solicitada)",
+        "delivery": "say",
+        "prompt": "Que tenga un buen día."
+      },
+      "final.end_commitment_mora_tardia": {
+        "type": "final",
+        "label": "Despedida (cita de atraso de agenda tardía)",
+        "delivery": "say",
+        "prompt": "Gracias por su tiempo. Que tenga un excelente día."
+      },
+      "final.end_no_commitment_mora_tardia": {
+        "type": "final",
+        "label": "Despedida (sin cita de atraso de agenda tardía)",
+        "delivery": "say",
+        "prompt": "Que tenga un buen día."
+      },
+      "final.end_missing_mora_tardia_data": {
+        "type": "final",
+        "label": "Cierre por datos incompletos de atraso de agenda tardía",
+        "delivery": "say",
+        "prompt": "En este momento no cuento con la información necesaria para continuar con la gestión. Por favor, comuníquese al 6, 0, 1, 3, 2, 8, 8, 9, 4, 9 para recibir apoyo con su caso."
+      },
+      "final.close_paid": {
+        "type": "final",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto, muchas gracias por la información. Agradezco su tiempo. Que tenga un excelente día."
+      },
+      "final.close_intencion_de_pago": {
+        "type": "final",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo tu situación, {nombre_deudor}. Valoro tu disposición para agendar, así que registraremos la fecha que propones para el {payment_intention_date_spoken} como una intención de turno, sin formalizar un cita. Mantendremos el seguimiento para acompañarte en la regularización de tu obligación. Agradezco tu tiempo. Que pases un excelente día."
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele que desde Sanatorio Pacífico intentamos ponernos en contacto con el titular.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_callback_scheduled": {
+        "type": "final",
+        "label": "Despedida (callback agendado)",
+        "prompt": "Correcto, ya quedó agendado para {next_contact_date_natural}. Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_no_callback": {
+        "type": "final",
+        "label": "Despedida (sin agendar)",
+        "prompt": "Gracias por tu tiempo.",
+        "delivery": "say"
+      }
+    }
+  }
+}

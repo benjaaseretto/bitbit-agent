@@ -1,0 +1,126 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Cómo los contacto? | ¿Cuál es su número? | ¿Dónde puedo llamar? | ¿Tienen un número de teléfono?",
+    "answer": "Puedes contactar a atención al comprador de DentalCore al número seis, cero, uno, cinco, ocho, cero, seis, seis, seis, cero. Además puedes comunicarte al WhatsApp al uno, cinco cinco cinco, ocho cero seis, dos nueve nueve ocho. Los horarios de atención son de lunes a viernes de ocho de la mañana a cinco treinta de la tarde, hora Colombia."
+  },
+  {
+    "question": "¿A qué hora atienden? | ¿Cuándo puedo llamar? | ¿Cuáles son sus horarios?",
+    "answer": "Los horarios de atención de DentalCore son de lunes a viernes de ocho de la mañana a cinco treinta de la tarde, hora Colombia."
+  },
+  {
+    "question": "¿Qué producto tengo? | ¿De qué producto me está hablando? | ¿Qué tipo de producto es?",
+    "answer": "Tu producto es {producto}. Es un producto de DentalCore que combina ahorro e inversión con protección de seguro."
+  },
+  {
+    "question": "¿Cuánto debo en total? | ¿Cuál es el monto completo? | ¿De cuánto es la cotización total?",
+    "answer": "El importe total que debes es {total_balance_palabras}. Este monto incluye los aportes pendientes vencidos por {due_balance_palabras} y el próximo aporte que está por vencer por {invoiced_balance_palabras}. Es el monto completo que necesitas cerrar la compra para cerrar la oferta tu situación."
+  },
+  {
+    "question": "¿Cuántos aportes tengo pendientes? | ¿Cuántas primas debo? | ¿Cuántas primas tengo vencidas?",
+    "answer": "Tienes {dim_9} aportes pendientes de compra, lo cual corresponde a {info_7}. Para conocer el detalle exacto de cada aporte, puedes revisar tu estado de cuenta en el Portal de Clientes o la APP DentalCore."
+  },
+  {
+    "question": "¿Cuánto debo en aportes vencidos? | ¿De cuánto son los aportes pendientes?",
+    "answer": "El importe de aportes pendientes vencidos es {due_balance_palabras}. Este monto corresponde a los aportes que ya vencieron y están pendientes de compra."
+  },
+  {
+    "question": "¿Cuánto es el próximo aporte? | ¿De cuánto es la próxima prima? | ¿Cuánto debo en el próximo aporte?",
+    "answer": "El próximo aporte que está por vencer es de {invoiced_balance_palabras}. Es importante realizar este compra a tiempo para mantener tu producto activo y seguir construyendo tu patrimonio."
+  },
+  {
+    "question": "¿Cuál es el número de referencia de mi producto? | ¿Cuál es mi número de póliza? | ¿Qué número de referencia tengo?",
+    "answer": "El número de referencia de tu producto es {info_9}. Este número te identifica como titular del producto {producto} en DentalCore."
+  },
+  {
+    "question": "¿Cómo puedo cerrar la compra? | ¿Dónde compra? | ¿Cuáles son las formas de compra?",
+    "answer": "Haz tu compra de forma fácil, rápida y 100% digital desde nuestra página pública, Portal de Clientes o la App DentalCore. También puedes contactar a atención al comprador al seis, cero, uno, cinco, ocho, cero, seis, seis, seis, cero para más opciones de compra."
+  },
+  {
+    "question": "¿Puedo cerrar la compra una parte? | ¿Aceptan pagos parciales? | ¿Puedo cerrar la compra solo algunos aportes?",
+    "answer": "Si tienes varios aportes pendientes, podemos acordar el compra de los aportes vencidos por {due_balance_palabras} o únicamente del próximo aporte por {invoiced_balance_palabras}. Si solo tienes un aporte pendiente, el compra se realiza por el monto completo de {total_balance_palabras}. Para otras opciones puedes contactar a atención al comprador al seis, cero, uno, cinco, ocho, cero, seis, seis, seis, cero."
+  },
+  {
+    "question": "¿Qué pasa si no compra? | ¿Qué consecuencias hay? | ¿Qué sucede si no realizo el compra?",
+    "answer": "Si no realizas el compra de {total_balance_palabras}, podrías acumular recargos adicionales y afectar el avance de tu plan de ahorro. Es importante mantener tus aportes al día para cumplir tus metas financieras y proteger tu futuro. Te recomendamos cerrar la oferta tus aportes lo antes posible."
+  },
+  {
+    "question": "¿Qué beneficios tiene mantener mi producto activo? | ¿Por qué es importante cerrar la compra?",
+    "answer": "Mantener tu aporte mensual al día te acerca a tus metas financieras y protege tu futuro. Tu producto {producto} te permite construir patrimonio mediante aportes periódicos y además te ofrece cobertura en caso de fallecimiento o invalidez. Es importante mantener tu plan activo para cumplir tus objetivos de ahorro."
+  },
+  {
+    "question": "¿Puedo cambiar la fecha? | ¿Puedo reprogramar? | ¿Se puede mover la fecha de compra?",
+    "answer": "Para cambiar o reprogramar la fecha de compra, te sugiero comunicarte con atención al comprador al seis, cero, uno, cinco, ocho, cero, seis, seis, seis, cero donde podrán evaluar tu solicitud y ver qué opciones tenemos disponibles."
+  },
+  {
+    "question": "¿Qué es Crea Patrimonio? | ¿En qué consiste Crea Patrimonio?",
+    "answer": "Crea Patrimonio es un producto de DentalCore que combina ahorro con componente de seguro. Te ayuda a construir patrimonio mediante aportes mensuales llamados primas, que además ofrecen cobertura en caso de fallecimiento o invalidez. Es muy importante mantener tus aportes al día para que tu plan siga creciendo."
+  },
+  {
+    "question": "¿Qué es Crea Ahorro? | ¿En qué consiste Crea Ahorro?",
+    "answer": "Crea Ahorro es un producto de DentalCore similar a Crea Patrimonio, pero más enfocado en el ahorro disciplinado. Fomenta el ahorro programado con rendimientos. Es importante mantener tus aportes al día para alcanzar tus metas de ahorro."
+  },
+  {
+    "question": "¿Cómo puedo acceder al Portal de Clientes? | ¿Dónde está el portal?",
+    "answer": "Puedes acceder al Portal de Clientes de DentalCore a través de su sitio web oficial. Desde ahí podrás realizar tus pagos de manera fácil, rápida y completamente digital."
+  },
+  {
+    "question": "¿Dónde está la APP DentalCore? | ¿Cómo descargo la aplicación?",
+    "answer": "La APP DentalCore está disponible en las tiendas de aplicaciones para dispositivos móviles. Desde la aplicación podrás realizar tus pagos de manera fácil, rápida y completamente digital."
+  },
+  {
+    "question": "¿A cuántos meses corresponde mi cotización? | ¿De cuántos meses es mi atraso?",
+    "answer": "Tus aportes pendientes corresponden a {info_7}. Tienes {dim_9} aportes pendientes de compra que necesitas cerrar la oferta para mantener tu producto activo."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "DentalCore puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

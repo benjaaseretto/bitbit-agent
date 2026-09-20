@@ -1,0 +1,102 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Cuánto debo exactamente? | ¿Cuánto debo? | ¿De cuánto es mi cotización? | ¿Cuál es el monto de mi cotización? | ¿Cuánto tengo pendiente?",
+    "answer": "Con gusto le proporciono la información actualizada de su cuenta. Si su compra ya presenta vigencia de oferta, su cotización a día de hoy es de {due_balance_palabras}. Si está próximo a vencer, el monto es de {invoiced_balance_palabras} con fecha de vigencia de oferta el {due_date_spoken}, correspondiente a su contrato terminación {producto1_terminacion_spelled}. ¿Quiere que veamos una solución para ponerse al día?"
+  },
+  {
+    "question": "¿Cuáles son los medios de compra? | ¿Cómo puedo cerrar la compra? | ¿Dónde puedo cerrar la compra? | ¿Cómo realizo el compra? | ¿A qué cuenta deposito? | ¿Tienen convenio en tiendas? | ¿Puedo cerrar la compra por transferencia? | ¿Aceptan compra en OXXO? | ¿Me pasa la referencia? | ¿Me puede enviar la línea de captura? | ¿Tienen aplicación para cerrar la compra? | ¿En qué bancos puedo cerrar la compra? | ¿Puedo cerrar la compra en BBVA? | ¿Puedo cerrar la compra en Banamex? | Mándeme los datos por WhatsApp",
+    "answer": "{sicrea_medios_pago_mensaje}"
+  },
+  {
+    "question": "¿Me pueden hacer un descuento? | ¿Hay algún descuento? | ¿Hay alguna promoción? | ¿Me pueden dar facilidades? | ¿Puedo reestructurar la cotización?",
+    "answer": "Las opciones de descuento o beneficios dependen de las políticas vigentes de la entidad financiera. Comuníquese al teléfono de atención cinco cinco cuatro siete cuatro dos cinco cero cinco tres para solicitar más información al respecto."
+  },
+  {
+    "question": "¿En qué momento se bloquea mi vehículo si no compra? | ¿Por qué se bloqueó mi vehículo? | Mi vehículo se bloqueó | ¿Se bloquea el auto si no compra? | ¿Cuándo bloquean el carro?",
+    "answer": "Con gusto le informo que el vehículo se bloquea debido a un atraso en la cuenta, el bloqueo puede aplicarse conforme a las condiciones del servicio. ¿Quiere que veamos una solución para ponerse al día?"
+  },
+  {
+    "question": "¿Cómo puedo domiciliar mi compra? | Quiero domiciliar | ¿Puedo activar la domiciliación? | ¿Cómo domicilio el compra?",
+    "answer": "Para más información por favor envíe la solicitud y sus datos al correo domiciliacion arroba sicrea punto com punto eme equis."
+  },
+  {
+    "question": "¿Cuál es la fecha de vigencia de oferta? | ¿Cuándo vence mi compra? | ¿De qué fecha es ese atraso?",
+    "answer": "La fecha de vigencia de oferta registrada es el {due_date_spoken}."
+  },
+  {
+    "question": "¿Cuántos días de atraso tengo? | ¿Cuántos días llevo sin cerrar la compra? | ¿De cuántos días es mi atraso?",
+    "answer": "Actualmente registra {delinquency_palabras} días de seguimiento comercial."
+  },
+  {
+    "question": "¿De qué producto me habla? | ¿Qué crédito es? | ¿A qué contrato se refiere? | ¿Cuál es mi producto?",
+    "answer": "Se trata de su {producto1_producto} con terminación {producto1_terminacion_spelled}."
+  },
+  {
+    "question": "¿Qué productos tengo? | ¿Cuáles son mis contratos? | ¿Qué créditos tengo con ustedes? | ¿Cuántos contratos tengo? | Dime todos mis productos | ¿Cuáles créditos tengo? | Detalle de mis productos",
+    "answer": "{productos_info_mensaje}"
+  },
+  {
+    "question": "Ya pagué | Ya hice el depósito | Ya transferí | Ya me puse al corriente | ¿Cómo confirman mi compra? | ¿En cuánto se refleja mi compra?",
+    "answer": "Gracias por informarlo. Los pagos suelen reflejarse en un plazo de veinticuatro a setenta y dos horas hábiles. Si desea acelerar la actualización de su cuenta puede comunicarse al área de seguimiento de venta al cinco cinco cuatro siete cuatro dos cinco cero cinco tres."
+  },
+  {
+    "question": "No reconozco esta cotización | Esa cotización no es mía | No sé de qué crédito me habla | Yo no tengo cuenta con ustedes",
+    "answer": "Con gusto podemos revisar la información de su cuenta. Por favor comuníquese al área de seguimiento de venta al cinco cinco cuatro siete cuatro dos cinco cero cinco tres para validar los datos de su contrato."
+  },
+  {
+    "question": "¿Cómo cancelo la domiciliación? | Quiero dar de baja la domiciliación | No quiero que me carguen automáticamente | Cancelar domiciliación",
+    "answer": "Para cancelar o modificar la domiciliación, por favor envíe su solicitud junto con sus datos al correo domiciliacion arroba sicrea punto com punto eme equis y el área correspondiente le dará seguimiento."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "DiagnoLab Equipos puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

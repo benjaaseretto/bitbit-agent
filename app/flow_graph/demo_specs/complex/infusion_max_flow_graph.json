@@ -1,0 +1,376 @@
+{
+  "flow_config": {
+    "company_pronunciation": "Infusión Max",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "agent_mode": "strict",
+    "start": "intent.identity_intro",
+    "nodes": {
+      "intent.identity_intro": {
+        "type": "intention",
+        "label": "Inicio y confirmación de identidad",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Hola, ¿Hablo con {nombre_deudor_completo}?",
+        "fallback": "¿Me confirma si es {nombre_deudor_completo}, por favor?",
+        "decision": "Espera PRIMERO que se entregue el mensaje completo antes de procesar cualquier respuesta. Si el usuario solo dice 'si?' o interrumpe antes del mensaje completo, NO avances. Solo después del mensaje completo, si confirma que es el titular, elige 'Sí'; si dice que no es el titular, 'No'; si es un tercero, 'Tercero'. Si el usuario pregunta '¿de parte de quién?', '¿quién habla?' o '¿de dónde llaman?', elige 'QuienHabla'.",
+        "on": {
+          "Sí": {
+            "status": "Entregado",
+            "ct": true,
+            "goto": "intent.debt_info"
+          },
+          "No": {
+            "goto": "intent.ask_knows_debtor"
+          },
+          "Tercero": {
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "QuienHabla": {
+            "goto": "intent.quien_habla"
+          }
+        }
+      },
+      "intent.ask_knows_debtor": {
+        "type": "intention",
+        "label": "¿Conoce al titular?",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "¿Conoce a {nombre_deudor_completo}?",
+        "decision": "Si menciona que el titular es un familiar (primo, abuelo, padre, esposa, etc.) o un amigo o conocido, elige 'Sí'. Si no conoce al titular elige 'No'. Si es el titular, elige 'Es el titular'.",
+        "fallback": "¿Conoce a {nombre_deudor_completo}?",
+        "on": {
+          "Sí": {
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "No": {
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Es el titular": {
+            "status": "Entregado",
+            "ct": true,
+            "goto": "intent.debt_info"
+          }
+        }
+      },
+      "intent.quien_habla": {
+        "type": "intention",
+        "label": "Identificación del agente",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Soy {nombre_agente} de Colektia, agencia de seguimiento de venta autorizada por Nu. ¿Hablo con {nombre_deudor_completo}?",
+        "fallback": "¿Me confirma si es {nombre_deudor_completo}, por favor?",
+        "decision": "Si el usuario confirma que es el titular, elige 'Sí'; si dice que no es el titular, 'No'; si es un tercero, 'Tercero'.",
+        "on": {
+          "Sí": {
+            "status": "Entregado",
+            "ct": true,
+            "goto": "intent.debt_info"
+          },
+          "No": {
+            "goto": "intent.ask_knows_debtor"
+          },
+          "Tercero": {
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          }
+        }
+      },
+      "intent.debt_info": {
+        "type": "intention",
+        "label": "Entrega de información de seguimiento de venta",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Gracias por confirmarlo, {nombre_deudor}. Le llamo de Colektia, Agencia de seguimiento de venta autorizada por Nu. Su cuenta registra {dias_mora} días de atraso y un importe vencido de {monto_deuda_palabras}. ¿Le parece si revisamos una opción para regularizarlo?",
+        "fallback": "Su cuenta tiene {dias_mora} días de atraso y un importe vencido de {monto_deuda_palabras}. ¿Le parece si revisamos opciones para regularizarlo?",
+        "decision": "Si pide que lo llamen luego, elige 'Llamar luego'; si dice que ya compró, 'Ya pagué'; si no reconoce la cotización, 'No reconoce cotización'; si dice que no tiene dinero o no puede cerrar la compra, elige 'Continuar' para proceder a preguntar si puede cerrar la compra el total; de lo contrario, 'Continuar'; si dice que va a cerrar la compra en una fecha, 'Fecha de pedido'.",
+        "on": {
+          "Llamar luego": {
+            "goto": "intent.handle_call_later"
+          },
+          "Ya compró": {
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "No reconoce la cotización": {
+            "status": "Disputa",
+            "goto": "final.end_dispute"
+          },
+          "Fecha de compromiso": {
+            "goto": "intent.ask_full_payment_fast"
+          },
+          "always": {
+            "goto": "intent.ask_full_payment"
+          }
+        }
+      },
+      "intent.handle_call_later": {
+        "type": "intention",
+        "label": "Manejo de objeción: pide que lo llamen luego",
+        "delivery": "say",
+        "prompt": "Entiendo que está ocupado; si me regala dos minutos le explico brevemente una opción que puede ayudarle y evitamos cargos adicionales, ¿le parece?",
+        "fallback": "¿Le explico una opción concreta? Será breve.",
+        "on": {
+          "Insiste en terminar": {
+            "goto": "task.next_contact"
+          },
+          "always": {
+            "goto": "intent.ask_full_payment"
+          }
+        }
+      },
+      "task.next_contact": {
+        "type": "task",
+        "label": "Captura fecha próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "require_franja": false,
+          "require_day": true,
+          "default_to_tomorrow": false,
+          "confirm_ambiguous_week": true,
+          "strict_cancel": true,
+          "allow_today": true
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_next_contact"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.ask_full_payment_fast": {
+        "type": "intention",
+        "label": "Solicitud de compra total",
+        "delivery": "say",
+        "prompt": "perfecto, entonces ¿Podría cubrir el importe total de {monto_deuda_palabras} en los próximos {max_dias} días?",
+        "fallback": "El importe total es de {monto_deuda_palabras}. Si no fuera posible hoy, ¿podría indicarme una fecha dentro de los próximos {max_dias} días?",
+        "on": {
+          "Pedido confirmado": {
+            "status": "Pedido confirmado",
+            "ct": true,
+            "payload": {
+              "required": true,
+              "type": "date",
+              "save_as": "commitment_date",
+              "missing_message": "Me repite nuevamente el dia para registrarlo? (por ejemplo, 'mañana' o 'el viernes')."
+            },
+            "validate": {
+              "rule": "date_in_next_days",
+              "days_var": "max_dias",
+              "max_tries": 3,
+              "invalid_message": "La fecha indicada no es válida. Indique una fecha dentro de los próximos días permitidos."
+            },
+            "max_tries_exceeded_goto": "final.end_commitment_max_tries_exceeded",
+            "goto": "intent.close_commitment"
+          },
+          "Rechaza compra total": {
+            "goto": "intent.offer_50"
+          }
+        }
+      },
+      "intent.ask_full_payment": {
+        "type": "intention",
+        "label": "Solicitud de compra total",
+        "delivery": "say",
+        "prompt": "¿Podría cubrir el importe total de {monto_deuda_palabras} en los próximos {max_dias} días?",
+        "fallback": "El importe total es de {monto_deuda_palabras}. Si no fuera posible hoy, ¿podría indicarme una fecha dentro de los próximos {max_dias} días?",
+        "on": {
+          "Pedido confirmado": {
+            "status": "Pedido confirmado",
+            "ct": true,
+            "payload": {
+              "required": true,
+              "type": "date",
+              "save_as": "commitment_date",
+              "missing_message": "Por favor indique una fecha para el pedido (por ejemplo, 'mañana')."
+            },
+            "validate": {
+              "rule": "date_in_next_days",
+              "days_var": "max_dias",
+              "max_tries": 3,
+              "invalid_message": "La fecha indicada no es válida. Indique una fecha dentro de los próximos días permitidos."
+            },
+            "max_tries_exceeded_goto": "final.end_commitment_max_tries_exceeded",
+            "goto": "intent.close_commitment"
+          },
+          "Rechaza compra total": {
+            "goto": "intent.offer_50"
+          }
+        }
+      },
+      "intent.offer_50": {
+        "type": "intention",
+        "label": "Oferta 50% del total",
+        "delivery": "say",
+        "prompt": "Si el total no le es viable, podemos registrar el 50% ahora y programar el resto; ¿le ayuda?",
+        "fallback": "Podemos registrar el 50% del total ahora y programar el resto. ¿Le queda bien cubrir la mitad en los próximos días?",
+        "on": {
+          "Acepta 50%": {
+            "status": "Pedido confirmado",
+            "substatus": "compra parcial",
+            "ct": true,
+            "payload": {
+              "required": true,
+              "type": "date",
+              "save_as": "commitment_date",
+              "missing_message": "Por favor indique una fecha para el pedido (por ejemplo, 'mañana')."
+            },
+            "validate": {
+              "rule": "date_in_next_days",
+              "days_var": "max_dias",
+              "max_tries": 3,
+              "invalid_message": "La fecha indicada no es válida. Indique una fecha dentro de los próximos días permitidos."
+            },
+            "max_tries_exceeded_goto": "final.end_commitment_max_tries_exceeded",
+            "goto": "intent.close_commitment"
+          },
+          "Rechaza 50%": {
+            "status": "Transferencia",
+            "goto": "final.transfer"
+          }
+        }
+      },
+      "intent.close_commitment": {
+        "type": "intention",
+        "label": "Cierre (pedido)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto, su pedido quedó registrado para {commitment_date_spoken}. Le enviaremos por correo y WhatsApp las instrucciones de compra.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Gracias por su pedido. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Gracias por su tiempo.",
+        "delivery": "say"
+      },
+      "final.end_next_contact": {
+        "type": "final",
+        "label": "Despedida (próximo contacto)",
+        "prompt": "Correcto, ya quedó agendado para {next_contact_date_natural}. Gracias por su tiempo.",
+        "delivery": "say"
+      },
+      "final.transfer": {
+        "type": "final",
+        "label": "Transferencia",
+        "delivery": "say",
+        "prompt": "Te paso con un especialista para ayudarte mejor.",
+        "transfer": true,
+        "transfer_reason": "{transfer_reason}"
+      },
+      "final.end_commitment_max_tries_exceeded": {
+        "type": "final",
+        "label": "Despedida (sin acuerdo - transferencia)",
+        "prompt": "Lo siento, no pudimos llegar a un acuerdo sobre la fecha de compra. Le voy a comunicar con un especialista para apoyarle mejor. Un momento, por favor.",
+        "delivery": "say",
+        "transfer": true,
+        "transfer_reason": "comprador no logró acordar fecha válida después de múltiples intentos"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por la información. Registraremos su compra. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_dispute": {
+        "type": "final",
+        "label": "Despedida (disputa)",
+        "prompt": "Gracias por su aclaración. Escalaremos su caso para su revisión.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, indíquele al titular que Colektia, Agencia de seguimiento de venta autorizada por Nu intentó comunicarse para apoyarle con su cuenta.",
+        "delivery": "say"
+      }
+    }
+  },
+  "flow_catalog": {
+    "platform_flow_key": "infusion_max_flow",
+    "visible_name": "Infusión Max",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (19 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/infusion_max.json",
+      "company_id": "infusion_max-demo",
+      "description": "Base de conocimiento de Infusión Max."
+    },
+    "company_id": "infusion_max-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "nu_mx_interno_strict_castigo_flow_graph.json",
+      "node_count": 19,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  }
+}

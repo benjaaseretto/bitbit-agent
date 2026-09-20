@@ -1,0 +1,158 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿De qué empresa me llaman? | ¿De qué empresa? | ¿De parte de quién me llaman? | ¿A quién le debo? | ¿Quiénes son ustedes?",
+    "answer": "Me comunico de Sierra Vital para ayudarte a confirmar la cita tu obligación pendiente. Esta llamada está siendo grabada con fines de calidad en el servicio."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿De cuánto es mi cita pendiente? | ¿Cuál es mi turno? | ¿Cuánto tengo que agendar? | ¿Cuánto es lo que debo?",
+    "answer": "Tu turno pendiente es de {due_balance_palabras}, con fecha de fecha propuesta del {due_date_spoken}{dias_mora_frase_representa}. Ese es el especialidad que necesitas confirmar la cita."
+  },
+  {
+    "question": "¿Desde cuándo está vencido mi turno? | ¿Cuántos días llevo de atraso? | ¿Desde cuándo debo? | ¿Hace cuánto venció? | ¿Cuántos días de atraso de agenda tengo?",
+    "answer": "Tu turno venció el {due_date_spoken}{dias_mora_frase_registras}. Regularizarlo ahora te permite avanzar en la normalización de tu obligación."
+  },
+  {
+    "question": "¿De qué producto me está hablando? | ¿Qué producto tengo con ustedes? | ¿De qué crédito me habla? | ¿A qué corresponde mi cita pendiente?",
+    "answer": "Se trata de tu {account_type} con Sierra Vital, que tiene un turno vencido de {due_balance_palabras} que conviene confirmar la cita cuanto antes."
+  },
+  {
+    "question": "Tengo varios productos, ¿de cuáles me hablan? | ¿Cuánto tengo vencido en total? | ¿Cuáles son todos mis productos? | ¿Qué productos tengo vencidos?",
+    "answer": "{desglose_respuesta}"
+  },
+  {
+    "question": "¿Cuánto tengo vencido de cada producto? | ¿Me das el detalle de mi crédito? | ¿Me das el detalle de mis créditos? | ¿Cuánto de mi credencial y cuánto de mi préstamo? | ¿Me desglosas mi cita pendiente? | ¿Me das más información de mi producto?",
+    "answer": "{desglose_respuesta}"
+  },
+  {
+    "question": "¿Dónde puedo agendar? | ¿Cómo hago el turno? | ¿Por dónde turno? | ¿Cómo puedo confirmar la cita? | ¿Cuáles son los medios de turno?",
+    "answer": "Puedes agendar de forma presencial en sanatorio, con un link de turno o con un cupón de turno. Dime cuál te acomoda y lo dejamos registrado."
+  },
+  {
+    "question": "¿Se puede agendar por Yape? | ¿Puedo agendar por banca móvil? | ¿Puedo agendar por internet? | ¿Se paga por la app? | ¿Puedo agendar de forma digital?",
+    "answer": "El turno digital se hace con un link de turno. También puedes agendar de forma presencial en sanatorio o con un cupón de turno."
+  },
+  {
+    "question": "¿Puedo agendar la mitad? | ¿Puedo agendar solo una parte? | ¿Aceptan abonos? | ¿Puedo hacer un turno parcial? | ¿Puedo agendar en partes? | ¿Puedo abonar algo nomás? | ¿Puedo agendar menos del total?",
+    "answer": "{aclaracion_pago_parcial}"
+  },
+  {
+    "question": "¿Por qué me cobran intereses? | ¿De dónde salen los intereses? | ¿Por qué creció mi cita pendiente? | ¿Por qué tengo cargos adicionales?",
+    "answer": "Los intereses moratorios se generan por el atraso en el turno. Si regularizas el turno de {due_balance_palabras} ahora, evitas que se sigan acumulando y mantienes tu cuenta al día."
+  },
+  {
+    "question": "¿Colektia es confiable? | ¿Esto es una estafa? | ¿Cómo sé que son reales? | ¿Es seguro pagarles? | ¿Quién es Colektia?",
+    "answer": "Me comunico de Sierra Vital. Colektia es la empresa que apoya al sanatorio en esta gestión de regularización. Al completar tu turno de forma presencial en sanatorio, con un link de turno o con un cupón de turno, recibes tu comprobante correspondiente."
+  },
+  {
+    "question": "¿Me van a reportar a Infocorp? | ¿Esto afecta mi historial crediticio? | ¿Voy a salir en una central de riesgo? | ¿Esto perjudica mi crédito?",
+    "answer": "El objetivo de esta llamada es ayudarte a confirmar la cita tu turno a tiempo. Lo recomendable es ponerte al día cuanto antes para evitar cargos adicionales. Si tienes consultas sobre tu situación crediticia, puedes comunicarte al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com."
+  },
+  {
+    "question": "¿Tienen oficinas para agendar? | ¿Puedo ir a agendar en persona? | ¿Dónde queda una sucursal? | ¿Puedo negociar presencialmente?",
+    "answer": "Puedes agendar de forma presencial en sanatorio. También está disponible el link de turno y el cupón de turno."
+  },
+  {
+    "question": "¿Me pueden enviar la información después? | ¿Me mandas los datos por mensaje? | ¿Me envías el detalle? | ¿Puedes escribirme los medios de turno?",
+    "answer": "Claro. Lo importante hoy es dejar registrada la fecha en que realizarás tu turno. Si confirmas un día cercano, lo anotamos y puedes agendar de forma presencial en sanatorio, con un link de turno o con un cupón de turno."
+  },
+  {
+    "question": "¿En qué moneda es la cita pendiente? | ¿Se paga en soles o en dólares? | ¿La cita pendiente está en soles?",
+    "answer": "Tu turno vencido de {due_balance_palabras} está en soles peruanos."
+  },
+  {
+    "question": "¿Cuál es el número de atención de Sierra Vital? | ¿A qué número me comunico? | ¿Tienen un WhatsApp de atención? | ¿Dónde hago un reclamo? | ¿Cuál es el correo? | ¿Me das el email?",
+    "answer": "Puedes comunicarte al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o escribir a normalización arroba colektia guion informa punto com."
+  },
+  {
+    "question": "¿Cuándo me dan la carta de no adeudo? | Carta de no adeudo | Constancia de no adeudo | Certificado de no adeudo | ¿Me dan una carta cuando pague? | ¿Cuándo sale la carta de no adeudo?",
+    "answer": "Después de hacer su turno, en un plazo de quince días hábiles le entregan la Carta de no adeudo."
+  },
+  {
+    "question": "Pásame con un especialista | Quiero un especialista | Pásame con alguien del sanatorio | Quiero hablar con un ejecutivo | Transfiéreme | Pásame con un humano",
+    "answer": "Ese tema lo puedes gestionar con Sierra Vital al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com."
+  },
+  {
+    "question": "¿Qué hago si la app falla? | ¿Qué hago si no puedo agendar por la app? | La app no funciona | Tengo problemas con la app",
+    "answer": "Si el canal digital presenta problemas, puedes agendar de forma presencial en sanatorio o con un cupón de turno. Si el inconveniente continúa, comunícate al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com."
+  },
+  {
+    "question": "¿Hay descuento? | ¿Me pueden hacer un descuento? | ¿Cuánto me descuentan? | ¿Hay un beneficio especial? | ¿Puedo agendar menos con descuento?",
+    "answer": "Hoy cuentas con un beneficio especial, un alto porcentaje de descuento para facilitar la regularización de tu obligación. No tengo un porcentaje numérico para citarte en esta llamada; lo importante es confirmar una fecha cercana y aprovechar este beneficio."
+  },
+  {
+    "question": "Ya hablé | Ya tengo un acuerdo | Ya quedé | Ya tengo convenio | Ya coordiné el turno | Ya me comuniqué con el sanatorio",
+    "answer": "Perfecto, gracias por comentarlo. Para registrarlo en el sistema, ¿me indicas qué día estarías realizando el turno?"
+  },
+  {
+    "question": "No entiendo | Estoy confundido | ¿De qué me habla? | No sé de qué se trata | Explícame otra vez | ¿Por qué me llaman?",
+    "answer": "No te preocupes, te explico brevemente. {explicacion_cobranza}"
+  },
+  {
+    "question": "No tengo dinero | No me alcanza | Estoy corto | Después turno | Más adelante lo turno | Después le turno",
+    "answer": "Entiendo que en este momento pueda estar pasando por una situación económica difícil. Precisamente por eso, lo importante es definir una fecha cercana en la que considere posible realizar el turno. ¿Qué día de los próximos días le parece viable?"
+  },
+  {
+    "question": "Estoy sin trabajo | Perdí mi empleo | Estoy desempleado | Está complicado | La situación está difícil",
+    "answer": "Lamento conocer su situación y entiendo que este momento pueda ser difícil. Sin embargo, es importante avanzar en la regularización de su obligación. ¿Considera posible programar un turno en los próximos días o indicarme una fecha en la que estime contar con recursos?"
+  },
+  {
+    "question": "No puedo agendar ahora | Ahorita no | Ahora mismo no | En este momento no puedo",
+    "answer": "Entiendo, sé que a veces se complica. ¿Prefieres que definamos una fecha cercana, como mañana o pasado mañana, para dejarlo registrado?"
+  },
+  {
+    "question": "Estoy molesto | Ya me llaman mucho | No me molesten | Qué fastidio | Dejen de llamarme",
+    "answer": "Entiendo, solo buscamos ayudarte a confirmar la cita tu obligación y evitar inconvenientes. También puedes gestionarlo directamente por nuestros canales. ¿Hay alguna fecha en la que creas que podrías realizar el turno?"
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Sierra Vital, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

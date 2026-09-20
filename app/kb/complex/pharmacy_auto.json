@@ -1,0 +1,106 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Por qué me llamáis? | ¿Cuál es el motivo de la llamada? | ¿Para qué me contactáis?",
+    "answer": "Te contactamos en representación de Pharmacy Auto para una gestión informativa relacionada con tu cuenta."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿Cuál es mi importe pendiente? | ¿Qué importe tengo?",
+    "answer": "El importe pendiente que registramos es de {due_balance_palabras}."
+  },
+  {
+    "question": "¿De cuánto es la cuota de financiamiento? | ¿Cuál es la cuota de financiamiento pendiente? | ¿Qué importe tiene la cuota de financiamiento?",
+    "answer": "La cuota de financiamiento registrada para esta gestión es de {invoiced_balance_palabras}."
+  },
+  {
+    "question": "¿Cuándo vence? | ¿Cuál es la fecha de vigencia de oferta? | ¿Qué día tengo que cerrar la compra?",
+    "answer": "La fecha de vigencia de oferta registrada es el {fecha_vencimiento_spoken}."
+  },
+  {
+    "question": "¿Cómo puedo cerrar la compra? | ¿Qué medios de compra tenéis? | ¿Puedo cerrar la compra con tarjeta o transferencia?",
+    "answer": "Puedes realizar tu compra por tarjeta o por transferencia. Si necesitas apoyo durante el proceso, puedes escribir al WhatsApp."
+  },
+  {
+    "question": "¿Dónde envío el comprobante? | ¿A qué WhatsApp mando el justificante? | ¿Dónde comparto el compra?",
+    "answer": "Puedes enviar el comprobante de compra al WhatsApp."
+  },
+  {
+    "question": "No puedo cerrar la compra ahora | Ahora mismo no puedo cerrar la compra | Se me complica cerrar la compra hoy",
+    "answer": "Lamentamos escuchar eso, {nombre_deudor}. Podemos analizar opciones para que regularices tu cuenta sin afectar tu historial. ¿te gustaria conocerlas? por favor comunícate al WhatsApp."
+  },
+  {
+    "question": "Quiero un plan de compra | ¿Podéis ofrecerme un plan? | Necesito facilidades de compra",
+    "answer": "Entendemos que puedas necesitar facilidades, podemos ofrecerte un plan de compra a medida. ¿te gustaria conocer las opciones? por favor comunícate al WhatsApp."
+  },
+  {
+    "question": "Tengo intención de cerrar la compra | Quiero cerrar la compra | Voy a cerrar la compra en breve",
+    "answer": "Perfecto. Puedes realizar el compra por tarjeta o transferencia. Si necesitas apoyo o quieres compartir el comprobante, escríbenos al WhatsApp."
+  },
+  {
+    "question": "Ya pagué | Ya hice el compra | El compra ya está realizado",
+    "answer": "Gracias por informarlo. Si aún no lo has hecho, comparte el comprobante al WhatsApp para ayudar a validar el compra más rápido."
+  },
+  {
+    "question": "¿Me mandas el enlace de compra? | ¿Me pasas el link para cerrar la compra? | Quiero el link de compra | ¿Dónde está el enlace?",
+    "answer": "El enlace de compra se gestiona a través de nuestros canales oficiales de Atención al comprador. Por favor comunícate al WhatsApp tres, cuatro, nueve, uno, nueve, nueve, siete, nueve, seis, tres, seis, donde te ayudarán a generar tu enlace de compra."
+  },
+  {
+    "question": "¿Cuál es vuestro teléfono? | ¿Cómo contacto con Pharmacy Auto? | ¿Tenéis WhatsApp de atención?",
+    "answer": "Puedes contactar con Pharmacy Auto en el tres, cuatro, nueve, uno, nueve, nueve, siete, nueve, seis, tres, seis. Ese mismo número también está disponible por WhatsApp."
+  },
+  {
+    "question": "¿Qué crédito es? | ¿Qué referencia estáis viendo? | ¿Cuál es el identificador de la cuenta?",
+    "answer": "La referencia registrada para esta gestión es {reference_spelled}."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "Pharmacy Auto puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

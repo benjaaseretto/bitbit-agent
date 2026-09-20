@@ -1,0 +1,19 @@
+{
+  "qwen_custom_voice": [
+    {"id": "Serena", "lang": "es", "gender": "f", "recommended": true},
+    {"id": "Vivian", "lang": "multi", "gender": "f", "recommended": true},
+    {"id": "Ryan", "lang": "multi", "gender": "m", "recommended": true},
+    {"id": "Aiden", "lang": "multi", "gender": "m", "recommended": true},
+    {"id": "Uncle_Fu", "lang": "multi", "gender": "m", "recommended": false},
+    {"id": "Ono_Anna", "lang": "multi", "gender": "f", "recommended": true},
+    {"id": "Sohee", "lang": "multi", "gender": "f", "recommended": true},
+    {"id": "Eric", "lang": "zh-sichuan", "gender": "m", "recommended": false},
+    {"id": "Dylan", "lang": "zh-beijing", "gender": "m", "recommended": false}
+  ],
+  "kokoro_es": [
+    {"id": "ef_dora", "lang": "es", "gender": "f", "recommended": true},
+    {"id": "em_alex", "lang": "es", "gender": "m", "recommended": true},
+    {"id": "em_santa", "lang": "es", "gender": "m", "recommended": true}
+  ],
+  "note": "No incluir voces de celebridades. Para voz personal: TTS_VOICE_MODE=clone + audio propio con permiso."
+}

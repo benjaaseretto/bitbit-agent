@@ -1,0 +1,385 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "home_care_tech_flow",
+    "visible_name": "HomeCare Tech",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (18 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/home_care_tech.json",
+      "company_id": "home_care_tech-demo",
+      "description": "Base de conocimiento de HomeCare Tech."
+    },
+    "company_id": "home_care_tech-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "izzi_flow_graph.json",
+      "node_count": 18,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "HomeCare Tech",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 1,
+          "identity_pregunta": "{saludo_por_horario}, ¿hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Te habla {nombre_agente}, Agente IA de HomeCare Tech Negocios.",
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "con ella",
+            "con él",
+            "si claro",
+            "claro que si",
+            "claro que sí",
+            "soy yo",
+            "para servirle",
+            "afirmativo",
+            "absolutamente"
+          ]
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "express_route": true,
+            "express_route_next": "task.negotiation",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura (presentación + divulgación)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Debes esperar la respuesta del comprador. Si el comprador realiza cualquier pregunta (importe, medios de compra, factura, referencia, plazos, etc.), respóndela de forma breve, precisa y únicamente con la información disponible, sin inventar ni agregar información. Una vez respondida, vuelve a invitar al compra con '¿Podremos contar con tu compra?' o pregunta si tiene alguna otra duda con una variación natural para no sonar repetitivo. Si el comprador realiza otra pregunta, respóndela de la misma manera y vuelve a preguntar con una variación distinta. Elige 'Reclamo / queja / Denuncia' si el comprador menciona un reclamo, queja, denuncia, fallas de servicio o retiro de equipos. Elige 'Continuar' si el comprador acepta cerrar la compra, propone una fecha, quiere negociar, indica que no tiene más dudas, o responde de forma que permita seguir con la gestión ('sí', 'ok', 'claro', 'de acuerdo' o equivalente). Si el comprador no realiza ninguna pregunta y solo desea continuar, avanza de inmediato con 'Continuar', sin hacer comentarios, aclaraciones, explicaciones ni agregar información adicional.",
+        "prompt_by": {
+          "field": "dias_mora",
+          "rules": [
+            {
+              "op": "between",
+              "min": 1,
+              "max": 6,
+              "template": "Te habla {nombre_agente}, Agente IA de HomeCare Tech Negocios. Te comento que esta llamada será grabada para fines de calidad. Te contacto sobre tu importe pendiente de {monto_deuda_palabras}. Si cubrimos el importe pendiente en los próximos {max_dias} días evitaríamos gestiones y cargos adicionales. Evita la suspensión del servicio. ¿Podremos contar con tu compra?"
+            }
+          ],
+          "default": "Te habla {nombre_agente}, Agente IA de HomeCare Tech Negocios. Te comento que esta llamada será grabada para fines de calidad. Te contacto sobre tu importe pendiente de {monto_deuda_palabras}. Si cubrimos el importe pendiente en los próximos {max_dias} días evitaríamos gestiones y cargos adicionales. ¿Podremos contar con tu compra?"
+        },
+        "on": {
+          "Reclamo / queja / Denuncia": {
+            "goto": "intent.reclamo_queja"
+          },
+          "Continuar": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.reclamo_queja": {
+        "type": "intention",
+        "label": "Reclamo o queja",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Lamento los inconvenientes presentados. Para el reporte de equipos y aclaraciones debes comunicarte a nuestra línea oficial de atención a clientes al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero. Registraremos tus comentarios sobre el importe pendiente de {monto_deuda_palabras}.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_reclamo"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_days": "{max_dias}",
+          "allow_partial_payments": false,
+          "max_attempts": 2,
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "collect_payment_method_in_task": false,
+          "ask_nonpayment_reason": false,
+          "benefit_hints": [
+            "evitar recargos"
+          ],
+          "empresa": "HomeCare Tech",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda_palabras": "{monto_deuda_palabras}",
+          "custom_instructions": "LENGUAJE OBLIGATORIO: usa siempre '¿Podremos contar con tu compra?' (nunca '¿te parece si lo revisamos?' ni variaciones). Para confirmar claridad sobre el proceso de compra usa '¿Tienes dudas en cómo realizar tu compra?'. Nunca digas '¿Está todo claro?'. MEDIOS DE compra (regla estricta): solo existen 2 métodos — 1) compra en línea (prioridad absoluta; empujar siempre esta vía) y 2) banco autorizado/convenio (BBVA, Banorte, Santander, Citibanamex, Scotiabank o HSBC con número de referencia). No ofrezcas ni menciones ningún otro medio bajo ningún escenario. Si el comprador pregunta directamente cuánto debe o cuál es su importe, respóndele inmediatamente con el monto exacto: {monto_deuda_palabras}. NUNCA digas que 'el monto se confirmará después'. Si el comprador menciona cerrar la compra 'mañana', 'al ratito', 'ahorita', 'en un rato' o cualquier intención de compra HOY o MAÑANA, llama cliente_dispuesto(fecha_propuesta=...) en el primer turno sin repreguntar. Si el comprador expresa que pagará 'en los próximos días' o usa frases vagas sin dar fecha concreta, pide UNA vez una fecha específica; si insiste en lo vago, llama finalizar('sin_compromiso'). RECUPERACIÓN DE FLUJO: si el comprador evade, responde con dudas o se niega sin motivo operativo claro, recapitula UNA vez: 'Entiendo. Solo para recapitular y apoyarte: si cubrimos el importe pendiente en los próximos {max_dias} días evitaríamos gestiones y cargos adicionales. Recuerda que puedes realizar tu compra en línea fácilmente. ¿Tienes dudas en cómo realizar tu compra?'. Si tras esa recapitulación sigue en negativa, cierra con sin_compromiso.",
+          "objection_handlers": [
+            {
+              "objection": "El comprador dice que ya compró | Ya está pagado | Ya hice el compra | Ya quedó pagado | Acabo de cerrar la compra | Eso ya lo pagué | Lo pagué hace poco | Ya lo deposité | Ya lo cubrí",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya compró"
+            },
+            {
+              "objection": "El comprador solicita reagendar la llamada o pide ser contactado en otro momento | Llámame mañana | Llámame después | Háblame más tarde | Dame chance, llámame en una hora | Mañana a las nueve | Háblame la próxima semana | Llámame al rato",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "comprador solicita callback"
+            },
+            {
+              "objection": "El comprador expresa indisponibilidad para hablar ahora | Está ocupado | No puedo hablar ahora | Estoy en reunión | Estoy manejando | Estoy conduciendo | Ahora no puedo",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "comprador dice que no pudo ir a cerrar la compra o tuvo problemas para cerrar la compra físicamente | No he podido ir a cerrar la compra | No voy a poder ir estos días | No me da tiempo de ir | El sistema del banco falló | No pude cerrar la compra en la sucursal",
+              "answer": "Comprendo lo que me comentas. Recuerda que para tu comodidad y evitar desplazamientos, siempre puedes realizar tu compra en línea de forma inmediata. Sabiendo esto, ¿podremos contar con tu compra en línea para evitar la suspensión de tu servicio?"
+            },
+            {
+              "objection": "El comprador necesita su factura primero para tramitar el compra | Necesito mi factura | Mándame la factura | Sin factura no puedo cerrar la compra | Necesito la factura para tramitar el compra",
+              "answer": "Entiendo. Puedes consultar y descargar tu factura directamente desde nuestro portal en línea en HomeCare Tech punto m x. Para evitar la suspensión del servicio, ¿podremos contar con tu compra a más tardar dentro de los próximos {max_dias} días?"
+            },
+            {
+              "objection": "El comprador no pagará por fallas del servicio, retiro de equipos o reclamo de servicio | No voy a cerrar la compra porque he tenido fallas | Pedí el retiro de equipos | Tengo fallas en el servicio y no voy a cerrar la compra | Voy a reclamar el servicio",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Reclamo servicio"
+            },
+            {
+              "objection": "El comprador no puede cerrar la compra por la página web o no le funciona el sitio | La página no me deja cerrar la compra | No puedo cerrar la compra por la web | El sitio no funciona | No me da permiso de hacerlo por línea | La web no me carga",
+              "answer": "Lamento la situación. Te sugiero entrar a HomeCare Tech punto m x, dar clic en Mi cuenta, iniciar sesión con tu usuario y contraseña, ir a tu estado de cuenta y elegir cerrar la compra ahora con tu tarjeta. Si la página continúa sin permitirte cerrar la compra, también puedes cerrar la compra por banca electrónica usando tu número de referencia en BBVA, Banorte, Santander, Citibanamex, Scotiabank o HSBC. ¿Podremos contar con tu compra?"
+            },
+            {
+              "objection": "El comprador menciona que la app de HomeCare Tech no le da acceso a la tarjeta o no le aparece la tarjeta | La aplicación no me deja | No me aparece la tarjeta en la app | La app no carga | Necesito mi referencia y la app no me la da",
+              "answer": "Lamento el inconveniente con la aplicación. Mientras se resuelve, puedes cerrar la compra directamente desde la página web HomeCare Tech punto m x con tu tarjeta de crédito o débito, o usar tu número de referencia para cerrar la compra por banca electrónica en BBVA, Banorte, Santander, Citibanamex, Scotiabank o HSBC. ¿Podremos contar con tu compra?"
+            },
+            {
+              "objection": "El comprador solicita compra automático o domiciliación | Quiero compra automático | Quiero domiciliar el compra | Que me lo cobren automático",
+              "answer": "Para activar la domiciliación o compra automático debes comunicarte a la línea de servicio al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero. Mientras lo gestionas, ¿podremos contar con tu compra para cerrar la oferta el importe actual?"
+            },
+            {
+              "objection": "El comprador quiere devolver equipos o cancelar el servicio | Quiero devolver los teléfonos | Voy a cancelar el servicio | Ya no tengo línea telefónica | Quiero entregar los equipos",
+              "answer": "Para gestionar la devolución de equipos o la baja del servicio debes comunicarte a la línea de servicio al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero. Para poder tramitarlo es importante cerrar la oferta primero el importe pendiente. ¿Podremos contar con tu compra?"
+            },
+            {
+              "objection": "El comprador pide número de cuenta bancaria o quiere cerrar la compra por banca electrónica | ¿Tienen una cuenta bancaria? | ¿En qué banco puedo depositar? | Dame una cuenta para cerrar la compra | Quiero cerrar la compra desde mi banco",
+              "answer": "Puedes cerrar la compra desde tu banca electrónica: ingresa a la app o portal de tu banco, selecciona la opción de compra de servicios, elige HomeCare Tech, ingresa tu número de referencia y confirma los datos solicitados. Los bancos autorizados donde puedes cerrar la compra son BBVA, Banorte, Santander, Citibanamex, Scotiabank o HSBC. Recuerda que el compra en línea es la vía más rápida. ¿Podremos contar con tu compra?"
+            },
+            {
+              "objection": "El interlocutor trabaja en la empresa pero no es el encargado de pagos | Soy de bodega | No estoy en la oficina | Hay que hablar con la secretaria | Hay que hablar con el encargado | No soy quien paga | Soy empleado",
+              "answer": "Entiendo. Por favor, dígale al encargado de pagos que desde HomeCare Tech Negocios estamos buscando contacto para cerrar la oferta la cuenta y que nos llame al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero."
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.ask_nonpayment_reason_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.ask_nonpayment_reason_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Cliente solicita callback": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Solicita callback",
+            "goto": "final.end_callback"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Ocupado",
+            "goto": "final.end_ocupado"
+          },
+          "Reclamo servicio": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "final.end_reclamo_servicio"
+          }
+        }
+      },
+      "intent.ask_nonpayment_reason_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (motivo no compra - pedido)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Solo escucha brevemente el motivo de no compra, no respondas nada, solo escucha y continua con el flujo.",
+        "prompt": "¿Podrías contarme qué ha sido lo que te había impedido hacer el compra hasta ahora?",
+        "on": {
+          "always": {
+            "goto": "intent.soft_close_commitment"
+          }
+        }
+      },
+      "intent.ask_nonpayment_reason_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (motivo no compra - sin pedido)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Solo escucha brevemente el motivo de no compra, no respondas nada, solo escucha y continua con el flujo.",
+        "prompt": "¿Podrías contarme qué es lo que te impide hacer el compra?",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (pedido)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Debes esperar la respuesta del comprador. Si el comprador realiza cualquier pregunta, respóndela de forma breve, precisa y únicamente con la información disponible, sin inventar ni agregar información. Una vez respondida, pregunta si tiene alguna otra duda utilizando una variación natural para no sonar repetitivo, por ejemplo: '¿Tienes dudas en cómo realizar tu compra?', '¿Hay algo más en lo que te pueda ayudar?' o '¿Tienes alguna otra consulta?'. Si el comprador realiza otra pregunta, respóndela de la misma manera y vuelve a preguntar utilizando una variación distinta. Si el comprador indica que no tiene más consultas o responde de forma equivalente ('no', 'nada más', 'ok', 'gracias', 'está bien'), continúa inmediatamente con el siguiente paso del flujo. Si el comprador no realiza ninguna pregunta y solo desea continuar, avanza de inmediato con el flujo, sin hacer comentarios, aclaraciones, explicaciones ni agregar información adicional.",
+        "prompt_by": {
+          "field": "commitment_date",
+          "date_operation": "weekday",
+          "cases": {
+            "viernes": "Excelente, te agradecemos por tu pedido, ya quedó registrado. Toma en cuenta que los pagos por banco tardan un día hábil en procesarse, por lo que podrías amanecer sin servicio el lunes. Te invito a realizar tu compra en línea hoy mismo para evitar la suspensión y garantizar que tu servicio siga activo sin interrupciones. ¿Tienes dudas en cómo realizar tu compra?"
+          },
+          "default": "Excelente, te agradecemos por tu pedido, ya quedó registrado. Recuerda que puedes realizar tu compra en línea para una acreditación más rápida. ¿Tienes dudas en cómo realizar tu compra?"
+        },
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Perfecto. Recuerda que tu compra se verá reflejado al siguiente día hábil. Gracias por tu pedido y que tengas un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Entiendo tu intención de compra. Sin embargo, la fecha propuesta excede el límite permitido de {max_dias} días para evitar la suspensión. Te invitamos a realizar tu compra en línea lo antes posible. Registraremos tu intención de compra en el sistema. Gracias por tu atención.",
+        "delivery": "say"
+      },
+      "final.end_callback": {
+        "type": "final",
+        "label": "Despedida (comprador solicita callback)",
+        "prompt": "Perfecto, dejamos registro para contactarte nuevamente. Recuerda que puedes cerrar la compra en cualquier momento en línea desde HomeCare Tech punto m x. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_ocupado": {
+        "type": "final",
+        "label": "Despedida (comprador ocupado)",
+        "prompt": "Entiendo, no le quito más tiempo. Lo contactaremos en otro momento. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Comprendo la situación. Te invitamos a cerrar la oferta tu importe vía en línea para evitar la suspensión. Gracias por tu tiempo y que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Perfecto, gracias por avisarme. Recuerda que tu compra se verá reflejado al siguiente día hábil. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Registraremos que el número no corresponde al titular para no volver a contactarle. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Entiendo, muchas gracias. Le agradecería informarle a {nombre_deudor_completo} que lo contactamos de HomeCare Tech Negocios sobre su cuenta pendiente. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_reclamo": {
+        "type": "final",
+        "label": "Despedida (reclamo)",
+        "prompt": "Gracias por tu tiempo, que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_reclamo_servicio": {
+        "type": "final",
+        "label": "Despedida (reclamo de servicio)",
+        "prompt": "Lamento los inconvenientes presentados. Para el reporte de equipos y aclaraciones debes comunicarte a nuestra línea oficial de atención a clientes al ocho cero cero, dos cero dos, cero seis cero cero o al ocho cero cero, uno dos cero, cinco cero cero cero. Registraremos tus comentarios sobre el importe pendiente de {monto_deuda_palabras}. Gracias por tu tiempo, que tengas buen día.",
+        "delivery": "say"
+      }
+    }
+  }
+}

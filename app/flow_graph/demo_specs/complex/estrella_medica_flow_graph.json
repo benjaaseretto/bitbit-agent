@@ -1,0 +1,817 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "estrella_medica_flow",
+    "visible_name": "Estrella Médica",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (24 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/estrella_medica.json",
+      "company_id": "estrella_medica-demo",
+      "description": "Base de conocimiento de Estrella Médica."
+    },
+    "company_id": "estrella_medica-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "caja_los_andes_colly_flow.json",
+      "node_count": 24,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Estrella Médica",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.1",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí",
+            "si",
+            "sí po",
+            "si po",
+            "sipo",
+            "sí poh",
+            "si poh",
+            "ya",
+            "ya po",
+            "ya poh",
+            "yapo",
+            "claro",
+            "claro po",
+            "claro poh",
+            "claro pos",
+            "claro que sí",
+            "sí pues",
+            "afirmativo",
+            "correcto",
+            "habla",
+            "habla él",
+            "habla ella",
+            "con él habla",
+            "con ella habla",
+            "sí con él habla",
+            "sí con ella habla",
+            "él mismo",
+            "ella misma",
+            "el mismo",
+            "la misma",
+            "sí él mismo",
+            "sí ella misma",
+            "yo mismo",
+            "yo misma",
+            "soy yo",
+            "sí soy yo",
+            "si soy yo",
+            "soy yo po",
+            "soy yo poh",
+            "yo soy",
+            "hola sí soy yo",
+            "sí señor",
+            "sí señora",
+            "sí señorita",
+            "aló",
+            "aló sí",
+            "sí aló",
+            "aló soy yo",
+            "aló soy yo po",
+            "aló diga",
+            "diga",
+            "dígame",
+            "sí dígame",
+            "sí, dígame",
+            "dime",
+            "ya dime",
+            "sí dime",
+            "dime no más",
+            "sí dime no más",
+            "no más dime",
+            "cuénteme",
+            "cuéntame",
+            "aquí estoy",
+            "sí aquí estoy",
+            "aquí ando",
+            "qué tal",
+            "qué pasó",
+            "él",
+            "ella",
+            "con él",
+            "con ella",
+            "sí, con él",
+            "sí, con ella",
+            "él habla",
+            "ella habla",
+            "él es",
+            "ella es",
+            "a la orden"
+          ],
+          "invalid_confirmation_identification": [
+            "quién habla",
+            "quien habla",
+            "con quién hablo",
+            "con quien hablo",
+            "de parte de quién",
+            "de parte de quien",
+            "cómo",
+            "no entendí",
+            "no entendi",
+            "para qué sería",
+            "para que seria",
+            "para qué es",
+            "para que es",
+            "otra vez llamando",
+            "otra vez están llamando",
+            "estoy ocupado",
+            "estoy ocupada",
+            "no me interesa",
+            "dejen de llamar",
+            "dejen de molestar",
+            "qué necesitan",
+            "que necesitan",
+            "qué quieren",
+            "que quieren"
+          ],
+          "identity_pregunta": "Hola {saludo_por_horario}. ¿Hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "{saludo_por_horario}, mi nombre es {nombre_agente}, Agente IA, le llamo de Estrella Médica por Colektia.",
+          "identity_repregunta": "Para continuar, necesito confirmar que me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "express_route": true,
+            "express_route_next": "task.negotiation",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura y exposición del motivo",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera una respuesta clara del paciente antes de avanzar. Si el paciente propone una fecha de turno, especialidad, dice que pagará después o acepta confirmar la cita (por ejemplo: 'cancelar a fin de mes', 'turno el viernes', 'puedo agendar mañana'), NO selecciones turno domiciliado: usa 'always' para continuar a negociación. Solo selecciona 'turno Domiciliado o Debito Automático' si el paciente afirma explícitamente que tiene turno domiciliado, débito automático, descuento por planilla o que ya se le descuenta automáticamente. No lo infieras ni lo preguntes tú si el paciente no lo mencionó.",
+        "prompt": "Soy {nombre_agente}, asistente virtual de Colektia, agencia autorizada por Estrella Médica. Esta llamada será grabada para fines de calidad. {nombre_deudor}, el motivo de mi llamado es conversar sobre su situación de turno con nosotros y regularizarla. Actualmente, usted presenta un turno total vencido de {total_balance_palabras}, que corresponde a {numero_cuotas_pendientes} en atraso de agenda de {numero_creditos_vigentes}. ¿Ha considerado cómo podría confirmar la cita esta situación para evitar gestiones o costos adicionales?",
+        "on": {
+          "Tiene cobertura prepaga": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.soft_close_paid"
+          },
+          "No reconoce la cita": {
+            "goto": "intent.reconocimiento_de_deuda"
+          },
+          "always": {
+            "goto": "task.negotiation"
+          },
+          "Rechaza agendar": {
+            "goto": "intent.no_commitment_offers"
+          }
+        }
+      },
+      "intent.reconocimiento_de_deuda": {
+        "type": "intention",
+        "label": "Reconocimiento de cita pendiente",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Comprendo su sorpresa. Le comento que, según el sistema, actualmente presenta un turno total vencido de {total_balance_palabras}, correspondiente a {numero_cuotas_pendientes} pendientes asociadas a {numero_creditos_vigentes} con Estrella Médica. ¿Ha considerado cómo podría confirmar la cita esta situación para evitar gestiones o costos adicionales?",
+        "on": {
+          "Rechaza agendar": {
+            "goto": "intent.no_commitment_offers"
+          },
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación V2",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a evitar recargos y mantener sus beneficios como afiliado. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, podrían generarse recargos sobre su cuenta. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_dias}",
+          "max_attempts": 3,
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "benefit_hints": [
+            "evitar recargos",
+            "mantener sus beneficios como afiliado"
+          ],
+          "monto_deuda": "{total_balance}",
+          "custom_instructions": "REGLAS DE ESTILO Y TONO (Chile, Estrella Médica):\n- Tono empático, cercano y profesional. Sin tecnicismos. Adaptado al público chileno con expresiones neutras y fácil comprensión.\n- Lenguaje permitido y recomendado: 'Ya, perfecto', 'Entiendo', 'No hay problema', 'Dale, lo revisamos', 'Te explico', 'Mira', 'A ver', 'Te ayudo con eso', 'Quedó claro', 'Vamos viendo'.\n- PROHIBIDO usar frases coercitivas o amenazantes: 'Debe confirmar la cita hoy mismo', 'Es obligatorio agendar ahora', 'No tiene opción', 'Está incumpliendo'. Nunca amenazar.\n- No interrumpas al paciente, no suenes robótico, no repitas el especialidad más veces de las necesarias.\n- Si el paciente no confirmó titularidad, no reveles datos sensibles.\n- Si el paciente dice 'ya pagué', 'ya cancelé', 'ya está cancelado', 'turno en trámite' o que le descuentan por planilla/débito automático, NO sigas negociando: agradece y deriva a la verificación en Mi Sucursal Virtual. Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "objection_handlers": [
+            {
+              "objection": "paciente dice que no tiene dinero o no le alcanza (no tengo plata, no tengo dinero, ando sin un peso, no me alcanza, mala situación económica, ando justo de plata)",
+              "answer": "Entiendo, lamento su situación. ¿Le parece que coordinemos una fecha más adelante?"
+            },
+            {
+              "objection": "paciente está desempleado o sin trabajo (estoy sin trabajo, perdí la pega, no tengo trabajo, estoy cesante, me quedé sin pega, me echaron)",
+              "answer": "Entiendo, lamento su situación. ¿Le parece que coordinemos una fecha más adelante?"
+            },
+            {
+              "objection": "paciente dice que pagará después o más adelante sin precisar día (turno después, turno más adelante, lo veo después, te aviso cuando pueda, lo turno cuando pueda)",
+              "answer": "Entiendo, ¿para qué fecha le acomoda dejarlo programado?"
+            },
+            {
+              "objection": "paciente expresa que no quiere agendar (no quiero agendar, no voy a agendar, no me da la gana, no pienso agendar)",
+              "answer": "Entiendo, solo le recuerdo que el turno sigue pendiente y es importante resolverlo para evitar inconvenientes con su cuenta."
+            },
+            {
+              "objection": "paciente no reconoce la cita pendiente o dice que nunca pidió el crédito (no es mi cita pendiente, no reconozco esa cita pendiente, no debo nada, nunca pedí ese crédito, no tengo crédito con ustedes)",
+              "answer": "Entiendo, le recomiendo comunicarse con nuestro centro de atención al paciente al seis cero cero, cinco diez, cero cero cero cero, para revisar el detalle.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "paciente pregunta por qué el especialidad o las cuotas son altas, o pide un detalle del turno (por qué tan alto, por qué tanto, de dónde sale, por qué tantas cuotas, no entiendo el especialidad, cómo se compone)",
+              "answer": "Comprendo su duda. El turno que le mencioné corresponde a la suma de los montos vencidos de los créditos que tiene activos con Estrella Médica."
+            },
+            {
+              "objection": "paciente menciona descuento por planilla, débito automático o gestión a través de su empresa (descuento por planilla, me descuentan del sueldo, turno domiciliado, débito automático, lo paga la empresa, gestión empresa)",
+              "answer": "Gracias por comentarlo. Al día de hoy no veo el turno registrado en el sistema; le invito a verificarlo en Mi Sucursal Virtual de Estrella Médica.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "paciente pregunta por qué la llamada proviene de un número fijo o móvil y no de un número 600 (por qué llaman de ese número, no es un seis cero cero, de dónde es esta llamada, número raro, no es número oficial)",
+              "answer": "Le informo que, debido a una actualización en la normativa de prefijos telefónicos, nuestras gestiones de coordinación de agenda ahora pueden realizarse desde números fijos o móviles, no por números seis cero cero, de acuerdo al fallo reciente de la Corte Suprema."
+            },
+            {
+              "objection": "paciente consulta por cuotas restantes, mes impago, detalle del crédito o especialidad total restante (cuántas cuotas me quedan, qué mes no pagué, detalle del crédito, especialidad total que debo, cuánto debo en total, qué cuotas faltan)",
+              "answer": "Para revisar el detalle, puede ingresar a triple dobleve punto cajalosandes punto cl barra centro de ayuda barra accede a tu sucursal virtual, seleccionar Mi Sucursal Virtual, iniciar sesión con su RUT y clave, y en Créditos Sociales, Mis Créditos, revisar sus créditos vigentes, cuotas pagadas o pendientes y el especialidad total adeudado."
+            },
+            {
+              "objection": "paciente pide un momento para revisar o corroborar información (regáleme un segundo, dame un momento, espera que reviso, dame un segundo que vea la agenda, un momentito, espéreme un segundo)",
+              "answer": "Por supuesto, le espero."
+            }
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "altiro turno",
+              "al tiro turno",
+              "altiro le turno",
+              "al tiro le turno",
+              "altiro lo turno",
+              "al tiro lo turno",
+              "altiro hago el turno",
+              "al tiro hago el turno",
+              "altiro deposito",
+              "al tiro deposito",
+              "altiro transfiero",
+              "al tiro transfiero",
+              "altiro lo hago",
+              "al tiro lo hago",
+              "hoy día turno",
+              "hoy día le turno",
+              "hoy día hago el turno",
+              "hoy día deposito",
+              "hoy día transfiero",
+              "hoy mismo turno",
+              "hoy mismo le turno",
+              "hoy sin falta turno",
+              "de hoy no pasa",
+              "al toque turno",
+              "al toque le turno",
+              "al toque lo hago",
+              "al rato turno",
+              "al ratito turno",
+              "en un rato turno",
+              "en la tarde turno",
+              "en la tarde le turno",
+              "esta tarde turno",
+              "esta tarde lo hago",
+              "ahora turno",
+              "ahorita turno",
+              "ahora mismo turno",
+              "ahora mismo lo hago"
+            ],
+            "mañana": [
+              "mañana turno",
+              "mañana le turno",
+              "mañana hago el turno",
+              "mañana deposito",
+              "mañana transfiero",
+              "mañana sin falta",
+              "mañana sin falta turno",
+              "mañana sin falta le turno",
+              "mañana mismo turno",
+              "mañana mismo le turno",
+              "mañana mismo lo hago",
+              "mañana le caigo",
+              "mañana cae",
+              "mañana sí o sí turno",
+              "mañana sí o sí le turno",
+              "mañana sipo",
+              "mañana po",
+              "mañana poh",
+              "mañana temprano turno",
+              "mañana tempranito turno",
+              "mañana primera hora turno",
+              "mañana en la mañana turno",
+              "mañana a primera hora le turno"
+            ],
+            "pasado_mañana": [
+              "pasado mañana turno",
+              "pasado mañana le turno",
+              "pasado mañana hago el turno",
+              "pasado mañana deposito",
+              "pasado mañana transfiero",
+              "pasado mañana sin falta",
+              "pasado mañana sin falta turno",
+              "pasado mañana mismo turno",
+              "pasado mañana le caigo",
+              "pasao mañana turno",
+              "pasao mañana le turno",
+              "pasao mañana hago el turno",
+              "pasao mañana sin falta",
+              "pasao mañana po",
+              "subiendo pasado mañana turno"
+            ]
+          }
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.no_commitment_offers"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.soft_close_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_no_reconoce"
+          }
+        }
+      },
+      "intent.no_commitment_offers": {
+        "type": "intention",
+        "label": "Evaluar ofertas (sin cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo. Permítame revisar si tiene alguna alternativa disponible para confirmar la cita su situación.",
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "tipo_oferta",
+              "cases": {
+                "CANCELACION": "intent.offer_cancelacion_intro",
+                "REPROGRAMACION": "intent.offer_reprogramacion",
+                "AMBAS OFERTAS": "intent.offer_cancelacion_intro"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          }
+        }
+      },
+      "intent.offer_cancelacion_intro": {
+        "type": "intention",
+        "label": "Oferta cancelación (turno único total)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo su situación. En este caso, Estrella Médica tiene una oferta para usted. Si realiza un turno de {oferta_cancelacion_palabras} quedaría totalmente al día. ¿Le gustaría agendar el día en que realizará este turno?",
+        "on": {
+          "Sí": {
+            "goto": "task.offer_cancelacion_commitment"
+          },
+          "No": {
+            "goto": "intent.after_cancelacion_reject"
+          },
+          "always": {
+            "goto": "intent.after_cancelacion_reject"
+          }
+        }
+      },
+      "intent.after_cancelacion_reject": {
+        "type": "intention",
+        "label": "Luego de rechazar cancelación",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo.",
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "tipo_oferta",
+              "cases": {
+                "AMBAS OFERTAS": "intent.offer_reprogramacion"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          }
+        }
+      },
+      "task.offer_cancelacion_commitment": {
+        "type": "task",
+        "label": "Negociación V2 (oferta cancelación)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. agendar a más tardar {fecha_limite} le ayuda a aprovechar la oferta de cancelación y quedar totalmente al día con un único turno. ¿Podría realizar el turno dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, podría perder la oferta de cancelación. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "max_dias": "{max_dias}",
+          "max_attempts": 1,
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "benefit_hints": [
+            "aprovechar la oferta de cancelación",
+            "quedar totalmente al día con un único turno"
+          ],
+          "monto_deuda": "{info_5}",
+          "custom_instructions": "REGLAS DE ESTILO Y TONO (Chile, Estrella Médica):\n- Tono empático, cercano y profesional. Sin tecnicismos. Adaptado al público chileno con expresiones neutras y fácil comprensión.\n- Lenguaje permitido y recomendado: 'Ya, perfecto', 'Entiendo', 'No hay problema', 'Dale, lo revisamos', 'Te explico', 'Mira', 'A ver', 'Te ayudo con eso', 'Quedó claro', 'Vamos viendo'.\n- PROHIBIDO usar frases coercitivas o amenazantes: 'Debe confirmar la cita hoy mismo', 'Es obligatorio agendar ahora', 'No tiene opción', 'Está incumpliendo'. Nunca amenazar.\n- No interrumpas al paciente, no suenes robótico, no repitas el especialidad más veces de las necesarias.\n- Al hablar del especialidad, refiérase a este turno como 'oferta total' u 'oferta de cancelación'.\n- Si el paciente no confirmó titularidad, no reveles datos sensibles.\n- Si el paciente dice 'ya pagué', 'ya cancelé', 'ya está cancelado', 'turno en trámite' o que le descuentan por planilla/débito automático, NO sigas negociando: agradece y deriva a la verificación en Mi Sucursal Virtual. Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "objection_handlers": [
+            {
+              "objection": "paciente dice que no tiene dinero o no le alcanza (no tengo plata, no tengo dinero, ando sin un peso, no me alcanza, mala situación económica, ando justo de plata)",
+              "answer": "Entiendo, lamento su situación. ¿Le parece que coordinemos una fecha más adelante?"
+            },
+            {
+              "objection": "paciente está desempleado o sin trabajo (estoy sin trabajo, perdí la pega, no tengo trabajo, estoy cesante, me quedé sin pega, me echaron)",
+              "answer": "Entiendo, lamento su situación. ¿Le parece que coordinemos una fecha más adelante?"
+            },
+            {
+              "objection": "paciente dice que pagará después o más adelante sin precisar día (turno después, turno más adelante, lo veo después, te aviso cuando pueda, lo turno cuando pueda)",
+              "answer": "Entiendo, ¿para qué fecha le acomoda dejarlo programado?"
+            },
+            {
+              "objection": "paciente expresa que no quiere agendar (no quiero agendar, no voy a agendar, no me da la gana, no pienso agendar)",
+              "answer": "Entiendo, solo le recuerdo que el turno sigue pendiente y es importante resolverlo para evitar inconvenientes con su cuenta."
+            },
+            {
+              "objection": "paciente no reconoce la cita pendiente o dice que nunca pidió el crédito (no es mi cita pendiente, no reconozco esa cita pendiente, no debo nada, nunca pedí ese crédito, no tengo crédito con ustedes)",
+              "answer": "Entiendo, le recomiendo comunicarse con nuestro centro de atención al paciente al seis cero cero, cinco diez, cero cero cero cero, para revisar el detalle.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "paciente pregunta por qué el especialidad o las cuotas son altas, o pide un detalle del turno (por qué tan alto, por qué tanto, de dónde sale, por qué tantas cuotas, no entiendo el especialidad, cómo se compone)",
+              "answer": "Comprendo su duda. El turno que le mencioné corresponde a la suma de los montos vencidos de los créditos que tiene activos con Estrella Médica."
+            },
+            {
+              "objection": "paciente menciona descuento por planilla, débito automático o gestión a través de su empresa (descuento por planilla, me descuentan del sueldo, turno domiciliado, débito automático, lo paga la empresa, gestión empresa)",
+              "answer": "Gracias por comentarlo. Al día de hoy no veo el turno registrado en el sistema; le invito a verificarlo en Mi Sucursal Virtual de Estrella Médica.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "paciente pregunta por qué la llamada proviene de un número fijo o móvil y no de un número 600 (por qué llaman de ese número, no es un seis cero cero, de dónde es esta llamada, número raro, no es número oficial)",
+              "answer": "Le informo que, debido a una actualización en la normativa de prefijos telefónicos, nuestras gestiones de coordinación de agenda ahora pueden realizarse desde números fijos o móviles, no por números seis cero cero, de acuerdo al fallo reciente de la Corte Suprema."
+            },
+            {
+              "objection": "paciente consulta por cuotas restantes, mes impago, detalle del crédito o especialidad total restante (cuántas cuotas me quedan, qué mes no pagué, detalle del crédito, especialidad total que debo, cuánto debo en total, qué cuotas faltan)",
+              "answer": "Para revisar el detalle, puede ingresar a triple dobleve punto cajalosandes punto cl barra centro de ayuda barra accede a tu sucursal virtual, seleccionar Mi Sucursal Virtual, iniciar sesión con su RUT y clave, y en Créditos Sociales, Mis Créditos, revisar sus créditos vigentes, cuotas pagadas o pendientes y el especialidad total adeudado."
+            },
+            {
+              "objection": "paciente pide un momento para revisar o corroborar información (regáleme un segundo, dame un momento, espera que reviso, dame un segundo que vea la agenda, un momentito, espéreme un segundo)",
+              "answer": "Por supuesto, le espero."
+            }
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "altiro turno",
+              "al tiro turno",
+              "altiro le turno",
+              "al tiro le turno",
+              "altiro lo turno",
+              "al tiro lo turno",
+              "altiro hago el turno",
+              "al tiro hago el turno",
+              "altiro deposito",
+              "al tiro deposito",
+              "altiro transfiero",
+              "al tiro transfiero",
+              "altiro lo hago",
+              "al tiro lo hago",
+              "hoy día turno",
+              "hoy día le turno",
+              "hoy día hago el turno",
+              "hoy día deposito",
+              "hoy día transfiero",
+              "hoy mismo turno",
+              "hoy mismo le turno",
+              "hoy sin falta turno",
+              "de hoy no pasa",
+              "al toque turno",
+              "al toque le turno",
+              "al toque lo hago",
+              "al rato turno",
+              "al ratito turno",
+              "en un rato turno",
+              "en la tarde turno",
+              "en la tarde le turno",
+              "esta tarde turno",
+              "esta tarde lo hago",
+              "ahora turno",
+              "ahorita turno",
+              "ahora mismo turno",
+              "ahora mismo lo hago"
+            ],
+            "mañana": [
+              "mañana turno",
+              "mañana le turno",
+              "mañana hago el turno",
+              "mañana deposito",
+              "mañana transfiero",
+              "mañana sin falta",
+              "mañana sin falta turno",
+              "mañana sin falta le turno",
+              "mañana mismo turno",
+              "mañana mismo le turno",
+              "mañana mismo lo hago",
+              "mañana le caigo",
+              "mañana cae",
+              "mañana sí o sí turno",
+              "mañana sí o sí le turno",
+              "mañana sipo",
+              "mañana po",
+              "mañana poh",
+              "mañana temprano turno",
+              "mañana tempranito turno",
+              "mañana primera hora turno",
+              "mañana en la mañana turno",
+              "mañana a primera hora le turno"
+            ],
+            "pasado_mañana": [
+              "pasado mañana turno",
+              "pasado mañana le turno",
+              "pasado mañana hago el turno",
+              "pasado mañana deposito",
+              "pasado mañana transfiero",
+              "pasado mañana sin falta",
+              "pasado mañana sin falta turno",
+              "pasado mañana mismo turno",
+              "pasado mañana le caigo",
+              "pasao mañana turno",
+              "pasao mañana le turno",
+              "pasao mañana hago el turno",
+              "pasao mañana sin falta",
+              "pasao mañana po",
+              "subiendo pasado mañana turno"
+            ]
+          }
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment_cancelacion"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.after_cancelacion_reject"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.soft_close_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_no_reconoce"
+          }
+        }
+      },
+      "intent.offer_reprogramacion": {
+        "type": "intention",
+        "label": "Oferta reprogramación",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo su situación. En este caso, veo que su crédito social aplica para reprogramación. El valor a reprogramar sería de {oferta_reprogramacion_palabras}. ¿Desea realizar su turno mediante esta opción?",
+        "on": {
+          "Sí": {
+            "goto": "intent.reprogramacion_channels"
+          },
+          "No": {
+            "goto_by": {
+              "field": "tipo_oferta",
+              "cases": {
+                "AMBAS OFERTAS": "intent.offer_cancelacion_intro"
+              },
+              "default": "intent.soft_close_no_commitment"
+            }
+          }
+        }
+      },
+      "intent.reprogramacion_channels": {
+        "type": "intention",
+        "label": "Canales reprogramación",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Perfecto, gracias por confirmar. En este caso puede consultar y revisar las opciones disponibles para su reprogramación a través del número +56 9 34 84 84 25. También puede consultar en www punto Estrella Médica punto cl barra creditos barra reprogramacion. Si necesita asistencia, puede escribir a soluciones arroba Estrella Médica punto cl.",
+        "on": {
+          "always": {
+            "goto": "final.end_reprogramacion_info"
+          }
+        }
+      },
+      "intent.soft_close_paid": {
+        "type": "intention",
+        "label": "Cierre suave (pagado)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Gracias por comentarlo. Al día de hoy, no hay un turno registrado en el sistema, pero puede verificarlo si lo desea. Sabes como verificarlo o necesitas ayuda?",
+        "on": {
+          "necesita ayuda": {
+            "goto": "intent.help_paid"
+          },
+          "no necesita ayuda": {
+            "goto": "final.end_paid"
+          },
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.help_paid": {
+        "type": "intention",
+        "label": "Ayuda (pagado)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Puede ingresar a doble ve doble ve doble ve punto, Estrella Médica punto, ce ele barra, centro, guion, de, guion, ayuda, barra, accede guion, a, guion, tu, guion, sucursal guion, virtual, seleccionar 'Mi Sucursal Virtual', iniciar sesión con su RUT y clave, y en 'Créditos Sociales - Mis Créditos', revisar sus créditos vigentes, cuotas pagadas o pendientes y el especialidad total adeudado. Si persisten dudas o la información no se actualiza, puede escribir a soluciones arroba Estrella Médica punto ce ele o comunicarse al + 5, 6, 9, 3, 4, 8, 4, 8, 4, 2, 5.",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente realiza una pregunta de la base de conocimientos respóndela y luego elige la opción Continuar. Si no hace pregunta o solo agradece o se despide, elige la opción Continuar de inmediato sin agregar ni comentar nada (NO te despidas, NO digas 'gracias' ni 'que tenga buen día' — el cierre lo dará el siguiente paso del flujo).",
+        "prompt": "Perfecto, entonces confirmamos su cita de turno por un valor de {total_balance_palabras} para el día {commitment_date_spoken}. Puede agendar en Mi Sucursal Webpay, ingresando a triple dobleve punto cajalosandes punto cl; en Toku, en triple dobleve punto cajalosandes punto try toku punto com; en Servipag, sanatorio Estado o Sencillito; en Caja Vecina con el número de convenio uno cuatro cero seis nueve; o directamente en una sucursal de Estrella Médica en la Caja Pagadora. ¿Tiene alguna otra duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_commitment_cancelacion": {
+        "type": "intention",
+        "label": "Cierre suave (cita oferta cancelación)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente realiza una pregunta de la base de conocimientos respóndela y luego elige la opción Continuar. Si no hace pregunta o solo agradece o se despide, elige la opción Continuar de inmediato sin agregar ni comentar nada (NO te despidas, NO digas 'gracias' ni 'que tenga buen día' — el cierre lo dará el siguiente paso del flujo).",
+        "prompt": "Perfecto. Le agendo el turno para el día {commitment_date_spoken} por un valor de {oferta_cancelacion_palabras}, correspondiente a la oferta total. Con este turno quedaría totalmente al día. Puede agendar en Mi Sucursal Webpay, ingresando a triple dobleve punto cajalosandes punto cl; en Toku, en triple dobleve punto cajalosandes punto try toku punto com; en Servipag, sanatorio Estado o Sencillito; en Caja Vecina con el número de convenio uno cuatro cero seis nueve; o directamente en una sucursal de Estrella Médica en la Caja Pagadora. ¿Tiene alguna otra duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Comprendo, lamentamos no haber podido concretar un acuerdo en esta ocasión. Puede comunicarse con nosotros al seis cero cero, cinco diez, cero cero cero cero, de lunes a jueves de nueve de la mañana a una cuarenta y cinco de la tarde, y de tres a cuatro cuarenta y cinco de la tarde; los viernes, de nueve de la mañana a dos de la tarde. También puede consultar en triple dobleve punto cajalosandes punto cl.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Perfecto. Muchas gracias por su tiempo. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intencion de turno para contactarnos en otra ocasión.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Gracias por atenderme, le deseo un buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Perfecto, le agradezco su tiempo. Que esté muy bien.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele al titular que Estrella Médica intentó ponerse en contacto con él.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_reprogramacion_info": {
+        "type": "final",
+        "label": "Despedida (reprogramación)",
+        "delivery": "say",
+        "prompt": "Gracias por su tiempo. Esperamos que pueda revisar las opciones de reprogramación y confirmar la cita su situación. Que tenga un buen día."
+      },
+      "final.end_no_reconoce": {
+        "type": "final",
+        "label": "Despedida (no reconoce la cita pendiente)",
+        "delivery": "say",
+        "prompt": "Gracias por su tiempo. Que tenga un buen día."
+      }
+    }
+  }
+}

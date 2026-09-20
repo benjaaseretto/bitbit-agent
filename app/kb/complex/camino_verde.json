@@ -1,0 +1,90 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Cómo puedo contactarlos? | ¿Tienen atención al paciente? | ¿Cuál es el número de atención?",
+    "answer": "Puedes comunicarte con atención al paciente de ABCDIN / La Polar llamando al  seis cero cero, ocho tres cero, dos dos dos dos, o al seis cero cero, tres nueve uno, tres cero cero cero."
+  },
+  {
+    "question": "¿Cuál es mi turno pendiente? | ¿Cuánto debo? | ¿Cuál es mi cita pendiente? | ¿Cuál es el turno? | ¿Cuándo vence?",
+    "answer": "Tu turno pendiente es de {monto_deuda_palabras} y la fecha límite de tu sesión fue el {due_date_spoken}. Para evitar cargos adicionales, te recomendamos regularizarlo lo antes posible."
+  },
+  {
+    "question": "No puedo agendar por la app | La aplicación falla | La app no funciona | Me da error al agendar | No puedo entrar a la app",
+    "answer": "Lamento los inconvenientes con la App. Para que tu gestión no se detenga, puedes realizar tu turno hoy mismo en cualquiera de nuestras tiendas físicas con tu número de identificación. También te sugerimos contactar a Atención al paciente para reportar la falla técnica y restablecer tu acceso."
+  },
+  {
+    "question": "¿Dónde puedo agendar presencialmente? | ¿Qué tiendas están habilitadas? | ¿Dónde hay una tienda? | ¿Cuál es la sede más cercana?",
+    "answer": "Ingresando a la página doble ve doble ve doble ve punto abc punto ce ele, barra tiendas, puedes consultar la sede más cercana y de tu preferencia, colocando tu ubicación, región o comuna. También puedes agendar en tienda física con tu número de identificación."
+  },
+  {
+    "question": "No puedo agendar ahora | No tengo el dinero completo | Necesito opciones de turno | Quiero consultar convenios | La situación económica está difícil",
+    "answer": "Entiendo tu situación. Podemos agendar un próximo contacto para brindarte las opciones de turno habilitadas para ti y encontrar la mejor alternativa."
+  },
+  {
+    "question": "No puedo hablar ahora | Llámame más tarde | Estoy ocupado | Contactar después",
+    "answer": "Entiendo perfectamente, no quiero interrumpir tus actividades. ¿Te parece bien si te contacto hoy al final de la tarde o prefieres mañana a primera hora?"
+  },
+  {
+    "question": "Tengo que consultar con un tercero | Debo hablarlo con alguien | Lo consulto y me llaman | Necesito verlo con otra persona",
+    "answer": "Me parece razonable que debas consultarlo. Podemos agendar un próximo contacto para conocer la decisión que tomaron y así dejar definida la fecha de turno, evitando que tu turno se siga incrementando."
+  },
+  {
+    "question": "No entiendo | Tengo una duda | Hay un error | Cobro injusto | ¿Por qué me cobran?",
+    "answer": "Entiendo tu duda. Revisemos primero lo importante: según la información disponible, tu turno pendiente es de {monto_deuda_palabras} y la fecha de fecha propuesta fue el {due_date_spoken}. ¿Con eso queda aclarado el motivo de la gestión?"
+  },
+  {
+    "question": "¿Quién me llama? | ¿Desde dónde me llaman? | ¿De qué empresa es esta llamada? | Confírmame la empresa | ¿Qué sanatorio es? | ¿Con qué institución hablo?",
+    "answer": "Te llamamos desde Camino Verde Salud por tu turno pendiente de {monto_deuda_palabras} con fecha de fecha propuesta {due_date_spoken}."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Camino Verde Salud, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

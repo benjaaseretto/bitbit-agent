@@ -1,0 +1,531 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "valle_cuidado_flow",
+    "visible_name": "Valle Cuidado",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (21 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/valle_cuidado.json",
+      "company_id": "valle_cuidado-demo",
+      "description": "Base de conocimiento de Valle Cuidado."
+    },
+    "company_id": "valle_cuidado-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "unicomer_gt_flow_graph.json",
+      "node_count": 21,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Valle Cuidado",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Sí soy yo",
+            "Soy yo",
+            "Con él habla",
+            "Con ella habla",
+            "Él habla",
+            "Ella habla",
+            "El mismo",
+            "La misma",
+            "Sí dígame",
+            "Aló sí",
+            "Sí señor",
+            "Sí señora",
+            "Claro que sí",
+            "Así es",
+            "Correcto",
+            "Habla con él",
+            "Habla con ella",
+            "A sus órdenes",
+            "Adelante"
+          ],
+          "identity_pregunta": "Buen día, ¿tengo el gusto con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le saluda {nombre_agente} de {resumen_cadena_principal}. Le llamo por una gestión sobre su cuenta.",
+          "identity_repregunta": "Para poder continuar, ¿me confirma que hablo con {nombre_deudor_completo}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "pay_confirmation_config": {
+              "recolectar_medio_pago": true,
+              "medio_pago_opciones": [
+                "transferencia",
+                "depósito bancario",
+                "otro"
+              ],
+              "medio_pago_pregunta": "¿El turno fue por medio de transferencia, depósito bancario u otro medio?"
+            },
+            "goto_by": {
+              "field": "Valle Cuidado_segment",
+              "cases": {
+                "compromiso_roto": "intent.opening_compromiso_roto",
+                "preventivo_mono": "intent.opening_preventiva",
+                "preventivo_multi": "intent.opening_preventiva"
+              },
+              "default": "intent.opening"
+            }
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura por segmento",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "Valle Cuidado_segment",
+          "cases": {
+            "vigente_mono_a_tiempo": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo por su crédito de {producto_1_producto}, que tiene un turno de {producto_1_saldo_palabras}. Su fecha de fecha propuesta fue el {producto_1_fecha_cuota_abierta_spoken}; pagando antes del {producto_1_fecha_limite_spoken} evita cargos adicionales.",
+            "vigente_mono_vencido": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo por su crédito de {producto_1_producto} con {producto_1_saldo_palabras} pendientes. Su cuenta ya está generando intereses adicionales desde el {producto_1_fecha_limite_spoken}. agendar a tiempo detiene ese crecimiento.",
+            "vigente_multi_a_tiempo": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo porque tiene {resumen_num_productos} créditos con nosotros por un total de {resumen_saldo_pendiente_palabras}. Su fecha de fecha propuesta más urgente es el {resumen_fecha_cuota_mas_antigua_spoken}; pagando antes del {resumen_fecha_limite_mas_antigua_spoken} evita cargos adicionales.",
+            "vigente_multi_vencido": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo porque tiene {resumen_num_productos} créditos pendientes por un total de {resumen_saldo_pendiente_palabras}. Su cuenta ya genera intereses desde el {resumen_fecha_limite_mas_antigua_spoken}. agendar a tiempo detiene ese crecimiento."
+          },
+          "default": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo para conversar sobre su cuenta y ver juntos una opción de turno."
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.opening_preventiva": {
+        "type": "intention",
+        "label": "Apertura preventiva (recordatorio, sin negociación)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente escucha un recordatorio de una sesión próxima a vencer. Si acepta o confirma que va a agendar (por ejemplo 'sí', 'claro', 'ahí lo turno', 'de acuerdo', 'sí puedo'), selecciona 'Acepta'. Si duda o necesita pensarlo ('déjeme ver', 'no sé', 'lo pienso', 'tal vez'), selecciona 'Duda'. Si se niega o dice que no puede ('no', 'no puedo', 'ahora no', 'no me alcanza'), selecciona 'Negativa'. Solo selecciona una opción; no continúes la conversación.",
+        "prompt_by": {
+          "field": "Valle Cuidado_segment",
+          "cases": {
+            "preventivo_mono": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Su sesión de {producto_1_saldo_palabras} en {producto_1_producto} vence el {resumen_fecha_cuota_mas_antigua_spoken}. Solo queríamos recordárselo para que pueda tenerlo presente. ¿Va a poder realizar el turno ese día o antes?",
+            "preventivo_multi": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Tiene {resumen_num_productos} cuotas próximas a vencer por un total de {resumen_saldo_pendiente_palabras}. Solo queríamos que pueda tenerlo presente. ¿Va a poder realizar el turno en la fecha de fecha propuesta o antes?"
+          },
+          "default": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Le recordamos que tiene una sesión próxima a vencer. ¿Va a poder realizar el turno en la fecha de fecha propuesta o antes?"
+        },
+        "on": {
+          "Acepta": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "register_commitment": {
+              "date": "{due_date}",
+              "invalid_goto": "final.end_preventiva_duda"
+            },
+            "goto": "final.end_preventiva_compromiso"
+          },
+          "Duda": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_preventiva_duda"
+          },
+          "Negativa": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_preventiva_negativa"
+          }
+        }
+      },
+      "intent.opening_compromiso_roto": {
+        "type": "intention",
+        "label": "Apertura cita roto",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Se le recuerda al paciente que tenía un cita de turno reciente que no se pudo confirmar. Clasifica su respuesta en UNA opción: Si reconoce que no pudo agendar o pide una nueva fecha ('no pude', 'todavía no', 'se me complicó', 'este mes no pude', 'lo turno después'), selecciona 'No pudo agendar'. Si no recuerda el cita o niega haberlo hecho ('no recuerdo', 'yo no me comprometí', 'no sé de qué habla', 'nunca acordé eso'), selecciona 'No recuerda'. Si se molesta, reclama o quiere colgar ('déjeme en paz', 'no me llamen', 'ya le dije', 'estoy molesto'), selecciona 'Molesto'. Solo selecciona una opción; no continúes la conversación.",
+        "prompt": "Mucho gusto {nombre_deudor}, le saluda {nombre_agente} de {resumen_cadena_principal}. Esta llamada está siendo grabada para brindarle un mejor servicio. Le llamo porque teníamos registrado un cita de turno reciente por {monto_objetivo_palabras} que no pudimos confirmar en nuestros sistemas. Quería saber si pudo realizarlo o si hay algo en lo que podamos apoyarle.",
+        "on": {
+          "No pudo pagar": {
+            "goto": "task.negotiation"
+          },
+          "No recuerda": {
+            "goto": "intent.compromiso_roto_reinfo"
+          },
+          "Molesto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_molesto"
+          }
+        }
+      },
+      "intent.compromiso_roto_reinfo": {
+        "type": "intention",
+        "label": "Reinformación tras negar cita",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Comprendo. Teníamos anotado un cita por el turno de su producto con {resumen_cadena_principal}, veamos si podemos coordinar una fecha para agendar a tiempo.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación de cita de turno",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, podrían generarse recargos adicionales sobre su cuenta. La fecha disponible es hasta el {fecha_limite}. ¿Le sería posible realizar el turno ese día?",
+          "unparseable_date_message": "Disculpe, no alcancé a escuchar bien la fecha. ¿Qué día podría realizar el turno?",
+          "max_dias": "{max_dias}",
+          "max_attempts": 2,
+          "suggest_dias": 1,
+          "staggered_days": [
+            1,
+            "{max_dias}"
+          ],
+          "monto_deuda": "{monto_objetivo}",
+          "monto_deuda_palabras": "{monto_objetivo_palabras}",
+          "nombre_empresa": "{resumen_cadena_principal}",
+          "deudor": "{nombre_deudor}",
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "ask_nonpayment_reason": true,
+          "collect_payment_method": false,
+          "benefit_hints": [
+            "agendar a tiempo le da tranquilidad con su cuenta",
+            "mantener su cuenta al día evita gestiones posteriores",
+            "su cuenta quedará al día y no será necesario contactarle nuevamente por este turno"
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy turno",
+              "hoy le turno",
+              "hoy mismo turno",
+              "hoy mismo le turno",
+              "hoy hago el turno",
+              "hoy deposito",
+              "hoy hago el depósito",
+              "hoy hago la transferencia",
+              "hoy me pongo al día",
+              "ahorita turno",
+              "ahorita le turno",
+              "ahorita lo hago",
+              "ahorita mismo turno",
+              "de una vez turno",
+              "ya mismo turno",
+              "más al rato turno",
+              "al rato turno",
+              "hoy en la tarde turno",
+              "en la tarde turno",
+              "hoy en la noche turno",
+              "en la noche turno",
+              "ya voy a agendar",
+              "va pues hoy turno"
+            ],
+            "mañana": [
+              "mañana turno",
+              "mañana le turno",
+              "mañana sin falta",
+              "mañana mismo",
+              "mañana temprano",
+              "mañana a primera hora",
+              "mañana hago el depósito",
+              "mañana hago la transferencia",
+              "para mañana",
+              "mañana en la mañana turno",
+              "mañana me pongo al día"
+            ],
+            "pasado_mañana": [
+              "pasado mañana",
+              "pasado mañana turno",
+              "en dos días",
+              "dentro de dos días",
+              "en un par de días"
+            ]
+          },
+          "invalid_date_message": "Entiendo. Si paga después del {fecha_limite} podrían generarse recargos adicionales. ¿Podría realizarlo ese día o antes?",
+          "custom_instructions": "Trate al paciente de USTED en todo momento; nunca tutee. Moneda: Quetzales. No ofrezca descuentos, quitas ni pagos parciales. ESCALONAMIENTO DE FECHAS (orden estricto): 1) proponga primero el turno para HOY; 2) si rechaza hoy, ofrezca como máximo hasta la última fecha del plazo vigente; 3) si insiste en una fecha posterior, no vuelva a negociar: el sistema tipificará Intención de turno. Al pedir o acotar la fecha de turno: NUNCA diga 'fechas válidas', 'opciones válidas' ni enumere 'hoy, mañana o pasado mañana' como lista de opciones. En su lugar diga algo natural como 'Es importante agendar a más tardar el [día]'. Al pedir fecha: NO repita la misma pregunta ni la misma estructura en turnos seguidos; varíe la formulación. No encadene el pedido de fecha con el mismo recordatorio de intereses o recargos cada vez (el aviso de recargos solo una vez). Ante negativa use 'Entiendo' o 'Comprendo', nunca 'Perfecto'. Al proponer o cerrar el acuerdo de turno, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el cita, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas.",
+          "objection_handlers": [
+            {
+              "objection": "¿Cuales son los medios de turno? | Por donde turno | En donde turno | ¿En donde puedo agendar? | En donde puedo realizar el turno",
+              "answer": "Puede realizar su turno en cualquier tienda de {resumen_cadena_principal}, solicitar el link de turno escribiendo al WhatsApp cuatro, tres, ocho, dos, cero, cuatro, cero, cuatro, o hacer un depósito y enviarnos la boleta al mismo numero."
+            },
+            {
+              "objection": "No reconozco la cita pendiente | Esta cita pendiente no es mía | Yo no debo eso | No conozco esa cita pendiente",
+              "answer": "Comprendo. Vamos a escalar su caso para darle un seguimiento especializado. Gracias por informarlo.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "Es una estafa | Esto es un fraude | Me quieren estafar | Reporto fraude",
+              "answer": "Entiendo su preocupación. Vamos a escalar de inmediato su caso a un especialista. Gracias por informarlo.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "Estoy fuera del país | Estoy en el extranjero | Ando de viaje fuera",
+              "answer": "Gracias por avisarme. Le dejamos el mensaje para cuando regrese.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Fuera de la ciudad"
+            },
+            {
+              "objection": "Llámeme después | Ahorita no puedo | Estoy ocupado | Estoy trabajando | No puedo hablar ahora",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "llamar_luego"
+            },
+            {
+              "objection": "Quiero hablar con una persona | Quiero hablar con un humano | Páseme con un asesor | Quiero un agente",
+              "answer": "Con gusto. Puede contactarnos por WhatsApp al cuatro tres, ocho dos, cero cuatro, cero cuatro y le apoyará un asesor. Que tenga buen día.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "final.end_intention"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "pay_confirmation": false,
+            "goto": "intent.pay_confirmation"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "No reconoce la cita",
+            "goto": "final.end_escalado"
+          },
+          "Fuera de la ciudad": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fuera de la ciudad",
+            "goto": "final.end_no_commitment"
+          },
+          "llamar_luego": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.llamar_luego"
+          }
+        }
+      },
+      "intent.llamar_luego": {
+        "type": "intention",
+        "label": "Llamar luego",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera la respuesta del paciente antes de avanzar, una vez que haya respondido elige la opcion 'continuar'",
+        "prompt": "Comprendo, no le quito más tiempo. ¿A que hora le queda mejor una llamada?",
+        "on": {
+          "always": {
+            "set_agent_output": {
+              "hora_llamada": "{last_user_turn_text}"
+            },
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.pay_confirmation": {
+        "type": "intention",
+        "label": "Confirmación de turno",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Acabas de preguntar por qué medio realizó el turno. Es OBLIGATORIO esperar la respuesta del paciente antes de elegir cualquier opción: no selecciones ninguna opción hasta que el paciente haya respondido efectivamente. Cuando responda, clasifica su respuesta en UNA sola opción: si indica que asistió por transferencia (por ejemplo 'transferencia', 'transferí', 'por transferencia', 'transferencia bancaria'), selecciona 'transferencia'. Si indica que asistió por depósito bancario (por ejemplo 'depósito', 'deposité', 'en ventanilla', 'en el sanatorio'), selecciona 'depósito bancario'. Si menciona cualquier otro medio o no lo especifica con claridad, selecciona 'otro'. No agregues comentarios, no repitas la pregunta y no continúes la conversación: solo selecciona la opción cuando el paciente haya respondido.",
+        "prompt": "Gracias por informarlo. ¿Su turno fue por transferencia o depósito bancario?",
+        "on": {
+          "transferencia": {
+            "set_agent_output": {
+              "medio_pago": "transferencia"
+            },
+            "goto": "final.end_paid"
+          },
+          "depósito bancario": {
+            "set_agent_output": {
+              "medio_pago": "depósito bancario"
+            },
+            "goto": "final.end_paid"
+          },
+          "otro": {
+            "set_agent_output": {
+              "medio_pago": "{last_user_turn_text}"
+            },
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmación de cita y medios de turno",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del paciente antes de avanzar. Si confirma que no tiene dudas o no necesita nada más, elige 'Continuar' en silencio. Si indica que ya asistió (ya pagué, ya deposité, ya transferí, ya quedó pagado, le envío la boleta u equivalente), elige 'Pagado' (el cierre pedirá la boleta por WhatsApp). Si reporta que un medio de turno falló (tienda, link o depósito), NO vuelvas a sugerir ese mismo medio; ofrece otra opción autorizada: tienda de la cadena, link de turno por WhatsApp, o depósito enviando boleta al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro. Si solicita hablar con un humano o asesor, indícale el mismo WhatsApp y elige 'Continuar'. Si hace otra pregunta, respóndela brevemente con la base de conocimiento. NO sigas la conversación ni te despidas aquí.",
+        "prompt_by": {
+          "field": "Valle Cuidado_producto_tipo",
+          "cases": {
+            "mono": "Va pues {nombre_deudor}, quedamos en que realiza el turno de {producto_1_saldo_palabras} el {commitment_date_spoken}. Puede agendar en cualquier tienda de {resumen_cadena_principal}, pedir el link de turno escribiendo al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro, o hacer un depósito y enviarnos la boleta al mismo número. ¿Tiene alguna duda, tuvo algún inconveniente con el medio de turno, o ya realizó el turno?",
+            "multi": "Va pues {nombre_deudor}, quedamos en que realiza el total de {resumen_saldo_pendiente_palabras} el {commitment_date_spoken}. Puede agendar en cualquier tienda de {resumen_cadena_principal}, pedir el link de turno escribiendo al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro, o hacer un depósito y enviarnos la boleta al mismo número. ¿Tiene alguna duda, tuvo algún inconveniente con el medio de turno, o ya realizó el turno?"
+          },
+          "default": "Va pues {nombre_deudor}, quedamos en que realiza el turno de {producto_1_saldo_palabras} el {commitment_date_spoken}. Puede agendar en cualquier tienda de {resumen_cadena_principal}, pedir el link de turno escribiendo al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro, o hacer un depósito y enviarnos la boleta al mismo número. ¿Tiene alguna duda, tuvo algún inconveniente con el medio de turno, o ya realizó el turno?"
+        },
+        "on": {
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.end_preventiva_compromiso": {
+        "type": "final",
+        "label": "Preventivo - cita registrado",
+        "prompt": "Perfecto, queda anotado. Cualquier cosa nos escribe al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro. Que se cuide.",
+        "delivery": "say"
+      },
+      "final.end_preventiva_duda": {
+        "type": "final",
+        "label": "Preventivo - duda / lo pensará",
+        "prompt": "Sin problema, cuando decida puede escribirnos al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro o acercarse a cualquier tienda de {resumen_cadena_principal}. Que se cuide.",
+        "delivery": "say"
+      },
+      "final.end_preventiva_negativa": {
+        "type": "final",
+        "label": "Preventivo - negativa",
+        "prompt": "Entendido, si en algún momento necesita ayuda estamos al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida con cita",
+        "prompt": "Perfecto, queda anotado. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida sin cita",
+        "prompt": "Entiendo {nombre_deudor}. Lo importante es ver una opción para que la cita pendiente no aumente. Cuando pueda, nos escribe al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro o se acerca a cualquier tienda de {resumen_cadena_principal}. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_intention": {
+        "type": "final",
+        "label": "Despedida con intención de turno",
+        "prompt": "Entiendo {nombre_deudor}, queda anotada su intención de turno. Si necesita apoyo, nos escribe al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida turno informado",
+        "prompt": "Perfecto, gracias por informarlo. Si aún no lo ha hecho, envíenos la boleta al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro para registrarlo. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_escalado": {
+        "type": "final",
+        "label": "Despedida caso escalado",
+        "prompt": "Gracias por informarlo. Escalaremos su caso para darle seguimiento especializado. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida número equivocado",
+        "prompt": "Disculpe la molestia. Actualizaremos nuestros registros. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida recado con tercero",
+        "prompt": "¿Podría dejarle el mensaje a {nombre_deudor_completo} que se comunique con {resumen_cadena_principal}? Muchas gracias, que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida buzón",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_molesto": {
+        "type": "final",
+        "label": "Despedida paciente molesto",
+        "prompt": "Disculpe la molestia, {nombre_deudor}. La intención es poder apoyarle. Cualquier cosa estamos al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro. Que tenga buen día.",
+        "delivery": "say"
+      }
+    }
+  }
+}

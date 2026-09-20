@@ -1,0 +1,668 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "prisma_med_flow",
+    "visible_name": "Prisma Med",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (21 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/prisma_med.json",
+      "company_id": "prisma_med-demo",
+      "description": "Base de conocimiento de Prisma Med."
+    },
+    "company_id": "prisma_med-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "belcorp_flow_graph.json",
+      "node_count": 21,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Prisma Med",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar titularidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Si",
+            "Claro",
+            "Claro que sí",
+            "Correcto",
+            "Así es",
+            "Es correcto",
+            "Ajá",
+            "Aja",
+            "Uh-huh",
+            "Va",
+            "Va que va",
+            "Está bien",
+            "Sale",
+            "Órale",
+            "Sin problema",
+            "Perfecto",
+            "De acuerdo",
+            "Cómo no",
+            "Por supuesto",
+            "Soy yo",
+            "Habla con ella",
+            "Con ella habla"
+          ],
+          "identity_pregunta": "Hola. ¿Hablo con la consultora {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Te contacto de Colektia en representación de Transbel S A de C ve, empresa que otorgó tu crédito Prisma Med.",
+          "identity_repregunta": "Para poder continuar necesito confirmar, ¿hablo con la consultora {nombre_deudor_completo}?",
+          "identity_no_titular_pregunta": "Entiendo. ¿Conoces a {nombre_deudor_completo}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.presentation"
+          },
+          "No Autenticado": {
+            "action": "set_status",
+            "status": "No Autenticado",
+            "goto": "final.end_no_autenticado"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "task.form_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "task.form_recado": {
+        "type": "task",
+        "label": "Recado a tercero (horario opcional)",
+        "task_type": "FormTask",
+        "params": {
+          "title": "Recado a tercero",
+          "allow_interruptions": true,
+          "intro": "Disculpa la molestia. ¿Podrías decirle a {nombre_deudor_completo} que lo llamamos de Transbel S A de C ve? Es sobre un tema de su cuenta.",
+          "instructions": "Este formulario es para dejar un recado con un tercero. Di el intro tal cual y luego di exactamente '¿A qué hora lo puedo encontrar?'. Luego, recolecta el campo opcional 'hora' con las herramientas del FormTask. Acepta expresiones naturales como 'en la tarde', 'a las 3', 'después de las 6', 'mañana por la mañana'. Si da un horario, llama a registrar_campo(nombre='hora', valor=LA_RESPUESTA_EXACTA_DEL_USUARIO). Si no sabe, no quiere dar horario o solo acepta dejar el recado sin hora, llama a omitir_campo(nombre='hora') sin insistir y confirma el formulario. NO reveles montos, días de atraso de agenda ni detalles de la cuenta.",
+          "schema": [
+            {
+              "name": "hora",
+              "type": "time",
+              "label": "hora en la que se puede encontrar al titular (opcional)",
+              "required": true,
+              "max_tries": 2,
+              "silence_on_max_tries": true
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto": "final.end_recado"
+          },
+          "Cancelado": {
+            "goto": "final.end_recado"
+          }
+        }
+      },
+      "intent.presentation": {
+        "type": "intention",
+        "label": "Presentación (novedad, sin montos)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Hola, {nombre_deudor}, soy {nombre_agente} y te contacto desde Colektia en representación de Transbel S A de C ve, empresa que otorgó tu crédito de Prisma Med. Te contactamos porque tienes una novedad en tu crédito.",
+        "on": {
+          "always": {
+            "goto": "task.form_address_verification"
+          }
+        }
+      },
+      "task.form_address_verification": {
+        "type": "task",
+        "label": "Validar identidad por domicilio",
+        "task_type": "FormTask",
+        "params": {
+          "title": "Validación de domicilio",
+          "allow_interruptions": true,
+          "skip_confirmation": true,
+          "use_knowledge_base": false,
+          "instructions": "REGLA ABSOLUTA: esta validación de domicilio es el ÚNICO objetivo. NO respondas preguntas de turno, atraso de agenda, medios de turno, descuentos ni ninguna FAQ: no tienes base de conocimiento en este paso. Si pregunta algo fuera de la validación de domicilio, di exactamente: 'Primero necesito validar tu identidad con el domicilio para poder continuar.' y vuelve a la pregunta del campo ask. En tu primer turno di EXACTAMENTE la pregunta del campo ask. Ante CUALQUIER respuesta llama INMEDIATAMENTE registrar_campo(nombre='validacion_domicilio', valor=...). NORMALIZACIÓN OBLIGATORIA: si confirma el domicilio (sí, si, correcto, es correcto, así es, asi es, claro, perfecto, de acuerdo, está bien, esta bien, va, sale, órale, orale, ajá, aja, cómo no, por supuesto, sí es mi domicilio, ese es) registra SIEMPRE valor='Correcto'. Si niega el domicilio (no, nel, no es, incorrecto, no corresponde, no es mi domicilio, está mal, esta mal) registra SIEMPRE valor='Incorrecto'. NUNCA registres 'es correcto' ni otras frases: solo 'Correcto' o 'Incorrecto'. Si dice que no recuerda / no se acuerda / no sabe / pide que se lo repitan, NO uses Correcto ni Incorrecto: registra el TEXTO EXACTO para que el sistema repregunte. PROHIBIDO inventar otra pregunta, omitir_campo, cancelar_formulario, revelar montos/atraso de agenda/medios de turno o continuar la gestión. Cualquier respuesta afirmativa tomala como 'Correcto'. Cualquier respuesta negativa tomala como 'Incorrecto'. Respuestas de duda, desconocimiento o que no afirman o niegan no la registres y repregunta. Si dice 'No daré mis datos' o 'No quiero validar domicilio', responde exactamente: 'Lo comprendo. Sin la validación de identidad no me es posible proporcionar información del crédito.'",
+          "schema": [
+            {
+              "name": "validacion_domicilio",
+              "type": "enum",
+              "label": "si el domicilio corresponde",
+              "required": true,
+              "options": [
+                "Correcto",
+                "Incorrecto"
+              ],
+              "ask": "Para proteger la información de tu crédito necesito validar tu identidad. ¿Podrías indicarme si tu domicilio corresponde a: {info_2_spoken}?",
+              "max_tries": 2,
+              "custom_error_messages": [
+                "Solo puedo continuar si me confirmas si el domicilio es correcto o incorrecto."
+              ],
+              "silence_on_max_tries": true
+            }
+          ]
+        },
+        "on": {
+          "Completado": {
+            "goto_by": {
+              "field": "validacion_domicilio",
+              "cases": {
+                "Correcto": {
+                  "action": "set_status",
+                  "status": "Entregado",
+                  "goto": "intent.opening",
+                  "express_route": true,
+                  "express_route_next": "task.negotiation",
+                  "pay_confirmation": true,
+                  "pay_confirmation_next": "final.end_paid"
+                },
+                "Incorrecto": {
+                  "action": "set_status",
+                  "status": "No Autenticado",
+                  "goto": "final.end_no_autenticado"
+                }
+              },
+              "default": {
+                "action": "set_status",
+                "status": "No Autenticado",
+                "goto": "final.end_no_autenticado"
+              }
+            }
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "No Autenticado",
+            "goto": "final.end_no_autenticado"
+          },
+          "MaxTriesExceeded": {
+            "action": "set_status",
+            "status": "No Autenticado",
+            "goto": "final.end_no_autenticado"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Aviso de privacidad + motivo de atraso de agenda + pregunta de turno hoy",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Gracias, {nombre_deudor}. Antes de continuar te informo que esta llamada se realiza conforme al Aviso de Privacidad de Transbel S A de C ve, puedes consultarlo en triple doble u punto Prisma Med punto com. El motivo de mi llamada es informarte que tu crédito presenta un turno pendiente de {monto_deuda_palabras}, con {delinquency} días de atraso. Nuestro objetivo es ayudarte a confirmar la cita tu cuenta para mantener tu crédito activo y que siga creciendo tu negocio.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación de turno total",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "currency": "MXN",
+          "max_dias": 5,
+          "max_attempts": 2,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{monto_deuda_palabras}",
+          "deudor": "{nombre_deudor}",
+          "empresa": "Transbel",
+          "benefit_hints": [
+            "mantener tu crédito activo",
+            "seguir creciendo tu negocio",
+            "evitar posibles bloqueos en tu cuenta"
+          ],
+          "allow_partial_payments": false,
+          "require_confirmation": true,
+          "collect_payment_method": false,
+          "accept_out_of_window_as_intention": true,
+          "out_of_window_warning_message": "Gracias. Registraré la fecha que me indica como intención de turno para seguimiento.",
+          "ask_nonpayment_reason": true,
+          "ask_nonpayment_reason_at_start": false,
+          "commitment_windows": {
+            "default": {
+              "confirmation_message": "Perfecto. Entonces confirmo: realizarás el turno de {amount} el día {date}."
+            }
+          },
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy turno",
+              "turno hoy",
+              "ahorita turno",
+              "hoy mismo",
+              "hoy en la tarde",
+              "después del trabajo",
+              "al rato turno",
+              "en un rato turno",
+              "temprano turno",
+              "primera hora",
+              "sí haré el turno",
+              "sí puedo"
+            ],
+            "mañana": [
+              "turno mañana",
+              "mañana turno",
+              "mañana mismo",
+              "mañanita",
+              "mañana temprano"
+            ]
+          },
+          "custom_instructions": "En tu PRIMERA intervención pregunta exactamente: '¿Le sería posible realizar el turno total el día de hoy?'. Únicamente turno total como cita. turno PARCIAL (PRIORIDAD MÁXIMA sobre fechas y sobre cliente_dispuesto): si dice 'una parte', 'la mitad', 'abono', 'poco a poco', 'parcial', 'solo puedo agendar X', 'solo la parte', o insiste con 'que no' en parcial — aunque dé una fecha — NO pidas fecha y NUNCA llames cliente_dispuesto con es_parcial. Cada vez que ofrezca o insista en parcial, llama INMEDIATAMENTE manejar_ofensa_cliente() (1ª vez advierte; si insiste, cierra como Intención de turno). Fecha fuera de 5 días (sin parcial) → Intención de turno. Modismos: va, sale, órale, ajá, ahorita, nel, ni hablar.",
+          "objection_handlers": [
+            {
+              "objection": "No tengo dinero | no tengo el dinero | no me alcanza | no me alcanzó | ando corto | estoy quebrada | estoy quebrado | no traigo | no traigo dinero | no hay dinero | no tengo para agendar | no puedo agendar por dinero | ando sin dinero | está difícil | no vendí este catálogo | no salió la venta | no coloqué catálogo | no junté dinero | no junté | sin dinero",
+              "answer": "Entiendo, {nombre_deudor}. En ocasiones pueden surgir imprevistos. En este momento el sistema requiere el turno total del adeudo. ¿Qué día considera que podría realizarlo?",
+              "on_trigger": {
+                "tipo": "Prisma Med_sin_dinero",
+                "max_remaining_attempts": 1
+              }
+            },
+            {
+              "objection": "Estoy esperando que me paguen | estoy esperando la quincena | estoy esperando comisión | no me cayó el turno | estoy esperando turno | me van a agendar | espero la quincena",
+              "answer": "Comprendo. ¿Qué fecha estima recibir ese ingreso para registrar su cita de turno?"
+            },
+            {
+              "objection": "No puedo agendar hoy | hoy no puedo | ahorita no puedo agendar | el día de hoy no puedo",
+              "answer": "No hay problema. ¿Qué día podría realizar el turno completo?"
+            },
+            {
+              "objection": "Quiero agendar poco a poco | agendar poco a poco | poco a poco | en partes | en abonos | en parcialidades | parcialidades | ofrece agendar un especialidad menor al adeudo | te turno una parte | voy a agendar una parte | voy a agendar solo una parte | turno una parte | no puedo el total | te turno la mitad | voy a agendar la mitad | solo la mitad | la mitad | te abono algo | abonar | turno parcial | solo puedo agendar la mitad | puedo agendar una parte | solo puedo abonar | quiero ir pagando | mañana pero solo la mitad | solo puedo agendar una parte | solo la parte | no, solo la parte | que no (insistiendo en parcial)",
+              "warning_answers": [
+                "Comprendo su intención. Sin embargo, le recordamos que debe realizar el turno del especialidad restante antes del {info_1_spoken}, para evitar posibles bloqueos. ¿Le sería posible cubrir el turno total?"
+              ],
+              "final_answer": "Perfecto, {nombre_deudor}. Permítame registrarlo como intención de turno.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de agendar"
+            },
+            {
+              "objection": "La próxima semana | la otra semana | en quincena | el mes que viene | el próximo mes | en quince días | en 10 días | en 15 días | en dos semanas | en tres semanas | para la quincena | después de la quincena | a finales de mes | para el otro mes | solo puedo más adelante | turno hasta el mes que entra | una fecha fuera de los próximos 5 días | más de cinco días | dentro de una semana | la semana entrante",
+              "answer": "Perfecto. Permítame registrar esa fecha como intención de turno.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de agendar"
+            },
+            {
+              "objection": "No pienso agendar | no voy a agendar | no pagaré | me niego a agendar | no me interesa agendar | olvídalo no turno | ni hablar de agendar | jamás voy a agendar | imposible que pague | para nada voy a agendar | no pienso hacerlo | no voy a agendar nada",
+              "answer": "Entiendo su decisión y respeto su postura. Si en el futuro desea información sobre su crédito o los medios de turno disponibles, estaremos para atenderle.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "No puedo hablar | estoy trabajando | voy manejando | llámenme más tarde | estoy ocupada | estoy ocupado | llámame después | ahora no puedo | no tengo tiempo | estoy en reunión",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Ya pagué | ya pague | ya lo pagué | ya quedó | ya hice el turno | ya hice el depósito | ya transferí | ya liquidé | ya quedó pagado | ya hice la transferencia | ya pagué en Walmart | ya pagué en OXXO | ya quedó desde ayer | ya está pagado | ya está liquidado",
+              "answer": "Excelente. Por favor contáctese con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "No reconozco ese crédito | no es mi cita pendiente | no reconozco la cita pendiente | yo no debo eso | no es mi crédito | no debo nada de Prisma Med",
+              "answer": "Comprendo su preocupación. Por favor contáctese con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, para que puedan brindarte una solución.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce crédito"
+            },
+            {
+              "objection": "¿Por qué me llaman? | ¿Qué pasó? | ¿Qué crédito? | ¿De qué empresa hablas? | ¿Quién eres? | ¿A qué se debe la llamada?",
+              "answer": "Te contactamos para informarte sobre el estado de su crédito y apoyarte a confirmar la cita tu cuenta."
+            },
+            {
+              "objection": "¿Cómo consiguieron mi número? | ¿De dónde sacaron mi teléfono? | ¿Cómo tienen mis datos?",
+              "answer": "Utilizamos la información proporcionada durante el proceso de contratación de su crédito."
+            },
+            {
+              "objection": "¿Es una estafa? | no confío | esto suena a fraude | ¿son reales?",
+              "answer": "Comprendo su inquietud. Le llamamos en representación de Transbel S A de C ve, entidad que otorgó su crédito Prisma Med."
+            },
+            {
+              "objection": "No soy esa persona | número equivocado | se equivocaron de número | no es mi nombre | no me llamo así",
+              "answer": "Gracias por informarlo. Para proteger la información no puedo proporcionar detalles del crédito.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Equivocado"
+            },
+            {
+              "objection": "No daré mis datos | no quiero validar domicilio | no doy mis datos | no voy a validar | no confirmo el domicilio | no voy a dar mi domicilio",
+              "answer": "Lo comprendo. Sin la validación de identidad no me es posible proporcionar información del crédito.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "¿Dónde puedo agendar? | ¿Cómo turno? | ¿Qué opciones de turno tienen? | medios de turno | métodos de turno | ¿en dónde turno?",
+              "answer": "Puede realizar su turno mediante Mercado turno, ESE PE E I, Banamex, BBVA, sanatorio Azteca, Walmart, Elektra, Seven Eleven, Farmacias del Ahorro, Farmacias Benavides, Sams Club, Circle Ka, Bodega Aurrerá, La Comer, Yastás, Neto, Extra, eStori y Pe De App. Si necesita el procedimiento de un canal en específico, con gusto se lo indico."
+            },
+            {
+              "objection": "¿Me pueden hacer descuento? | ¿Hay quita? | ¿Hay descuento? | rebájame | quita de capital",
+              "answer": "Actualmente este crédito no contempla descuentos."
+            },
+            {
+              "objection": "Estoy molesta porque me llaman mucho | ya dejen de llamar | me llaman mucho | estoy harta | qué fastidio | no molesten | siempre llaman | no quiero llamadas | me están acosando",
+              "answer": "Entendemos su molestia, consultora. Nuestro objetivo es ayudarle a confirmar la cita su crédito. Si registramos un cita de turno, podremos dar seguimiento conforme a esa fecha."
+            },
+            {
+              "objection": "Voy a presentar una queja | quiero quejarme | PROFECO | inconformidad formal | me voy a quejar | quiero presentar una inconformidad | estoy inconforme con la coordinación de agenda | queja formal | denuncia por coordinación de agenda",
+              "answer": "Está en todo su derecho. También le informamos que puede presentar una queja relacionada con prácticas de coordinación de agenda ante PROFECO.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "Quiero cancelar mi crédito | quiero cancelar | cancelar el crédito | dar de baja el crédito",
+              "answer": "Esa solicitud requiere atención especializada. Por favor comuníquese con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "Ya no vendo Prisma Med | dejé de ser consultora | ya no soy consultora | ya no trabajo con Prisma Med",
+              "answer": "Comprendo. Es importante que sepa que continúe o no como consultora, el crédito otorgado por Transbel S A de C ve permanece vigente. ¿Cuándo considera que podría confirmar la cita el turno?",
+              "on_trigger": {
+                "tipo": "Prisma Med_ya_no_vende",
+                "max_remaining_attempts": 1
+              }
+            },
+            {
+              "objection": "Estoy enferma | Estoy enfermo | Problemas de salud | Estoy en el hospital | estoy hospitalizada | estoy hospitalizado",
+              "answer": "Lamento mucho la situación que nos comenta. Registraré la información y, si le es posible, ¿podría indicarme una fecha estimada para realizar el turno completo?",
+              "on_trigger": {
+                "tipo": "Prisma Med_enferma",
+                "max_remaining_attempts": 1
+              }
+            },
+            {
+              "objection": "Perdí mi empleo | me quedé sin trabajo | me quede sin trabajo | No tengo trabajo | No tengo empleo | estoy desempleada | estoy desempleado",
+              "answer": "Lamento escuchar esa situación, consultora. Aun así, el crédito continúa vigente. ¿Podría indicarme una fecha estimada en la que considere posible realizar el turno total?",
+              "on_trigger": {
+                "tipo": "Prisma Med_sin_empleo",
+                "max_remaining_attempts": 1
+              }
+            },
+            {
+              "objection": "Quiero hablar con alguien | pásame con una persona | no quiero robot | quiero un asesor | comunícame con un ejecutivo | quiero un humano | pásame con un agente",
+              "answer": "Comprendo tu solicitud. Por favor contáctate con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, en un horario de 7 de la mañana a 10 de la noche. También está disponible Prisma Med Responde en el sitio de ayuda.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "Quiero una aclaración del crédito | aclaración del crédito | aclarar mi crédito | necesito una aclaración | quiero aclarar mi turno | no entiendo mi crédito | hay un error en mi crédito",
+              "answer": "Comprendo. Para una aclaración especializada, por favor contáctate con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, en un horario de 7 de la mañana a 10 de la noche. También está disponible Prisma Med Responde en el sitio de ayuda.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "Robo de identidad | me robaron la identidad | usaron mis datos | no reconocí ese crédito por robo | identidad robada",
+              "answer": "Comprendo tu preocupación. Por favor contáctate con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, en un horario de 7 de la mañana a 10 de la noche. También está disponible Prisma Med Responde en el sitio de ayuda.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "Fraude | es un fraude | esto es fraude | me están estafando | denuncia de fraude",
+              "answer": "Comprendo tu preocupación. Por favor contáctate con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, en un horario de 7 de la mañana a 10 de la noche. También está disponible Prisma Med Responde en el sitio de ayuda.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "Quiero mi estado de cuenta | estado de cuenta | mándame el estado de cuenta | necesito el estado de cuenta | envíenme mi estado de cuenta",
+              "answer": "Con gusto. Para solicitar tu estado de cuenta, por favor contáctate con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, en un horario de 7 de la mañana a 10 de la noche. También está disponible Prisma Med Responde en el sitio de ayuda.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "Quiero cambiar mis datos | cambio de datos | actualizar mis datos | cambiar mi domicilio | cambiar mi teléfono | corregir mis datos | actualizar mi información",
+              "answer": "Para realizar un cambio de datos, por favor contáctate con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, en un horario de 7 de la mañana a 10 de la noche. También está disponible Prisma Med Responde en el sitio de ayuda.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            },
+            {
+              "objection": "Pide información que no tienes | no me puedes dar esa información | dame mi número de cuenta | dame mi CLABE completa | dame mi referencia completa | dame mi contrato | dame mi historial completo | información no autorizada | no estás autorizado a darme eso",
+              "answer": "Esa información requiere atención especializada. Por favor contáctate con el centro de atención al paciente llamando al cero uno, ochoscientos, dos treinta y cinco, veintiseis, setenta y siete o por WhatsApp al cincuenta y cinco, diescinueve, veintisiete, cero cinco, sesenta y siete, en un horario de 7 de la mañana a 10 de la noche. También está disponible Prisma Med Responde en el sitio de ayuda.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin cita"
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.soft_close_intencion"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ocupado",
+            "goto": "intent.objection.cliente_ocupado"
+          },
+          "No reconoce crédito": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "no_reconoce_credito",
+            "goto": "intent.soft_close_no_commitment"
+          }
+        }
+      },
+      "intent.objection.cliente_ocupado": {
+        "type": "intention",
+        "label": "Objeción: paciente ocupado",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Lo entiendo perfectamente. ¿A qué hora podemos volver a contactarte?",
+        "on": {
+          "always": {
+            "goto": "task.next_contact"
+          }
+        }
+      },
+      "task.next_contact": {
+        "type": "task",
+        "label": "Próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "time_windows": [
+            "mañana",
+            "tarde",
+            "noche",
+            "indistinto"
+          ],
+          "require_franja": false,
+          "require_hour": false,
+          "require_day": true,
+          "allow_today": true,
+          "default_to_tomorrow": false,
+          "ask_phone": false
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_next_contact"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_callback"
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Cierre (cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Muchas gracias. Hemos registrado tu cita de turno. Te agradecemos tu atención y te recordamos que confirmar la cita tu crédito oportunamente te permitirá seguir creciendo con tu negocio.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_intencion": {
+        "type": "intention",
+        "label": "Cierre (intención de turno)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Gracias por tu tiempo. Registraremos tu intención de turno. Recuerda que pagando el total antes de la fecha límite mantendrás tu cuenta activa.",
+        "on": {
+          "always": {
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre (sin cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Gracias por tu tiempo. Registraremos el resultado de esta gestión y daremos seguimiento conforme a nuestras políticas. Si requiere información adicional, puede comunicarse con nuestros canales de atención.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Que tengas un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Disculpa la confusión, te agradezco. Que tengas un buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_autenticado": {
+        "type": "final",
+        "label": "Despedida (no autenticado)",
+        "prompt": "Gracias. Por seguridad no puedo proporcionar información del crédito. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Muchas gracias por tu ayuda. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_next_contact": {
+        "type": "final",
+        "label": "Despedida (próximo contacto)",
+        "prompt": "Correcto, ya quedó agendado para {next_contact_date_natural}. Gracias por tu tiempo. Que tengas un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_no_callback": {
+        "type": "final",
+        "label": "Despedida (sin agendar)",
+        "prompt": "Entiendo. Gracias por tu tiempo. Te contactaremos en otra ocasión. Que tengas un buen día.",
+        "delivery": "say"
+      }
+    }
+  }
+}

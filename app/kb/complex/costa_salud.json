@@ -1,0 +1,82 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Cómo puedo contactarlos? | ¿Tienen atención al paciente? | ¿Cuál es el número de contacto? | ¿Tienen otro teléfono?",
+    "answer": "Puedes comunicarte a nuestro teléfono de contacto: seis, cero, cero, tres, dos, cero, tres, cero, cero, cero."
+  },
+  {
+    "question": "¿Con quién hablo? | ¿De qué empresa llaman? | ¿Quién me llama? | ¿De parte de quién?",
+    "answer": "Te habla {nombre_agente} de Colektia, por encargo de Costa Salud."
+  },
+  {
+    "question": "¿Cuál es mi turno pendiente? | ¿Cuánto debo? | ¿Cuál es mi cita pendiente? | ¿Cuál es el turno? | ¿Cuándo vence?",
+    "answer": "Tu turno pendiente es de {due_balance_palabras} y la fecha de fecha propuesta fue el {fecha_vencimiento}. Te recomendamos regularizarlo hoy o mañana para evitar mayores inconvenientes."
+  },
+  {
+    "question": "¿Por qué me están llamando? | ¿Para qué es esta llamada? | ¿Cuál es el motivo de la llamada?",
+    "answer": "{respuesta_motivo_llamada}"
+  },
+  {
+    "question": "¿Cómo puedo agendar? | ¿Cuáles son los medios de turno? | ¿Dónde puedo agendar? | ¿Cómo turno mi turno?",
+    "answer": "Puedes agendar a través del Botón de turno en santander punto ce ele, desde tu App Santander, o presencialmente en nuestras sucursales."
+  },
+  {
+    "question": "¿Hasta cuándo tengo plazo? | ¿Cuántos días me dan? | ¿Cuál es la fecha límite? | ¿Hasta qué día puedo agendar?",
+    "answer": "Lo ideal es que lo hagas lo antes posible, preferiblemente hoy o mañana, para evitar mayores inconvenientes en tu cuenta."
+  },
+  {
+    "question": "Quiero hablar con un agente | Quiero hablar con una persona | Quiero un asesor humano | Necesito hablar con alguien de verdad",
+    "answer": "Por este canal puedo ayudarte directamente con tu turno. Si prefieres hablar con un asesor, puedes llamar al seis, cero, cero, tres, dos, cero, tres, cero, cero, cero."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Costa Salud, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

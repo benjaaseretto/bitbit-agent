@@ -1,0 +1,122 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "paciente pregunta sobre métodos de turno | ¿Cómo puedo agendar?",
+    "answer": "Puedes agendar en Mi Sucursal web en triple dobleve punto cajalosandes punto cl. También puedes hacerlo en Servipag, sanatorio Estado, Sencillito, Caja Vecina usando el convenio uno, cuatro, cero, seis, nueve; en Toku en cajalosandes punto trytoku punto com; o directamente en nuestras sucursales de Estrella Médica."
+  },
+  {
+    "question": "paciente pide la página de Toku | ¿Cuál es la URL de Toku?",
+    "answer": "La página de Toku es cajalosandes punto trytoku punto com. Puedes ingresarla tal cual: ‘cajalosandes punto trytoku punto com’."
+  },
+  {
+    "question": "paciente pregunta por Caja Vecina | ¿Cuál es el número de convenio?",
+    "answer": "El número de convenio para Caja Vecina es: uno, cuatro, cero, seis, nueve."
+  },
+  {
+    "question": "paciente pregunta por qué el especialidad o las cuotas son tan altas | paciente pide detalle de cita pendiente",
+    "answer": "Comprendo tu duda. El turno informado de {total_balance_palabras} corresponde a la suma de los montos vencidos de los {dim_7} créditos que actualmente tienes activos y al total de {info_7} sesión(s) en atraso de agenda. Si necesitas el detalle, por producto es {due_balance_palabras} y por cada sesión es {invoiced_balance_palabras} aproximadamente."
+  },
+  {
+    "question": "paciente solicita detalle por producto | paciente pide ver cita pendiente por crédito o por sesión",
+    "answer": "Claro. Tu cita pendiente total es {total_balance_palabras} y corresponde a {dim_7} crédito(s) vigentes. Cada crédito tiene {dim_8} sesión(s) en atraso de agenda y una cita pendiente por producto de {due_balance_palabras}. A nivel de sesión, la cita pendiente es {invoiced_balance_palabras} aproximadamente por cada una."
+  },
+  {
+    "question": "paciente pregunta total de cuotas en atraso de agenda | ¿Cuántas cuotas en atraso de agenda tengo en total?",
+    "answer": "En total, sumando todos tus créditos, tienes {info_7} sesión(s) en atraso de agenda."
+  },
+  {
+    "question": "paciente pregunta cantidad de cuotas en atraso de agenda por producto | ¿Cuántas cuotas en atraso de agenda tiene cada crédito?",
+    "answer": "Por cada crédito, registras {dim_8} sesión(s) en atraso de agenda. El especialidad por producto es {due_balance_palabras} y por cada sesión es {invoiced_balance_palabras} aproximadamente."
+  },
+  {
+    "question": "paciente pregunta cuántos créditos tiene | ¿Cuántos créditos tengo?",
+    "answer": "Actualmente tienes {dim_7} crédito(s) activos."
+  },
+  {
+    "question": "paciente pregunta tipo de créditos | ¿Qué tipo de créditos son?",
+    "answer": "Tus créditos son de tipo {dim_1}."
+  },
+  {
+    "question": "paciente pregunta si puede agendar en efectivo | paciente no tiene cuenta bancaria",
+    "answer": "Sí, puedes agendar en efectivo a través de Servipag, en Caja Vecina usando el convenio uno, cuatro, cero, seis, nueve, o directamente en las sucursales de Estrella Médica."
+  },
+  {
+    "question": "paciente pregunta cómo contactarse | ¿Tienen número de atención?",
+    "answer": "Atención al paciente: seis cero cero, cinco uno cero, cero cero, cero cero. Inbound coordinación de agenda: seis cero cero, nueve siete ocho, cero dos ocho cero. WhatsApp: cincuenta y seis, nueve, tres cuatro ocho cuatro, ocho cuatro dos cinco. Horarios: de lunes a jueves, de nueve a trece cuarenta y cinco, y de quince a dieciséis cuarenta y cinco; los viernes de nueve a catorce."
+  },
+  {
+    "question": "paciente pregunta por qué la llamada proviene de número fijo o móvil y no 600 | ¿Por qué no viene de un número 600?",
+    "answer": "Le informo que, debido a una actualización en la normativa de prefijos telefónicos, nuestras gestiones de coordinación de agenda ahora podrán realizarse desde números fijos o móviles, no por números seiscientos, de acuerdo al fallo reciente de la Corte Suprema."
+  },
+  {
+    "question": "paciente pregunta cuántas cuotas totales le quedan por agendar | ¿Cuántas cuotas en total me restan del crédito? | ¿Cuántas cuotas me faltan por agendar?",
+    "answer": "El total de cuotas restantes lo puede ver en Mi Sucursal web. Lo que tengo registrado son sus {info_7} sesión(s) en atraso de agenda."
+  },
+  {
+    "question": "paciente quiere diferenciar cuotas en atraso de agenda vs cuotas totales | ¿Esas son todas mis cuotas o solo las atrasadas? | ¿Las cuotas en atraso de agenda son todas las que debo?",
+    "answer": "Esas son solo sus cuotas en atraso de agenda: {info_7} en total, {dim_8} por crédito. Las cuotas futuras no están incluidas."
+  },
+  {
+    "question": "paciente pregunta desde qué mes está impago o cuál es el mes vencido | ¿Desde qué mes debo? | ¿Cuál mes está impago? | ¿De cuándo viene atrasado?",
+    "answer": "Su sesión vencida más antigua tiene fecha de fecha propuesta {due_date}."
+  },
+  {
+    "question": "paciente pregunta cuál es el especialidad vencido | ¿Cuánto debo en atraso de agenda? | ¿Cuánto es lo vencido? | ¿Cuál es mi cita pendiente vencida?",
+    "answer": "Su especialidad vencido es {total_balance_palabras}, correspondiente a {info_7} sesión(s) en atraso de agenda."
+  },
+  {
+    "question": "paciente pregunta por alternativas de regularización | ¿Qué opciones tengo para ponerme al día? | ¿Tienen alguna alternativa para agendar? | ¿Pueden ofrecerme algo?",
+    "answer": "{texto_alternativas_regularizacion}"
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Estrella Médica, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

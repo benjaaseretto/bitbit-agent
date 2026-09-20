@@ -1,0 +1,154 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Qué es la novación?",
+    "answer": "La novación renueva tu crédito actual creando uno nuevo que sustituye al anterior. Aplica cuando el crédito ya fue desembolsado, la seguimiento comercial no supera aproximadamente un mes y no se han realizado abonos a capital en el mes anterior."
+  },
+  {
+    "question": "Beneficios de la novación",
+    "answer": "Permite empezar de cero, reorganizar la cotización y evitar que sigan corriendo seguimiento comercial e intereses. La cotización pendiente se liquida y se crea un nuevo crédito con un plazo breve de referencia. No genera consultas adicionales a centrales de riesgo y puede habilitar aumento de cupo en algunos casos."
+  },
+  {
+    "question": "No entiendo, ¿qué es la novación?",
+    "answer": "La novación te permite cerrar la compra los intereses pendientes del crédito actual y empezar un crédito de 0 con plazo de compra a 30 días."
+  },
+  {
+    "question": "¿Qué pasa con el importe a capital?",
+    "answer": "La novación te permite cerrar la compra los intereses pendientes del crédito actual y empezar un crédito de 0 con plazo de compra a 30 días; tu importe a capital queda intacto y de esta manera se evitan cargos adicionales."
+  },
+  {
+    "question": "¿Por qué el valor que me ofreces hoy de novación es más grande que el de ayer?",
+    "answer": "Porque la novación te permite cerrar la compra los intereses pendientes del crédito actual y empezar un crédito de cero. Entre más tiempo pase, el valor de la novación va aumentando."
+  },
+  {
+    "question": "¿Cuál es el valor de la novación? | Cuánto tengo que cerrar la compra por la novación | Cuánto vale la novación | Cuál es el monto de la novación",
+    "answer": "Para la novación, {valor_novacion_frase}."
+  },
+  {
+    "question": "¿Por qué puedo quedar al día pagando menos? | Cómo es que compra menos y quedo al día | Por qué el monto es menor",
+    "answer": "Porque estás pagando únicamente los intereses pendientes; el valor del importe capital se incluye en el nuevo crédito."
+  },
+  {
+    "question": "Pero en la aplicación no me aparece que esté vencido | En la app no aparece vencido | No me sale vencido en la aplicación | No veo el vigencia de oferta",
+    "answer": "La fecha de vigencia de oferta que tengo reportada es el {due_date_spoken}."
+  },
+  {
+    "question": "¿Son 30 días hábiles? | Los 30 días son hábiles | Los 30 días son calendarios | Los 30 días son corridos | Cómo se cuentan los 30 días",
+    "answer": "Los 30 días correspondientes a la novación son calendarios, no hábiles."
+  },
+  {
+    "question": "¿Qué costo tiene la novación?",
+    "answer": "Incluye un cobro por concepto de aval donación. En algunos primeros productos este valor puede ser mayor y luego disminuir."
+  },
+  {
+    "question": "¿Cuánto debo cerrar la compra para hacer la novación?",
+    "answer": "Para activar la novación, {valor_novacion_frase}. Ese monto viene calculado por el sistema para tu caso y aparece en tu cuenta cuando eliges ‘Ampliar Plazo’."
+  },
+  {
+    "question": "¿Cómo hago la novación?",
+    "answer": "Ingresa al portal oficial, inicia sesión, ve a créditos activos y elige la opción Ampliar Plazo. Revisa y autoriza los términos y condiciones; realiza el compra con el método que prefieras y finaliza el proceso desde la plataforma."
+  },
+  {
+    "question": "Qué es RapiCredit?",
+    "answer": "RapiCredit ofrece préstamos de dinero en línea de forma rápida, fácil y segura para personas y pequeñas empresas en Colombia. Proporciona acceso a créditos de libre inversión para cubrir gastos inesperados, permitiendo realizar la solicitud, recibir el dinero y cerrar la compra completamente en línea, utilizando la firma electrónica para el contrato. "
+  },
+  {
+    "question": "Quiero realizar una renegociación | Quiero renegociar | Hay renegociación | cerrar la compra en cuotas | Otras opciones | Qué otras opciones tengo",
+    "answer": "En este momento no tienes disponible la renegociación ni un plan de cuotas adicional. Lo que sí puedes hacer es una novación: crea un crédito nuevo que reemplaza al anterior y, para activarla, el compra de formalización debe realizarse hoy."
+  },
+  {
+    "question": "Cuál es el plazo para la novación | Hasta cuándo puedo cerrar la compra la novación | Cuándo tengo que cerrar la compra la novación | La novación es solo hoy | Cuánto plazo tengo para la novación",
+    "answer": "Para activar la novación, el compra de formalización debe realizarse hoy mismo. Si no puedes hoy, la alternativa es cerrar la compra el total del crédito en una fecha cercana."
+  },
+  {
+    "question": "¿De donde me llaman?",
+    "answer": "Soy de RapiCredit, una empresa de préstamos en línea. Estoy aquí para ayudarte con cualquier pregunta o inquietud que tengas sobre tu crédito."
+  },
+  {
+    "question": "¿Cuál es el número de servicio al comprador?",
+    "answer": "¡Claro! Si necesitas comunicarte con nosotros, puedes llamar a nuestro número de servicio al comprador: sesenta, uno, tres, nueve, cero, dos, seis, siete, cero. Y si tienes alguna consulta sobre cartera, la línea es: sesenta, uno, siete, cuatro, cuatro, ocho, dos, cero, dos. Estoy aquí para ayudarte con lo que necesites."
+  },
+  {
+    "question": "¿Cómo compra la novación?",
+    "answer": "Realiza tus pagos directamente en rapicredit.com: inicia sesión, entra a Créditos Activos y elige ‘Ampliar Plazo’. Dado que tienes novación disponible, puedes completarla ahí mismo. Si prefieres, también puedes cerrar la compra el total desde tu crédito activo."
+  },
+  {
+    "question": "¿Cómo y dónde compra en RapiCredit?",
+    "answer": "Puedes cerrar la compra en rapicredit.com iniciando sesión y, desde Créditos Activos, en ‘Ampliar Plazo’. Si pagas por Nequi, Daviplata, consignación bancaria o por Sucursal Virtual Bancolombia, recuerda enviar el comprobante a ayuda@rapicredit.com o al WhatsApp de cartera. Los pagos por PSE y Efecty se aplican automáticamente."
+  },
+  {
+    "question": "¿Cuáles son los métodos de compra?",
+    "answer": "Puedes cerrar la compra por PSE, Banco Davivienda, Bancolombia (en sucursal, corresponsales o Sucursal Virtual), Efecty, Nequi y SuSuerte (solo en el departamento de Caldas)."
+  },
+  {
+    "question": "¿Cuál es el numero de convenio de Efecty?",
+    "answer": "El numero de convenio de Efecty es: uno uno uno, cuatro, cinco, seis."
+  },
+  {
+    "question": "¿Qué es Rapiflex Ya?",
+    "answer": "Rapiflex Ya es un beneficio adicional que Rapicredit ofrece a clientes que realizan el compra total de su cotización. Después de que se registre el compra total, puedes acceder a un nuevo crédito Rapiflex Ya con intereses menores a los habituales. Para conocer los detalles de estos descuentos y validarlo, ingresa a nuestra página rapicredit punto com."
+  },
+  {
+    "question": "¿Por qué tengo que mandar el comprobante por mail?",
+    "answer": "Para registrar el compra en nuestro sistema. Cuando pagas por Nequi, Daviplata, consignación bancaria o por Sucursal Virtual Bancolombia, necesitamos el comprobante para procesar y aplicar el compra correctamente a tu cuenta."
+  },
+  {
+    "question": "¿Cuál es el correo electrónico de atención al comprador?",
+    "answer": "El correo electrónico de atención al comprador es ayuda arroba rapicredit punto com"
+  },
+  {
+    "question": "¿Cuál es la página web de Rapicredit?",
+    "answer": "La página web de Rapicredit es rapicredit punto com. Puedes acceder a rapicredit punto com barra contacto para más información."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "Neonatal Kit puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

@@ -4,60 +4,48 @@
     "visible_name": "bitbit",
     "flow_type": "test",
     "enabled": true,
-    "description": "Flujo único de cobranza Bitbit (financiamiento celular, stack OSS).",
+    "description": "Alias legacy de clinica_vida_flow (mismo dominio médico).",
     "fields": [
       {
-        "label": "Nombre del cliente",
+        "label": "Nombre del paciente",
         "field": "name",
         "type": "text",
         "required": true
       },
       {
-        "label": "Nombre de la empresa",
+        "label": "Nombre de la clínica",
         "field": "company_name",
         "type": "text",
         "required": true
       },
       {
-        "label": "País",
-        "field": "country_id",
-        "type": "select",
-        "required": true,
-        "options": [
-          {
-            "value": 146,
-            "name": "Mexico"
-          }
-        ]
-      },
-      {
-        "label": "Monto total",
-        "field": "amount",
-        "type": "number",
+        "label": "Especialidad",
+        "field": "especialidad",
+        "type": "text",
         "required": true
       },
       {
-        "label": "Saldo vencido",
-        "field": "due_balance",
-        "type": "number",
-        "required": true
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
       },
       {
-        "label": "Fecha de vencimiento",
-        "field": "due_date",
-        "type": "date",
-        "required": true
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
       }
     ],
     "knowledge_base": {
-      "file": "bitbit.json",
-      "company_id": "bitbit-demo",
-      "description": "Base de conocimiento bitbit.json."
+      "file": "clinica_vida.json",
+      "company_id": "clinica-vida-demo",
+      "description": "FAQ de consultas médicas."
     },
-    "company_id": "bitbit-demo"
+    "company_id": "clinica-vida-demo"
   },
   "flow_config": {
-    "company_pronunciation": "Bitbit"
+    "company_pronunciation": "Clínica Vida"
   },
   "flow_graph": {
     "version": "1.0",
@@ -65,19 +53,17 @@
     "nodes": {
       "task.identity_verification": {
         "type": "task",
-        "label": "Verificar identidad",
+        "label": "Verificar identidad del paciente",
         "task_type": "IdentityVerificationTask",
         "params": {
           "max_retries": 2,
-          "identity_identificacion_breve": "Hola, buen día. Mi nombre es {nombre_agente}, le hablo de Bitbit respecto al financiamiento de su teléfono móvil."
+          "identity_identificacion_breve": "Hola, buen día. Mi nombre es {nombre_agente}, le hablo de {nombre_empresa} para coordinar su consulta médica."
         },
         "on": {
           "Entregado": {
             "action": "set_status",
             "status": "Entregado",
             "goto": "intent.opening",
-            "pay_confirmation": true,
-            "pay_confirmation_next": "final.end_paid",
             "express_route": true,
             "express_route_next": "task.negotiation"
           },
@@ -103,7 +89,7 @@
         "label": "Apertura y motivo de llamada",
         "delivery": "say",
         "interruptible": false,
-        "prompt": "Hola {nombre_deudor}, soy {nombre_agente} de Bitbit. El motivo de mi llamada es recordarle que su cuota del financiamiento de su teléfono presenta un atraso de {dias_mora} días. Queremos ayudarle a mantener el equipo desbloqueado y cuidar su historial. ¿Hubo algún inconveniente que le impidiera pagar en la fecha acordada?",
+        "prompt": "Hola {nombre_deudor}, soy {nombre_agente} de {nombre_empresa}. Lo contacto para agendar su consulta de {especialidad} con {nombre_medico} en {sucursal}. ¿Le vendría bien una cita esta semana, por ejemplo hoy o mañana?",
         "on": {
           "always": {
             "goto": "task.negotiation"
@@ -112,51 +98,45 @@
       },
       "task.negotiation": {
         "type": "task",
-        "label": "Negociación",
-        "task_type": "NegotiationTaskV2",
+        "label": "Agendar consulta",
+        "task_type": "AppointmentSchedulingTask",
         "params": {
-          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. Pagar a más tardar {fecha_limite} le ayuda a mantener el teléfono activo y su historial positivo con Bitbit. ¿Podría realizar el pago dentro de ese plazo?",
-          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, el servicio del teléfono podría restringirse. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible pagar ese día?",
+          "invalid_date_message": "Entiendo. Esa fecha queda fuera de la agenda disponible. Podemos ofrecerle turnos hasta el {fecha_limite}. ¿Prefiere otro día dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Para {especialidad} tenemos disponibilidad hasta el {fecha_limite}. ¿Le funciona alguna fecha dentro de ese rango?",
           "max_dias": "{max_dias}",
-          "allow_partial_payments": false,
           "max_attempts": 3,
-          "ask_nonpayment_reason": false,
-          "collect_payment_method": false,
-          "benefit_hints": [
-            "mantener su teléfono activo y su historial con Bitbit positivo para futuros créditos"
-          ],
-          "custom_instructions": "Mantén un tono cordial, profesional, cercano y empático en todo momento. Si el cliente indica que fue olvido, ofrece pagar hoy mismo. Si hay problema económico, ofrece una fecha compromiso cercana. Refuerza los beneficios de mantener el teléfono activo y el historial positivo, y menciona las consecuencias si el atraso continúa (restricción del teléfono) pero sin sonar amenazante.\n\nOBJECIÓN DEVOLUCIÓN/CANCELACIÓN: Si el cliente menciona querer devolver, entregar el equipo, cancelar el servicio o que no lo quiere, NO cierres la llamada ni uses sin_compromiso de inmediato. Primero responde con empatía enfocándote en que para iniciar ese proceso debe poner al día su saldo pendiente. Si insiste, responde de forma conciliadora indicando que solo puedes gestionar el pago del saldo vigente para evitar que la deuda crezca. Solo si tras ambas respuestas sigue sin aceptar ningún acuerdo de pago, recién entonces usa sin_compromiso según la política general de negociación. Al proponer o cerrar el acuerdo de pago, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el compromiso, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas."
+          "custom_instructions": "Mantén un tono cordial, profesional y empático. Sos asistente de agenda médica, NO das diagnósticos ni recetas. Si el paciente describe síntomas, escuchá con empatía y ofrecé agendar cuanto antes con el especialista. Si no puede esa semana, ofrecé la fecha más cercana disponible. Confirmá siempre día y, si lo menciona, franja (mañana/tarde). Nunca inventes horarios exactos que no estén en la KB."
         },
         "on": {
-          "Compromiso": {
+          "Cita agendada": {
             "action": "set_status",
-            "status": "Compromiso",
+            "status": "Cita agendada",
             "commitment_date": "result.commitment_date",
             "goto": "intent.confirm_commitment"
           },
-          "Sin compromiso": {
+          "Sin cita": {
             "action": "set_status",
-            "status": "Sin compromiso",
+            "status": "Sin cita",
             "goto": "intent.soft_close_no_commitment"
           },
-          "Pagado": {
+          "Ya tenía cita": {
             "action": "set_status",
-            "status": "Pagado",
+            "status": "Ya tenía cita",
             "goto": "final.end_paid"
           },
-          "Intención de pago": {
+          "Reagendar después": {
             "action": "set_status",
-            "status": "Intención de pago",
+            "status": "Reagendar después",
             "goto": "final.end_intencion_de_pago"
           }
         }
       },
       "intent.confirm_commitment": {
         "type": "intention",
-        "label": "Confirmar compromiso y reforzar beneficios",
+        "label": "Confirmar cita",
         "delivery": "say",
         "interruptible": false,
-        "prompt": "Entonces quedamos en que realizará su pago el día {commitment_date_spoken}, ¿correcto? Al estar al corriente, mantiene su teléfono activo y su historial con Bitbit positivo para futuros créditos. Si el atraso continúa, el sistema puede restringir el funcionamiento del teléfono. ¿Tiene alguna duda?",
+        "prompt": "Perfecto. Queda agendada su consulta de {especialidad} con {nombre_medico} el día {commitment_date_spoken} en {sucursal}. Le pedimos llegar diez minutos antes con documento de identidad. ¿Tiene alguna otra consulta?",
         "on": {
           "always": {
             "goto": "final.end_commitment"
@@ -165,10 +145,10 @@
       },
       "intent.soft_close_no_commitment": {
         "type": "intention",
-        "label": "Cierre suave (sin compromiso)",
+        "label": "Cierre sin cita",
         "delivery": "say",
         "interruptible": false,
-        "prompt": "Entiendo. Gracias por su tiempo. Desde Bitbit lo contactaremos en otra ocasión.",
+        "prompt": "Entiendo. Gracias por su tiempo. Cuando desee agendar, puede llamar a {nombre_empresa} o contactarnos por WhatsApp.",
         "on": {
           "always": {
             "goto": "final.end_no_commitment"
@@ -177,20 +157,20 @@
       },
       "final.end_commitment": {
         "type": "final",
-        "label": "Despedida (compromiso)",
-        "prompt": "Muchas gracias {nombre_deudor}. Con su pago, su equipo seguirá funcionando sin interrupciones. Puede pagar por la app Bitbit, transferencia bancaria o tiendas autorizadas. Que tenga un excelente día.",
+        "label": "Despedida (cita agendada)",
+        "prompt": "Muchas gracias {nombre_deudor}. Lo esperamos el {commitment_date_spoken} en {sucursal}. Que tenga un excelente día.",
         "delivery": "say"
       },
       "final.end_no_commitment": {
         "type": "final",
-        "label": "Despedida (sin compromiso)",
+        "label": "Despedida (sin cita)",
         "prompt": "Gracias por su tiempo. Que tenga buen día.",
         "delivery": "say"
       },
       "final.end_paid": {
         "type": "final",
-        "label": "Despedida (pagado)",
-        "prompt": "Perfecto, gracias por su tiempo. Que tenga buen día.",
+        "label": "Despedida (ya tenía cita)",
+        "prompt": "Perfecto, entonces ya cuenta con su turno registrado. Gracias por confirmar. Que tenga buen día.",
         "delivery": "say"
       },
       "final.end_wrong": {
@@ -202,7 +182,7 @@
       "final.end_recado": {
         "type": "final",
         "label": "Despedida (recado)",
-        "prompt": "Gracias. Por favor comuníquele que desde Bitbit intentamos contactar al titular.",
+        "prompt": "Gracias. Por favor comuníquele que desde {nombre_empresa} llamamos para agendar su consulta médica.",
         "delivery": "say"
       },
       "final.end_mailbox": {
@@ -213,8 +193,8 @@
       },
       "final.end_intencion_de_pago": {
         "type": "final",
-        "label": "Despedida (intención de pago)",
-        "prompt": "Gracias por su tiempo. Desde Bitbit dejamos registro de su intención de pago para contactarlo después.",
+        "label": "Despedida (reagendar después)",
+        "prompt": "Gracias por su tiempo. Dejamos registro para volver a contactarlo y agendar su consulta más adelante.",
         "delivery": "say"
       }
     }

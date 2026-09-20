@@ -1,8 +1,9 @@
 """
-bitbit-agent — bot de voz con Pipecat.
+clinica-vida-agent — bot de voz con Pipecat.
 
-Stack: DeepSeek-V4.1-Flash + Whisper OSS + Chatterbox Multilingual (ES) + Silero VAD.
-Flujo: app/flow_graph/specs/bitbit_flow_graph.json
+Stack: DeepSeek-V4.1-Flash + Whisper OSS + Kokoro (ES) + Silero VAD.
+Flujo: app/flow_graph/specs/*.json (default clinica_vida_flow).
+Tasks: app/tasks/* (scripts independientes).
 
 Arranque:
   python -m app.pipecat_runtime.bot --transport webrtc
@@ -18,7 +19,7 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
-from pipecat.frames.frames import LLMUpdateSettingsFrame, TTSSpeakFrame
+from pipecat.frames.frames import InputAudioRawFrame, LLMUpdateSettingsFrame, TTSSpeakFrame
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker, ProcessorUnusablePolicy
 from pipecat.processors.aggregators.llm_context import LLMContext
@@ -26,6 +27,7 @@ from pipecat.processors.aggregators.llm_response_universal import (
     LLMContextAggregatorPair,
     LLMUserAggregatorParams,
 )
+from pipecat.processors.frame_processor import FrameProcessor
 from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.deepseek.llm import DeepSeekLLMService
@@ -36,9 +38,9 @@ from pipecat.transports.daily.transport import DailyParams
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.workers.runner import WorkerRunner
 
+from app.orchestrator import FlowController, build_session
 from app.pipecat_runtime.deepseek_llm import BitbitDeepSeekLLMService
-from app.pipecat_runtime.flow_data import build_session, render_template
-from app.pipecat_runtime.tools import FlowController
+from app.utils.templates import render_template
 
 _THINKING_OFF = DeepSeekLLMService.ThinkingConfig(type="disabled")
 
@@ -46,6 +48,20 @@ load_dotenv(override=True)
 
 ROOT = Path(__file__).resolve().parents[2]
 PRESET = ROOT / "presets" / "demo_call.json"
+
+
+class ClosedSessionGate(FrameProcessor):
+    """Descarta micrófono cuando la sesión ya cerró (fase done)."""
+
+    def __init__(self, session):
+        super().__init__()
+        self.session = session
+
+    async def process_frame(self, frame, direction):
+        await super().process_frame(frame, direction)
+        if isinstance(frame, InputAudioRawFrame) and self.session.phase == "done":
+            return
+        await self.push_frame(frame, direction)
 
 
 def require_config() -> None:
@@ -104,10 +120,15 @@ def _build_tts():
     from pipecat.services.kokoro.tts import KokoroTTSService
 
     voice = os.getenv("KOKORO_VOICE", "ef_dora")
+    speed = float(os.getenv("TTS_SPEED", "1.0"))
     tts = KokoroTTSService(
-        settings=KokoroTTSService.Settings(voice=voice, language=Language.ES),
+        settings=KokoroTTSService.Settings(
+            voice=voice, language=Language.ES, speed=speed
+        ),
     )
-    logger.info("TTS ready engine=kokoro voice={} language=ES", voice)
+    logger.info(
+        "TTS ready engine=kokoro voice={} language=ES speed={}", voice, speed
+    )
     return tts
 
 
@@ -141,7 +162,7 @@ transport_params = {
 
 async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     require_config()
-    logger.info("Starting bitbit-agent on Pipecat")
+    logger.info("Starting clinica-vida agent on Pipecat")
 
     metadata = _load_metadata()
     session, flow = build_session(metadata)
@@ -161,6 +182,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         await tts.queue_frame(TTSSpeakFrame(text))
 
     llm_holder: dict = {}
+    worker_holder: dict = {}
 
     async def on_phase(phase: str) -> None:
         """Swap system prompt + tools. Never call llm.set_settings (missing on DeepSeek)."""
@@ -170,16 +192,8 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         if not llm or not ctrl or not ctx:
             return
         if phase == "negotiation":
-            ctx.set_tools(
-                [
-                    ctrl.cliente_dispuesto,
-                    ctrl.finalizar,
-                    ctrl.responder_kb,
-                ]
-            )
-            # auto: allow free-text empathy / date proposals; tools only when needed.
-            # required forced endless responder_kb loops on hardship turns.
-            ctx.set_tool_choice("auto")
+            ctx.set_tools(ctrl.tools_for_phase("negotiation"))
+            ctx.set_tool_choice(ctrl.tool_choice_for_phase("negotiation"))
             await llm.queue_frame(
                 LLMUpdateSettingsFrame(
                     delta=DeepSeekLLMService.Settings(
@@ -191,6 +205,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         elif phase == "done":
             ctx.set_tools([])
             ctx.set_tool_choice("none")
+            worker = worker_holder.get("worker")
+            if worker is not None:
+                await worker.stop_when_done()
 
     controller = FlowController(session, flow, speak=speak, on_phase=on_phase)
 
@@ -206,11 +223,8 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     llm_holder["controller"] = controller
 
     context = LLMContext(
-        tools=[
-            controller.esperar_titular,
-            controller.registrar_resultado_identidad,
-        ],
-        tool_choice="required",
+        tools=controller.tools_for_phase("identity"),
+        tool_choice=controller.tool_choice_for_phase("identity"),
     )
     llm_holder["context"] = context
     user_aggregator, assistant_aggregator = LLMContextAggregatorPair(
@@ -221,6 +235,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     pipeline = Pipeline(
         [
             transport.input(),
+            ClosedSessionGate(session),
             stt,
             user_aggregator,
             llm,
@@ -240,13 +255,14 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         # One DeepSeek 400 must not tear down the whole WebRTC call.
         processor_unusable_policy=ProcessorUnusablePolicy.CONTINUE,
     )
+    worker_holder["worker"] = worker
     runner = WorkerRunner(handle_sigint=runner_args.handle_sigint)
     await runner.add_workers(worker)
 
     @transport.event_handler("on_client_connected")
     async def on_client_connected(transport, client):
         logger.info(
-            "Client connected call_id={} deudor={}",
+            "Client connected call_id={} paciente={}",
             session.call_id,
             session.nombre_deudor,
         )

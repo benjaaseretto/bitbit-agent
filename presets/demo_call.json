@@ -1,9 +1,9 @@
 {
   "name": "Juan Pérez",
-  "company_name": "Bitbit",
-  "amount": 1899,
-  "due_balance": 1899,
-  "due_date": "2026-09-01",
+  "company_name": "Clínica Vida",
+  "especialidad": "medicina general",
+  "nombre_medico": "la doctora López",
+  "sucursal": "sucursal Centro",
   "max_dias": 7,
   "nombre_agente": "Ana",
   "timezone": "America/Mexico_City"

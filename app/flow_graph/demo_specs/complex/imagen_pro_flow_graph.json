@@ -1,0 +1,629 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "imagen_pro_flow",
+    "visible_name": "ImagenPro",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (19 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/imagen_pro.json",
+      "company_id": "imagen_pro-demo",
+      "description": "Base de conocimiento de ImagenPro."
+    },
+    "company_id": "imagen_pro-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "mi_banco_co_flow_graph.json",
+      "node_count": 19,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "ImagenPro",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "enable_ocupado": true,
+          "enable_screening": true,
+          "wait_for_account_holder": true,
+          "screening_announce": "Soy {nombre_agente}, asesor de ImagenPro, llamo por una gestión con {nombre_deudor_completo}.",
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Él habla",
+            "Ella habla",
+            "Con él",
+            "Con ella",
+            "Sí soy yo",
+            "Sí señor/señora",
+            "Aló sí",
+            "Claro que sí",
+            "Soy yo",
+            "Yo soy",
+            "El mismo",
+            "La misma",
+            "Habla con él",
+            "Habla con ella",
+            "Con él habla",
+            "Con ella habla",
+            "Sí hablo con él",
+            "Sí hablo con ella",
+            "Sí, habla con él",
+            "Sí, habla con ella",
+            "Sí, con esa persona",
+            "Sí, soy esa persona",
+            "dígame",
+            "digame",
+            "Sí, dígame",
+            "Ajá, dígame",
+            "aja",
+            "ajá"
+          ],
+          "invalid_confirmation_identification": [
+            "de parte",
+            "sí de parte",
+            "sí, de parte",
+            "aló de parte",
+            "dígame de parte",
+            "quién habla",
+            "quién es",
+            "con quién hablo",
+            "a ver"
+          ],
+          "identity_pregunta": "Muy buen día, ¿me comunica con {nombre_deudor_completo}, por favor?",
+          "identity_identificacion_breve": "Mi nombre es {nombre_agente}, soy asesor de ImagenPro.",
+          "identity_repregunta": "Para continuar, necesito confirmar que me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?",
+          "identity_no_titular_pregunta": "Gracias. ¿Conoce a {nombre_deudor_completo}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "dias_mora",
+              "rules": [
+                {
+                  "op": "<=",
+                  "value": 0,
+                  "goto": "intent.opening_preventivo"
+                },
+                {
+                  "op": ">",
+                  "value": 0,
+                  "goto": "intent.opening_vigente"
+                }
+              ],
+              "default": "intent.opening_vigente"
+            },
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "fast_commitment": true,
+            "fast_commitment_next": "intent.confirm_commitment"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          },
+          "Ocupado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "final.end_ocupado"
+          },
+          "Screening": {
+            "action": "set_status",
+            "status": "Screening",
+            "goto": "final.end_screening"
+          }
+        }
+      },
+      "intent.opening_preventivo": {
+        "type": "intention",
+        "label": "Apertura Preventivo (seguimiento comercial ≤ 0)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del comprador antes de avanzar. Hoy es {today_iso} y la fecha de vigencia de oferta es {due_date}. Use siempre tratamiento de USTED. PRIORIDAD de mayor a menor: (1) 'Ocupado' si NO PUEDE HABLAR / ATENDER ahora (está ocupado, llámeme después, no es buen momento, en reunión, manejando, ahorita no puedo hablar referidos a la llamada), SIN que sea negativa de compra. (2) 'compra parcial' si pagará SOLO una parte / un abono / la mitad / 'les puedo abonar algo' / 'no me alcanza para el total pero sí algo', aunque mencione fecha. (3) 'Negación' si dice que NO va a cerrar la compra o no puede cerrar la compra y no ofrece fecha ni abono. Incluye: 'no', 'no voy a cerrar la compra', 'no lo hago', 'esta vez no', 'no puedo' (compra), 'ahorita no' (compra), 'déjeme luego', 'no tengo', 'más adelante', 'no me alcanza', 'estoy corto', 'no tengo plata', 'estoy llevado', 'estoy apretado', 'la cosa está dura', 'ando embalado', 'estoy descuadrado', 'ando sin un peso', 'estoy fregado', 'me cogió mal parado', 'voy a ver', 'déjame revisar', 'puede ser', 'yo lo veo', 'después reviso eso', 'yo miro', 'déjeme validar', 'más tarde le confirmo'. NUNCA elijas 'Aceptación' ni registres pedido si el turno niega el compra. (4) 'Aceptación otra fecha' si confirma que pagará pero da una fecha ESPECÍFICA distinta: 'compra el viernes', 'el 20 te caigo', 'el lunes sin falta', 'mañana sin falta', 'mañana lo compra', 'hoy mismo' (si hoy no es la fecha de vigencia de oferta), 'espérame hasta la quincena'; convierte esa fecha a AAAA-MM-DD en el parámetro 'dato' (si solo dice el día del mes, usa el mes actual o el siguiente si ya pasó). (5) 'Aceptación fecha ambigua' si hay disposición a cerrar la compra con fecha vaga o condicionada: 'esta semana lo hago', 'apenas me paguen', 'cuando me paguen', 'estoy cuadrando', 'déjeme organizarme', 'a fin de mes', 'voy a ponerme al día' sin día, '¿me regalan unos días?', '¿cómo hacemos?'. (6) 'Aceptación' si confirma que pagará EN la fecha establecida, sin otra fecha y sin negar el compra: 'sí', 'claro que sí', 'de acuerdo', 'cuente con eso', 'cuente conmigo', 'voy a cerrar la compra', 'lo arreglo', 'voy a hacer el compra', 'yo lo realizo', 'yo lo hago', 'sí esa fecha', 'cuente con el compra', 'hoy realizo el compra' (si hoy es la fecha de vigencia de oferta), 'ok', 'listo', 'dale', 'de una', 'bueno', 'perfecto', o si dice que cualquier fecha le sirve ('cualquier fecha', 'la que sea', 'el día que sea'). No repreguntes, no repitas la información ni agregues saludos o agradecimientos extra.",
+        "prompt": "Hola {nombre_deudor}, mi nombre es {nombre_agente} de ImagenPro. Recuerde que esta llamada está siendo grabada y monitoreada para validar la calidad de mi servicio. El motivo de mi llamada, {nombre_deudor}, es para fomentar y mantener los buenos hábitos de compra. Por ello le informamos que su próxima cuota de financiamiento del crédito vence el próximo {due_date_spoken} por valor de {due_balance_palabras}. ¿Contamos con el compra en la fecha establecida?",
+        "on": {
+          "Aceptación": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "register_commitment": {
+              "date": "{due_date}",
+              "amount": "{due_balance}",
+              "invalid_goto": "task.negotiation_preventivo"
+            },
+            "goto": "intent.confirm_commitment"
+          },
+          "Aceptación otra fecha": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "register_commitment": {
+              "date": "payload",
+              "amount": "{due_balance}",
+              "invalid_goto": "task.negotiation_preventivo"
+            },
+            "goto_by": {
+              "field": "commitment_date",
+              "date_operation": "days_difference",
+              "compare_to": "due_date",
+              "rules": [
+                {
+                  "op": "<=",
+                  "value": 0,
+                  "goto": "intent.confirm_commitment"
+                },
+                {
+                  "op": "between",
+                  "min": 1,
+                  "max": 5,
+                  "goto": "intent.late_proximos_dias"
+                },
+                {
+                  "op": ">",
+                  "value": 5,
+                  "goto": "intent.late_acompanamiento"
+                }
+              ],
+              "default": "intent.confirm_commitment"
+            }
+          },
+          "Aceptación fecha ambigua": {
+            "goto": "task.negotiation_preventivo"
+          },
+          "Pago parcial": {
+            "goto": "intent.partial_acompanamiento"
+          },
+          "Ocupado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "final.end_ocupado"
+          },
+          "Negación": {
+            "goto": "intent.late_acompanamiento"
+          }
+        }
+      },
+      "intent.opening_vigente": {
+        "type": "intention",
+        "label": "Apertura Vigente (seguimiento comercial > 0)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta del comprador antes de avanzar. Use siempre tratamiento de USTED. PRIORIDAD: (1) 'Aceptación otra fecha' si da una fecha ESPECÍFICA de compra aunque el turno empiece con 'sí' ('sí, mañana compra', 'compra el viernes', 'el 20 te caigo', 'hoy mismo', 'el lunes sin falta'); convierte esa fecha a AAAA-MM-DD en el parámetro 'dato'. (2) 'Aceptación' si acepta ver una solución ahora SIN fecha ('sí', 'claro', 'de acuerdo', 'cómo hacemos', 'colabóreme', 'vamos a ver', 'yo lo realizo', 'voy a cerrar la compra', 'cuente conmigo', 'lo arreglo'). (3) 'Ocupado' si NO PUEDE HABLAR / ATENDER ahora (llámeme después, ahorita no puedo hablar, no es buen momento, en reunión, manejando), SIN que sea negativa de compra. (4) 'Pagado' si ya compró. (5) 'Negación' si no quiere ver una solución ahora o dice que no va a cerrar la compra ('no', 'no puedo', 'no tengo', 'más adelante', 'déjeme luego', 'no me alcanza', 'estoy corto', 'no tengo plata', 'después reviso eso', 'déjame revisar', 'yo miro'). No repreguntes, no tutees, no menciones transferencia ni especialista.",
+        "prompt": "Hola {nombre_deudor}, mi nombre es {nombre_agente} de ImagenPro. Recuerde que esta llamada está siendo grabada y monitoreada para validar la calidad de mi servicio. El motivo de mi llamada, {nombre_deudor}, es porque en ImagenPro estamos comprometidos con el bienestar financiero de nuestros clientes y el día de hoy su crédito presenta {dias_mora} días en seguimiento comercial, por un valor a cancelar de {due_balance_palabras}. ¿Quiere que veamos una solución ahora?",
+        "on": {
+          "Aceptación otra fecha": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "register_commitment": {
+              "date": "payload",
+              "amount": "{due_balance}",
+              "invalid_goto": "task.negotiation_vigente"
+            },
+            "goto": "intent.confirm_commitment"
+          },
+          "Aceptación": {
+            "goto": "task.negotiation_vigente"
+          },
+          "Negación": {
+            "goto": "intent.soft_close_no_commitment_vigente"
+          },
+          "Ocupado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "final.end_ocupado"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.negotiation_preventivo": {
+        "type": "task",
+        "label": "Negociación Preventivo (seguimiento comercial ≤ 0)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "{max_dias_preventivo_acceptance}",
+          "suggest_dias": "{max_dias_preventivo}",
+          "max_attempts": 1,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "benefit_hints": [
+            "mantener un buen comportamiento crediticio",
+            "evitar cobros adicionales",
+            "construir mejores oportunidades en el sistema financiero"
+          ],
+          "ask_nonpayment_reason": false,
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "low_insistence": true,
+          "low_insistence_max_dias": "{max_dias_preventivo}",
+          "custom_instructions": "Gestión PREVENTIVA: el comprador no está en seguimiento comercial. Tratamiento de USTED; no tutees. No uses seguimiento comercial, cotización, compra vencido ni atraso; habla de su próxima cuota de financiamiento y de mantener el crédito al día. No menciones transferencia ni especialista. No insistas pidiendo fecha si no la da. Ocupado, compra parcial y no poder cerrar la compra se resuelven con los handlers. No menciones parámetros internos.",
+          "objection_handlers": [
+            {
+              "objection": "Estoy ocupado | No puedo hablar ahora | Disculpa no puedo hablar ahora | Llámame después | Llámeme después | No es buen momento | Estoy en reunión | Estoy manejando | Estoy conduciendo | No tengo tiempo ahora | Ahora no puedo hablar | Ahorita no puedo hablar | Tengo prisa | Voy de salida",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ocupado"
+            },
+            {
+              "objection": "Voy a cerrar la compra pero solo una parte | Solo puedo cerrar la compra una parte | Puedo abonar | Haré un abono | compra la mitad | compra lo que pueda | No me alcanza para el total pero sí algo | Puedo cerrar la compra menos del total | compra parcial | Solo puedo cerrar la compra algo de la cuota de financiamiento | No puedo cerrar la compra el completo | No puedo cerrar la compra el total completo | compra una parte de la cuota de financiamiento",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "compra parcial acompañamiento"
+            },
+            {
+              "objection": "No puedo cerrar la compra en la fecha de vigencia de oferta | No voy a poder cerrar la compra el día que vence | No voy a alcanzar a cerrar la compra a tiempo | Esta vez no voy a poder cerrar la compra la cuota de financiamiento | No tengo cómo cerrar la compra en la fecha | No voy a poder cerrar la compra antes del vigencia de oferta | No sé cuándo voy a poder cerrar la compra | No tengo fecha de compra | Estoy pasando por una situación difícil | No tengo dinero ahora",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido acompañamiento"
+            },
+            {
+              "objection": "Estoy corto | No tengo plata | Estoy llevado | Estoy apretado | La cosa está dura | No me alcanza | Ando embalado | Estoy descuadrado | Ando sin un peso | Estoy fregado | Me cogió mal parado",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido acompañamiento"
+            },
+            {
+              "objection": "Voy a ver | Déjame revisar | Puede ser | Yo lo veo | Después reviso eso | Yo miro | Déjeme validar | Más tarde le confirmo | Déjeme luego | Más adelante | Ahorita no",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido acompañamiento"
+            },
+            {
+              "objection": "Voy a cerrar la compra más de cinco días después del vigencia de oferta | Voy a cerrar la compra mucho después del vigencia de oferta | Voy a cerrar la compra en una semana o más | Voy a cerrar la compra en quince días | Voy a cerrar la compra en dos semanas | Voy a cerrar la compra el próximo mes | Voy a demorarme bastante en cerrar la compra",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido acompañamiento"
+            },
+            {
+              "objection": "No quiero cerrar la compra | No pienso cerrar la compra | No les voy a cerrar la compra | Me niego a cerrar la compra | No voy a cerrar la compra nada | No tengo por qué cerrar la compra | No me da la gana de cerrar la compra | No voy a cerrar la compra y punto | Olvídense de que voy a cerrar la compra | No pagaré | Hagan lo que quieran, no voy a cerrar la compra",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido acompañamiento"
+            },
+            {
+              "objection": "Voy a cerrar la compra unos días después del vigencia de oferta | compra unos días después | compra dentro de cinco días después de la fecha | compra en los próximos días después del vigencia de oferta | compra la semana del vigencia de oferta pero un poco después | compra apenas pueda en los próximos días | compra entre uno y cinco días después | ¿Hay problema si me demoro unos días? | ¿Hay multa por cerrar la compra un poco tarde?",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra próximos días"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto_by": {
+              "field": "commitment_date",
+              "date_operation": "days_difference",
+              "compare_to": "due_date",
+              "rules": [
+                {
+                  "op": "<=",
+                  "value": 0,
+                  "goto": "intent.confirm_commitment"
+                },
+                {
+                  "op": "between",
+                  "min": 1,
+                  "max": 5,
+                  "goto": "intent.late_proximos_dias"
+                },
+                {
+                  "op": ">",
+                  "value": 5,
+                  "goto": "intent.late_acompanamiento"
+                }
+              ],
+              "default": "intent.confirm_commitment"
+            }
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.late_acompanamiento"
+          },
+          "Sin compromiso acompañamiento": {
+            "goto": "intent.late_acompanamiento"
+          },
+          "Pago parcial acompañamiento": {
+            "goto": "intent.partial_acompanamiento"
+          },
+          "Ocupado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "final.end_ocupado"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Acompañamiento",
+            "goto": "intent.late_acompanamiento"
+          },
+          "Intención de pago próximos días": {
+            "goto": "intent.late_proximos_dias"
+          }
+        }
+      },
+      "task.negotiation_vigente": {
+        "type": "task",
+        "label": "Negociación Vigente (seguimiento comercial > 0)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "{max_dias}",
+          "max_attempts": 2,
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "benefit_hints": [
+            "construir un buen comportamiento crediticio",
+            "evitar cobros adicionales",
+            "mantener mejores oportunidades en el sistema financiero"
+          ],
+          "ask_nonpayment_reason": true,
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "custom_instructions": "Gestión VIGENTE. Tratamiento de USTED; no tutees. Tono empático y formal, sin presionar. No uses 'usted está en seguimiento comercial', 'su cotización', 'compra vencido' ni 'incumplimiento'; prefiere 'su crédito presenta {dias_mora} días en seguimiento comercial', 'valor a cancelar', 'ponerse al día'. No insistas pidiendo fecha si no la da. No menciones transferencia ni especialista.",
+          "objection_handlers": [
+            {
+              "objection": "No puedo cerrar la compra ahora | No tengo cómo cerrar la compra en este momento | Esta vez no voy a poder cerrar la compra la cuota de financiamiento | No voy a poder ponerme al día ahora | Voy a demorarme bastante en cerrar la compra | Voy a cerrar la compra mucho después | No sé cuándo voy a poder cerrar la compra | No tengo",
+              "answer": "Entendemos que no pueda realizar el compra en este momento. Gracias por comentarlo, esperamos que pronto pueda mejorar su situación y así atender la cuota de financiamiento de este mes. Desde ImagenPro le estaremos acompañando y nos comunicaremos en los próximos días para ver cómo van las cosas. Además, recuerde que cuenta con su asesor personal para apoyarlo cuando lo necesite.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido acompañamiento"
+            },
+            {
+              "objection": "Estoy corto | No tengo plata | Estoy llevado | Estoy apretado | La cosa está dura | No me alcanza | Ando embalado | Estoy descuadrado | Ando sin un peso | Estoy fregado | Me cogió mal parado",
+              "answer": "Entendemos que no pueda realizar el compra en este momento. Gracias por comentarlo, esperamos que pronto pueda mejorar su situación y así atender la cuota de financiamiento de este mes. Desde ImagenPro le estaremos acompañando y nos comunicaremos en los próximos días para ver cómo van las cosas. Además, recuerde que cuenta con su asesor personal para apoyarlo cuando lo necesite.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido acompañamiento"
+            },
+            {
+              "objection": "Voy a ver | Déjame revisar | Puede ser | Yo lo veo | Después reviso eso | Yo miro | Déjeme validar | Más tarde le confirmo | Déjeme luego | Más adelante | Ahorita no",
+              "answer": "Entendemos que no pueda realizar el compra en este momento. Gracias por comentarlo, esperamos que pronto pueda mejorar su situación y así atender la cuota de financiamiento de este mes. Desde ImagenPro le estaremos acompañando y nos comunicaremos en los próximos días para ver cómo van las cosas. Además, recuerde que cuenta con su asesor personal para apoyarlo cuando lo necesite.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Sin pedido acompañamiento"
+            },
+            {
+              "objection": "Voy a cerrar la compra en unos días | compra la próxima semana | compra apenas pueda en los próximos días | Voy a cerrar la compra pronto | compra en los próximos días",
+              "answer": "Perfecto, entendemos que realizará el compra en los próximos días. Lo invitamos a mantenerse al día con su crédito, ya que esto contribuye a conservar un buen historial crediticio y recuerde que en ImagenPro estamos para acompañarlo en lo que necesite.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Intención de compra próximos días"
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment_vigente"
+          },
+          "Sin compromiso acompañamiento": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Acompañamiento",
+            "goto": "final.end_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "goto": "final.end_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Intención de pago próximos días": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "substatus": "Próximos días",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar pedido y medios de compra",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Espera la respuesta del comprador tras la pregunta '¿Hay algo más en lo que pueda ayudarlo?'. Si responde 'sí', 'no', 'nada más', 'gracias', 'todo claro', 'ok' o cualquier respuesta breve, llama avanzar_flujo('Continuar') inmediatamente, SIN agregar texto de despedida ni resumir. Si el comprador hace una pregunta cubierta en la base de conocimiento, respóndela primero con la KB y luego llama avanzar_flujo('Continuar'). NUNCA vuelvas a agendar, renegociar ni preguntar por la fecha de compra. No tutees.",
+        "prompt": "Perfecto, entonces confirmamos su pedido de compra por un valor de {due_balance_palabras} para el día {commitment_date_spoken}. Para facilitar el compra recuerde que puede hacerlo a través del botón PSE o el botón Bancolombia en nuestra página web, también de forma presencial en nuestras oficinas o en corresponsales Bancolombia y Akí, y adicionalmente en Punto compra, Super Giros o en cualquier punto Efecty a nivel nacional. Su referencia para cerrar la compra es {reference_spelled}. ¿Hay algo más en lo que pueda ayudarlo?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.late_proximos_dias": {
+        "type": "intention",
+        "label": "comprador pagará 1-5 días post vigencia de oferta (playbook próximos días)",
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto {nombre_deudor}, entendemos que realizará el compra en los próximos días. Lo invitamos a mantenerse al día con su crédito, ya que esto contribuye a conservar un buen historial crediticio y recuerde que en ImagenPro estamos para acompañarlo en lo que necesite.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "substatus": "Próximos días",
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.late_acompanamiento": {
+        "type": "intention",
+        "label": "comprador pagará >5 días post vigencia de oferta o no puede (playbook acompañamiento)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Debes esperar la respuesta del comprador. Use siempre tratamiento de USTED. Si el comprador realiza cualquier pregunta —incluidas medios de compra, cualquier Efecty, Super Giros, montos, fechas u otros créditos—, respóndela de forma breve, precisa y únicamente con la información disponible, sin inventar. Una vez respondida, pregunta si tiene alguna otra consulta con una variación natural, por ejemplo: '¿Hay algo más en lo que pueda ayudarlo?', '¿Tiene alguna otra duda?' o '¿Hay alguna otra consulta?'. Si indica que no tiene más consultas, que está todo claro o responde de forma equivalente, continúa de inmediato. NO avances si acaba de hacer una pregunta. Si no realiza ninguna pregunta y solo desea continuar, avanza de inmediato, sin comentarios extra.",
+        "prompt": "{nombre_deudor}, entendemos que no pueda realizar el compra en la fecha de vigencia de oferta de su crédito o antes. Gracias por comentarlo, esperamos que pronto pueda mejorar su situación y así atender la cuota de financiamiento de este mes. Desde ImagenPro le estaremos acompañando y nos comunicaremos en los próximos días para ver cómo van las cosas. Además, recuerde que cuenta con su asesor personal para apoyarlo cuando lo necesite. ¿Hay algo mas en lo que pueda ayudarlo?",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Acompañamiento",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.partial_acompanamiento": {
+        "type": "intention",
+        "label": "comprador pagará solo una parte (playbook acompañamiento compra parcial)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Debes esperar la respuesta del comprador. Use siempre tratamiento de USTED. Si el comprador realiza cualquier pregunta —incluidas medios de compra, cualquier Efecty, Super Giros, montos, fechas u otros créditos—, respóndela de forma breve, precisa y únicamente con la información disponible, sin inventar. Una vez respondida, pregunta si tiene alguna otra consulta con una variación natural, por ejemplo: '¿Hay algo más en lo que pueda ayudarlo?', '¿Tiene alguna otra duda?' o '¿Hay alguna otra consulta?'. Si indica que no tiene más consultas, que está todo claro o responde de forma equivalente, continúa de inmediato. NO avances si acaba de hacer una pregunta. Si no realiza ninguna pregunta y solo desea continuar, avanza de inmediato, sin comentarios extra.",
+        "prompt": "{nombre_deudor}, entendemos que no pueda realizar el compra completo en la fecha de vigencia de oferta de su crédito o antes. Gracias por comentarlo, esperamos que pronto pueda mejorar su situación y así atender la cuota de financiamiento de este mes. Desde ImagenPro le estaremos acompañando y nos comunicaremos en los próximos días para ver cómo van las cosas. Además, recuerde que cuenta con su asesor personal para apoyarlo cuando lo necesite. ¿Hay algo mas en lo que pueda ayudarlo?",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Acompañamiento",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment_vigente": {
+        "type": "intention",
+        "label": "Cierre suave sin pedido (vigente)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Debes esperar la respuesta del comprador. Use siempre tratamiento de USTED. Si el comprador realiza cualquier pregunta —incluidas medios de compra, cualquier Efecty, Super Giros, montos, fechas u otros créditos—, respóndela de forma breve, precisa y únicamente con la información disponible, sin inventar. Una vez respondida, pregunta si tiene alguna otra consulta con una variación natural, por ejemplo: '¿Hay algo más en lo que pueda ayudarlo?', '¿Tiene alguna otra duda?' o '¿Hay alguna otra consulta?'. Si indica que no tiene más consultas, que está todo claro o responde de forma equivalente, continúa de inmediato. NO avances si acaba de hacer una pregunta. Si no realiza ninguna pregunta y solo desea continuar, avanza de inmediato, sin comentarios extra.",
+        "prompt": "Recuerde que al realizar sus pagos de manera oportuna construye un buen comportamiento crediticio, el cual le brindará mejores oportunidades en el sistema financiero y también evita cobros adicionales. De igual manera quisiera recordarle que ImagenPro lo contactará nuevamente durante el transcurso de la semana por este canal o un canal diferente, para evaluar nuevamente otras alternativas de compra. ¿Esta todo claro?",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "De parte de ImagenPro, le deseamos que tenga un ¡Feliz Día! Recuerde que habló con {nombre_agente} de ImagenPro.",
+        "interruptible": true,
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "De parte de ImagenPro, le deseamos que tenga un ¡Feliz Día! Recuerde que habló con {nombre_agente} de ImagenPro.",
+        "interruptible": true,
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Le agradecemos su tiempo. Dejamos registrada su intención de compra para contactarlo en otra ocasión. De parte de ImagenPro, le deseamos que tenga un ¡Feliz Día! Recuerde que habló con {nombre_agente} de ImagenPro.",
+        "interruptible": true,
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Le agradecemos confirmarlo. De parte de ImagenPro, le deseamos que tenga un ¡Feliz Día! Recuerde que habló con {nombre_agente} de ImagenPro.",
+        "interruptible": true,
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Gracias por la información, procederemos a finalizar la llamada. Que tenga buen día.",
+        "interruptible": true,
+        "delivery": "say"
+      },
+      "final.end_ocupado": {
+        "type": "final",
+        "label": "Despedida (comprador ocupado)",
+        "prompt": "Perfecto, muchas gracias. Intentaremos comunicarnos nuevamente con usted. Que tenga un buen día.",
+        "interruptible": true,
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Le agradezco. Por favor coméntele al titular que desde ImagenPro intentamos comunicarnos. Que tenga muy buen día.",
+        "interruptible": true,
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "interruptible": true,
+        "delivery": "say"
+      },
+      "final.end_screening": {
+        "type": "final",
+        "label": "Despedida (screening)",
+        "prompt": "Hasta luego.",
+        "interruptible": true,
+        "delivery": "say"
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Qué es Valle Cuidado? | ¿Quién es la empresa? | ¿A qué se dedican? | ¿De qué empresa me hablan? | ¿Qué es La Curacao? | ¿Qué es Tropigas?",
+    "answer": "{resumen_cadena_principal} forma parte de Valle Cuidado, el grupo de tiendas más grande de Centroamérica, que ofrece créditos de consumo para mercadería, motocicletas y crédito en efectivo."
+  },
+  {
+    "question": "¿Dónde turno? | ¿Cómo puedo agendar? | ¿Cuáles son los medios de turno? | ¿Por dónde realizo el turno? | ¿Dónde puedo abonar? | ¿Cómo hago el turno?",
+    "answer": "Puede realizar su turno en cualquier tienda de {resumen_cadena_principal}; también puede pedir un link de turno escribiendo al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro; o hacer un depósito o transferencia y enviarnos la boleta a ese mismo número."
+  },
+  {
+    "question": "¿Cómo pido el link de turno? | Quiero un link de turno | ¿Me pueden enviar un enlace para agendar? | ¿A qué número pido el link?",
+    "answer": "Para recibir su link de turno solo debe escribir al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro y se lo enviamos para que pague de forma fácil y segura."
+  },
+  {
+    "question": "¿A dónde envío la boleta? | ¿Dónde envío el comprobante? | ¿A qué WhatsApp mando la boleta? | Ya pagué, ¿cómo confirmo? | ¿Cómo registro mi depósito o transferencia?",
+    "answer": "Si realizó un depósito o transferencia, solo envíenos la boleta al WhatsApp cuatro tres, ocho dos, cero cuatro, cero cuatro para validar y registrar su turno."
+  },
+  {
+    "question": "¿Me puede dar el detalle? | ¿Qué créditos tengo? | Detalle de mis productos | ¿Cuáles son mis créditos? | Desglóseme la cita pendiente | ¿De qué productos me habla? | ¿En qué tiendas tengo crédito?",
+    "answer": "{Valle Cuidado_detalle_productos}"
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Valle Cuidado, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

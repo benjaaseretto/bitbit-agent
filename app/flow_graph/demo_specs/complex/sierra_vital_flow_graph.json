@@ -1,0 +1,813 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "sierra_vital_flow",
+    "visible_name": "Sierra Vital",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (23 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/sierra_vital.json",
+      "company_id": "sierra_vital-demo",
+      "description": "Base de conocimiento de Sierra Vital."
+    },
+    "company_id": "sierra_vital-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "banco_falabella_peru_flow_graph.json",
+      "node_count": 23,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Sierra Vital",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "2.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_pregunta": "Hola, {saludo_por_horario}. ¿Me comunico con {nombre_deudor_completo}?",
+          "identity_repregunta": "Disculpe, para confirmar me indica ¿si hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Te habla {nombre_agente}, de Sierra Vital. ¿Me indica si hablo con {nombre_deudor_completo}?",
+          "identity_no_titular_pregunta": "Gracias por indicarlo. ¿Conoces a {nombre_deudor_completo}?",
+          "solo_rechazar_negacion_explicita": true,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Aló sí",
+            "Aló, sí",
+            "Sí",
+            "Sí?",
+            "Sí, dígame",
+            "Sí, diga",
+            "Sí soy yo",
+            "Sí, soy yo",
+            "Soy yo",
+            "Con él",
+            "Con ella",
+            "Con él habla",
+            "Con ella habla",
+            "Sí, con él habla",
+            "Sí, con ella habla",
+            "Él habla",
+            "Ella habla",
+            "Al habla",
+            "Le habla",
+            "El mismo",
+            "La misma",
+            "Sí señor",
+            "Sí señora",
+            "Claro",
+            "Claro que sí",
+            "Correcto",
+            "Así es",
+            "A sus órdenes",
+            "A la orden",
+            "Sí, soy el titular",
+            "Sí, esa persona soy yo",
+            "Sí, soy quien busca",
+            "Sí, lo escucho",
+            "Sí, habla conmigo",
+            "Sí, soy yo mismo",
+            "Sí, qué necesita",
+            "Sí, soy {primer_nombre}",
+            "Sí, soy {nombre_deudor}",
+            "Sí, él soy yo",
+            "Sí, esa es mi cuenta",
+            "Sí, ese documento es mío",
+            "Sí, habla nomás",
+            "Sí, dime",
+            "Sí, adelante",
+            "Sí, soy yo pues",
+            "Sí, qué pasó",
+            "Sí, qué se ofrece",
+            "Sí, esos son mis datos",
+            "Sí, ese es mi DNI",
+            "Sí, la información es correcta",
+            "Sí, todo coincide",
+            "Sí, está bien",
+            "Sí, puede continuar",
+            "Sí, continúe",
+            "Sí, cuénteme",
+            "Sí, indíqueme"
+          ]
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "intent.already_paid_validation",
+            "pay_confirmation_config": {
+              "recolectar_datos_pago": false,
+              "recolectar_medio_pago": false,
+              "pay_identification_phrases": [
+                "Ya atendido",
+                "Ya cancelé",
+                "Ya hice el turno",
+                "Ya aboné",
+                "Ya realicé el depósito",
+                "Ya hice la transferencia",
+                "Esa cita pendiente ya está cancelada",
+                "Ya quedó pagado",
+                "Ya está saldada",
+                "Ya regularicé esa cita pendiente",
+                "Ya no debo nada",
+                "Esa cuenta ya está cerrada",
+                "Ya quedó todo cancelado",
+                "Ya quedó todo en regla",
+                "Eso ya lo solucioné",
+                "Ya me puse al día",
+                "Ya está arreglado",
+                "Eso ya lo pagué hace días",
+                "Ya cumplí con el turno",
+                "Ya mandé el voucher",
+                "Ya envié el comprobante",
+                "Tengo el voucher del turno",
+                "Ya pasé el comprobante",
+                "Ya hice el depósito y envié la constancia",
+                "Acabo de agendar",
+                "Recién hice el turno",
+                "Hace un rato pagué",
+                "Hoy ya cancelé",
+                "El turno ya está en proceso",
+                "Ya pagué pero todavía no aparece",
+                "El sanatorio aún no lo refleja",
+                "Ya hice el turno deben actualizar el sistema",
+                "Todavía no les figura pero ya está pagado",
+                "El turno está por aplicarse",
+                "Ya pagué solo falta que lo actualicen",
+                "El sistema todavía no refleja mi turno",
+                "Ya está pagado revisen el sistema",
+                "El turno aún está en validación",
+                "Ya envié el comprobante solo falta que lo registren"
+              ]
+            }
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Transición (presentación + grabación)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Mucho gusto {primer_nombre}, me comunico del Sierra Vital. Te comento que esta llamada está siendo grabada con fines de calidad en el servicio.",
+        "on": {
+          "always": {
+            "goto": "intent.opening_bridge"
+          }
+        }
+      },
+      "intent.opening_bridge": {
+        "type": "intention",
+        "label": "Contexto de cita pendiente por tramo Castigo",
+        "delivery": "say",
+        "interruptible": true,
+        "kb_exclude_hint": "IMPORTANTE: este paso NO negocia ni responde preguntas. El nodo destino (negociación o medio de turno) se encarga. Si el paciente no acepta la fecha de hoy, pregunta (turno, atraso de agenda, fecha propuesta, medios), propone otra fecha (mañana, el treinta, fin de mes, el viernes), dice que no puede, o está confuso (no entiendo, explícame, no sé de qué me hablas, de qué me estás hablando, por qué me llaman), elige EN SILENCIO 'No acepta'. NO hables, NO pidas que repita, NO uses no_entiendo_cliente, NO pidas otra fecha, NO respondas el turno, NO ofrezcas un plazo más cercano.",
+        "decision": "Este nodo SOLO clasifica. Tras el say, en el PRIMER turno del paciente llama avanzar_flujo EN SILENCIO. NUNCA generes texto hablado, NUNCA pidas que repita, NUNCA uses no_entiendo_cliente, NUNCA pidas otra fecha, NUNCA ofrezcas un plazo más cercano, NUNCA respondas preguntas: el negociador se encarga. Si acepta ESA fecha de hoy (sí, ok, dale, está bien, claro, de acuerdo, perfecto, cuenta conmigo, hoy sí, está bien hoy) → 'Acepta fecha' (el sistema registra hoy y pide el medio de turno). Ya asistió o cuenta cancelada (ya pagué, ya cancelé, ya quedó pagado, ya está saldada, ya mandé el voucher, acabo de agendar) → 'Ya asistió'. Ocupado o que lo llamen después (estoy ocupado, estoy manejando, llámame después, me puedes llamar más tarde, ahora no puedo hablar) → 'paciente ocupado'. Cualquier otra cosa (no, no puedo, no me alcanza, otra fecha, mañana, el viernes, el treinta, el 30, fin de mes, próxima quincena, pregunta, cuánto debo, no voy a agendar, confuso, no entiendo, no entiendo de qué me estás hablando, explícame, no sé de qué me hablas, por qué me llaman) → 'No acepta' de inmediato. 'no entiendo' / 'explícame' NO es audio ininteligible ni Ya asistió ni Acepta fecha: es 'No acepta' para que el negociador reexplique. NO clasifiques 'mañana', 'el treinta' ni otra fecha como Acepta fecha. NO clasifiques un 'sí' suelto como Ya asistió.",
+        "prompt_by": {
+          "field": "falabella_tramo",
+          "cases": {
+            "181_360": "Le informo que actualmente registra una obligación con un turno pendiente de {due_balance_palabras}, con fecha de fecha propuesta {due_date_spoken}{dias_mora_frase_representa}. Para ayudarle a ponerse al día, ¿le parece bien realizar el turno el {fecha_propuesta}? De esta manera podrá avanzar en la normalización de su obligación.",
+            "361": "Te contactamos para ayudarte con tu cuenta y evitar que continúe avanzando. Actualmente mantienes una obligación pendiente por {due_balance_palabras}, con fecha de fecha propuesta {due_date_spoken}{dias_mora_frase_acumulando}. ¿Podemos dejar programado el turno para el {fecha_propuesta}? Así podrás iniciar el proceso de normalización de tu cita pendiente.",
+            "fuera_castigo": "Te comento que registras un turno pendiente de {due_balance_palabras}, con fecha de fecha propuesta {due_date_spoken}{dias_mora_frase_representa}. ¿Te parece bien realizar el turno el {fecha_propuesta}?"
+          },
+          "default": "Le informo que actualmente registra una obligación con un turno pendiente de {due_balance_palabras}, con fecha de fecha propuesta {due_date_spoken}{dias_mora_frase_representa}. Para ayudarle a ponerse al día, ¿le parece bien realizar el turno el {fecha_propuesta}? De esta manera podrá avanzar en la normalización de su obligación."
+        },
+        "on": {
+          "Acepta fecha": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "register_commitment": {
+              "date": "{today_iso}",
+              "amount": "{due_balance}",
+              "invalid_goto": "task.negotiation"
+            },
+            "goto": "intent.collect_payment_channel"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.already_paid_validation"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ocupado",
+            "goto": "intent.objection.cliente_ocupado"
+          },
+          "No acepta": {
+            "goto": "task.negotiation"
+          },
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.collect_payment_channel": {
+        "type": "intention",
+        "label": "Medio de turno tras aceptar hoy",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera el medio de turno. Presencial, sanatorio, sucursal, agencia o ventanilla → 'presencial en sanatorio'. Link, app, digital o en línea → 'link de turno'. Cupón o voucher → 'cupón de turno'. Ya asistió → 'Ya asistió'. Ocupado o que lo llamen después → 'paciente ocupado'. No es el titular → 'Equivocado'. Si pregunta, responde con la KB y repregunta el medio UNA vez. Si no elige canal, avanza con 'always' (confirma sin canal). NO pidas otra fecha: el cita de hoy ya está registrado.",
+        "prompt": "Para registrar tu cita, indícame por favor el medio de turno que utilizarás, las opciones son presencial en sanatorio, link de turno o cupón de turno.",
+        "on": {
+          "presencial en banco": {
+            "set_variables": {
+              "payment_channel": "presencial en sanatorio"
+            },
+            "set_agent_output": {
+              "payment_channel": "presencial en sanatorio"
+            },
+            "goto": "intent.confirm_commitment"
+          },
+          "link de pago": {
+            "set_variables": {
+              "payment_channel": "link de turno"
+            },
+            "set_agent_output": {
+              "payment_channel": "link de turno"
+            },
+            "goto": "intent.confirm_commitment"
+          },
+          "cupón de pago": {
+            "set_variables": {
+              "payment_channel": "cupón de turno"
+            },
+            "set_agent_output": {
+              "payment_channel": "cupón de turno"
+            },
+            "goto": "intent.confirm_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.already_paid_validation"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ocupado",
+            "goto": "intent.objection.cliente_ocupado"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "always": {
+            "goto": "intent.confirm_commitment"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": 5,
+          "staggered_days": [
+            3,
+            5
+          ],
+          "allow_transfer": false,
+          "allow_partial_payments": false,
+          "accept_out_of_window_as_intention": true,
+          "require_confirmation": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "max_attempts": 3,
+          "rejection_step_messages": [
+            "{pitch_descuento}",
+            "{pitch_valor_medio}"
+          ],
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "collect_payment_method_in_task": true,
+          "payment_method_collection_mode": "open",
+          "channel_options": [
+            "presencial en sanatorio",
+            "link de turno",
+            "cupón de turno"
+          ],
+          "payment_method_question": "Para registrar tu cita, indícame por favor el medio de turno que utilizarás, las opciones son presencial en sanatorio, link de turno o cupón de turno.",
+          "payment_method_instructions": "Canales canónicos: 'presencial en sanatorio' (sanatorio, sucursal, agencia, ventanilla, ir al sanatorio); 'link de turno' (link, enlace, turno en línea, app, digital); 'cupón de turno' (cupón, cupon, voucher). Si el paciente nombra un alias, registra el canónico. No inventes otros canales. Pregunta UNA sola vez y espera la respuesta.",
+          "ask_nonpayment_reason": false,
+          "benefit_hints": [
+            "avanzar en la normalización de tu obligación",
+            "aprovechar el beneficio de descuento disponible para confirmar la cita",
+            "evitar que la atraso de agenda continúe avanzando"
+          ],
+          "empresa": "{nombre_empresa}",
+          "deudor": "{primer_nombre}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "modismos_pago_custom": {
+            "hoy": [
+              "turno hoy",
+              "hoy mismo deposito",
+              "hoy deposito",
+              "hoy lo turno",
+              "lo hago hoy mismo",
+              "esta tarde lo hago",
+              "haré el turno hoy en la tarde",
+              "ahorita lo turno",
+              "ahorita turno",
+              "ahorita lo deposito",
+              "ahorita lo hago",
+              "ahorita lo arreglo",
+              "ahorita te deposito",
+              "en un rato lo turno",
+              "al rato lo hago",
+              "ya mismo lo hago",
+              "ya lo deposito",
+              "más tarde lo turno",
+              "en la tarde lo hago",
+              "ahorita mismo lo transfiero"
+            ],
+            "mañana": [
+              "turno mañana",
+              "mañana cancelo",
+              "mañana lo turno",
+              "mañana lo deposito",
+              "mañana hago la transferencia",
+              "mañana te transfiero",
+              "mañana sin falta",
+              "mañana temprano lo hago",
+              "mañana cobro y turno"
+            ],
+            "pasado_mañana": [
+              "pasado mañana turno",
+              "pasado mañana lo deposito",
+              "pasado mañana lo hago",
+              "en dos días lo turno",
+              "en dos días lo hago"
+            ]
+          },
+          "custom_instructions": "CONTEXTO: Eres asesor de Sierra Vital, gestionando cartera Castigo en dos tramos: Tramo 1 (181 a 360 días de atraso de agenda) y Tramo 2 (361 días o más). El tramo de esta llamada es {falabella_tramo}. Moneda: soles peruanos. NUNCA menciones que eres un agente de inteligencia artificial ni que puedes transferir o derivar la llamada con un agente o especialista. ANTI-ALUCINACION: usa solo los datos disponibles del lead; no inventes intereses, recargos, porcentajes de descuento, productos ni fechas. DESCUENTO SCRIPTADO: puedes mencionar un 'alto porcentaje de descuento' o 'beneficio especial' SOLO con las frases de contraoferta de esta campaña; NUNCA digas un número de porcentaje ni un especialidad descontado si no está en las variables. turno TOTAL: no se aceptan pagos parciales; siempre busca el cita por el especialidad total del turno vencido ({due_balance_palabras}). Cuando el paciente diga que solo puede agendar un especialidad menor al total, NO uses la palabra 'entiendo' (a veces la voz se traba); usa 'comprendo' u otra expresión equivalente al iniciar tu respuesta. MULTIPRODUCTO: si el paciente tiene varios productos, presenta el turno vencido total agrupado; solo si pide el desglose o más información menciona cada producto con su tipo, número y especialidad en atraso de agenda, y cierra con el valor total; el cita siempre es por el turno total de todos los productos. ADAPTACION DINAMICA: interpreta lo que dice el paciente y cambia el rumbo con naturalidad usando las objeciones de esta campaña. Si dice que ya asistió, agradece y NO continúes la coordinación de agenda. CARTA DE NO ADEUDO: si pregunta por carta, constancia o certificado de no adeudo, di exactamente 'Después de hacer su turno, en un plazo de quince días hábiles le entregan la Carta de no adeudo.' No inventes otro plazo ni menciones Infocorp. PEDIDO DE ESPECIALISTA / HUMANO: si pide un especialista, ejecutivo, alguien del sanatorio o que lo pasen, NO llames finalizar('transferir') ni digas que lo transfieres; da el teléfono y el correo y retoma la fecha de turno. OCUPADO / LLAMAR DESPUES: si el paciente está ocupado, manejando, conduciendo, en reunión, no puede hablar ahora, o pide que lo llamen más tarde/después ('llámame después', 'me puedes llamar más tarde'), eso NO es transferencia ni pedido de humano. Llama de inmediato finalizar_objecion_terminal(etiqueta='paciente ocupado') sin texto adicional. NUNCA llames finalizar('transferir') por esa frase. NUNCA sigas cobrando ni pidas fecha de turno. Si dice que ya habló o tiene un acuerdo, pide UNA sola vez el día de turno, registra la fecha y NO insistas. Si está confuso o dice que no entiende de qué se trata la llamada, llama manejar_objecion_especial(tipo='confuso') y NO uses no_entiendo_cliente ni confirmar_pago_cliente. NO ES EL TITULAR: si dice que no es el titular, no es esa persona, se equivocó de número o no vive ahí, llama de inmediato finalizar_objecion_terminal(etiqueta='Equivocado') sin texto adicional. NO preguntes si conoce al titular ni sigas cobrando. NO QUIERE agendar: si dice que no va a agendar, se niega o no le interesa agendar, llama de inmediato finalizar_objecion_terminal(etiqueta='No quiere agendar'). NO uses la escalera de descuento ni cliente_dispuesto(dispuesto=false) para esa frase. MOTIVO SIN DINERO / DESPUÉS / MÁS ADELANTE: si reitera el mismo motivo, no repitas la misma frase; usa en este orden, una por turno: 1) 'Entiendo. Sin embargo, dejar una fecha definida le permitirá avanzar en la regularización de su obligación. ¿Podemos confirmar el {fecha_propuesta} como su cita de turno?'; 2) 'Gracias por indicarlo. Para darle seguimiento a su cita, es importante dejar una fecha programada. ¿Podemos confirmar un turno dentro de los próximos 3 días?'; 3) 'Comprendo que hoy no le sea posible. Sin embargo, definir una fecha le permitirá organizar mejor este cita. ¿Le parece bien dejarlo dentro de los próximos 5 días?'. PROPUESTA DE FECHA (PDP): la apertura ya propuso el turno para el {fecha_propuesta} (hoy). Un 'sí', 'ok', 'dale', 'está bien', 'claro', 'de acuerdo', 'perfecto' o 'cuenta conmigo' a esa pregunta es aceptación de HOY: llama de inmediato cliente_dispuesto(dispuesto=true, fecha_propuesta=hoy en ISO). NO es 'ya habló', NO es motivo sin dinero y NO vuelvas a preguntar hoy, mañana o pasado mañana. Acepta también mañana, un día de la semana o una fecha concreta dentro de 5 días. No vuelvas a saludar, no repitas la grabación ni relees el turno salvo que el paciente lo pida o esté confuso. Si no puede ese día, escala: primero hasta 3 días; solo si no puede, hasta 5. No reveles el plazo de 5 días en la primera contraoferta. MAXIMO 3 INTENTOS PERSUASIVOS: apertura (hoy) + descuento (hasta 3 días) + valor medio (hasta 5 días). Al agotarlos, no insistas: cierra en sin cita, registra intención de turno si dio una fecha fuera de plazo, o próximo contacto si está ocupado. PLAZO: el cita válido es de hoy hasta 5 días desde el contacto. FECHA FUERA DE RANGO (NO INSISTIR): si el paciente está dispuesto a agendar pero ofrece una fecha posterior al plazo de 5 días (fin de mes, próxima quincena, cuando cobre, etc.), NO insistas, NO intentes que la cambie y NO le pidas otra fecha. Acéptala amablemente y registra su intención de turno para esa fecha. ESCALERA DE NEGATIVAS: 1) primera negativa genérica a la FECHA (hoy no, más adelante, ahora no) → di exactamente el beneficio de descuento y ofrece hasta 3 días; 2) segunda negativa → valor medio y ofrece hasta 5 días. No adelantes el plazo de 5 días. 'No voy a agendar' NO es negativa genérica: cierra con finalizar_objecion_terminal(etiqueta='No quiere agendar'). CONSULTAS (turno, medios, desglose, FAQ): responde el dato pedido y pide una fecha cercana; NO vuelvas a proponer el {fecha_propuesta} ni resetees la ventana de 3 o 5 días si ya la ofreciste. NO REDUNDAR: confirma el cita una sola vez; no repitas innecesariamente ni presiones luego de confirmar. NO COMPRENSION: 'no entiendo', 'no sé de qué me hablas', 'explícame' o '¿por qué me llaman?' NO es audio ininteligible ni turno ya hecho: llama manejar_objecion_especial(tipo='confuso'). No entres en loops ni continúes cobrando sin haber reexplicado. PROHIBICIONES: no amenaces ni uses lenguaje intimidatorio, ni menciones consecuencias legales o de cualquier otro tipo; no reveles información de la cuenta a terceros; no inventes descuentos, condonaciones ni condiciones especiales fuera de las frases scriptadas. ESCALAMIENTO: ante disputas, cargos que el paciente no reconoce, reclamos formales o problemas con la cuenta, indica que puede comunicarse al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com. MEDIOS DE turno: solo presencial en sanatorio, link de turno o cupón de turno. Tras una fecha válida, pregunta UNA vez el medio y espera. TONO: cercano, amable y orientado a facilitar el turno, sin presionar. Adapta tú/usted según el tramo del playbook, sin corregir al paciente.",
+          "objection_handlers": [
+            {
+              "objection": "El paciente dice que ya asistió | ya pagué | ya cancelé | ya hice el turno | ya aboné | ya realicé el depósito | ya hice la transferencia | esa cita pendiente ya está cancelada | ya quedó pagado | ya está saldada | ya regularicé esa cita pendiente | ya no debo nada | esa cuenta ya está cerrada | ya quedó todo cancelado | ya quedó todo en regla | eso ya lo solucioné | ya me puse al día | ya está arreglado | eso ya lo pagué hace días | ya cumplí con el turno | ya mandé el voucher | ya envié el comprobante | tengo el voucher del turno | ya pasé el comprobante | ya hice el depósito y envié la constancia | acabo de agendar | recién hice el turno | hace un rato pagué | hoy ya cancelé | el turno ya está en proceso | ya pagué pero todavía no aparece | el sanatorio aún no lo refleja | ya hice el turno deben actualizar el sistema | todavía no les figura pero ya está pagado | el turno está por aplicarse | ya pagué solo falta que lo actualicen | el sistema todavía no refleja mi turno | ya está pagado revisen el sistema | el turno aún está en validación | ya envié el comprobante solo falta que lo registren | pagué por la app | pagué en tienda | ya transferí | ya está pagado",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "El paciente dice que ahora está ocupado | no tiene tiempo | está en una reunión | está manejando | estoy manejando | está conduciendo | estoy en el auto | no es buen momento | ahora no puedo hablar | pide que lo llamen más tarde o después | llámame después | llámame más tarde | me puedes llamar más tarde | llámame luego | llama más tarde | ahora no es buen momento. Pedir que lo llamen más tarde NO es pedir un humano ni una transferencia.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "El paciente dice que ya habló | ya tiene un acuerdo | ya quedó | ya tiene convenio | ya coordinó el turno | ya se comunicó con el sanatorio | ya hablé con alguien",
+              "answer": "Perfecto, gracias por comentarlo. Para registrarlo en el sistema, ¿me indicas qué día estarías realizando el turno?"
+            },
+            {
+              "objection": "El paciente dice que no es el titular | no soy esa persona | se equivocó de número | no vivo aquí | no es mi número | busca a otra persona | no soy yo. NO es 'no reconozco la cita pendiente': es que no es la persona buscada.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Equivocado"
+            },
+            {
+              "objection": "El paciente no reconoce la cita pendiente, dice que no debe, desconoce el cobro, reclama un cargo incorrecto o que no corresponde",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "El paciente pregunta de qué empresa llaman | de parte de quién | quiénes son | si es Colektia | a quién le debe | de qué empresa me llaman",
+              "answer": "Me comunico de Sierra Vital para ayudarte a confirmar la cita tu obligación pendiente. Esta llamada está siendo grabada con fines de calidad en el servicio.",
+              "on_trigger": {
+                "tipo": "consulta_empresa",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "El paciente pregunta por la carta de no adeudo | constancia de no adeudo | certificado de no adeudo | cuándo le dan la carta | cuándo sale la carta después de agendar",
+              "answer": "Después de hacer su turno, en un plazo de quince días hábiles le entregan la Carta de no adeudo.",
+              "on_trigger": {
+                "tipo": "carta_no_adeudo",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "El paciente está confuso, no entiende el motivo de la llamada, pide que le expliques, no entiende de qué se trata, dice que no sabe de qué le hablas, no entiendo, no entiendo de qué me estás hablando, explícame, ¿de qué me hablas? o ¿por qué me llaman? NO es audio ininteligible: reexplica, no pidas que repita.",
+              "answer": "No te preocupes, te explico brevemente. {explicacion_cobranza}",
+              "on_trigger": {
+                "tipo": "confuso",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "El paciente pregunta cuánto debe, el especialidad, el turno, la fecha de fecha propuesta o desde cuándo está vencido. NO es 'no entiendo', 'explícame' ni 'de qué me estás hablando': eso es confuso, no consulta de turno.",
+              "answer": "Tu turno pendiente es de {due_balance_palabras}, con fecha de fecha propuesta {due_date_spoken}{dias_mora_frase_representa}. Ese es el especialidad que necesitas confirmar la cita. ¿Podemos confirmar una fecha cercana para el turno?",
+              "on_trigger": {
+                "tipo": "consulta_saldo",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "El paciente pide el desglose, pregunta cuánto debe de cada producto, pide el detalle de su crédito o de cada uno de sus créditos, o quiere más información de su(s) producto(s)",
+              "answer": "{desglose_respuesta}",
+              "on_trigger": {
+                "tipo": "desglose_productos",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "El paciente pregunta dónde puede agendar, cómo agendar, por qué canales o pide los medios de turno",
+              "answer": "Puedes realizar tu turno de forma presencial en sanatorio, con un link de turno o con un cupón de turno. ¿Cuál de estas opciones te acomoda?"
+            },
+            {
+              "objection": "El paciente reporta una falla al agendar, problema con la aplicación, la web o que un canal no funciona",
+              "warning_answers": [
+                "Lamento el inconveniente. Mientras se resuelve, puedes agendar de forma presencial en sanatorio o con un cupón de turno. ¿Para qué día coordinamos tu turno?"
+              ],
+              "final_answer": "Comprendo que el inconveniente continúa. Te pido que te comuniques al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com, para que revisen tu caso. Una vez validado el inconveniente, nos comunicaremos contigo nuevamente para concretar el turno.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Problema con la app"
+            },
+            {
+              "objection": "El paciente ofrece agendar menos del total: la mitad, una parte, un abono, un especialidad menor al turno, en partes o en cuotas",
+              "answer": "{aclaracion_pago_parcial}",
+              "on_trigger": {
+                "tipo": "pago_parcial",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "El paciente dice que no tiene dinero | no me alcanza | estoy corto | después turno | más adelante | más adelante lo turno | después le turno",
+              "answer": "Entiendo que en este momento pueda estar pasando por una situación económica difícil. Precisamente por eso, lo importante es definir una fecha cercana en la que considere posible realizar el turno. ¿Qué día de los próximos días le parece viable?"
+            },
+            {
+              "objection": "El paciente está sin trabajo | desempleado | perdió su empleo | está complicado | la situación está difícil",
+              "answer": "Lamento conocer su situación y entiendo que este momento pueda ser difícil. Sin embargo, es importante avanzar en la regularización de su obligación. ¿Considera posible programar un turno en los próximos días o indicarme una fecha en la que estime contar con recursos?"
+            },
+            {
+              "objection": "El paciente no puede agendar ahora | ahorita no | ahora mismo no | en este momento no puedo",
+              "answer": "Entiendo, sé que a veces se complica. ¿Prefieres que definamos una fecha cercana, como mañana o pasado mañana, para dejarlo registrado?"
+            },
+            {
+              "objection": "El paciente no quiere agendar | no voy a agendar | me niego | no me interesa agendar | no pienso agendar | no voy a agendar nada",
+              "answer": "Comprendo su decisión. Si cambia de parecer puede comunicarse al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com. Gracias por su tiempo.",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No quiere agendar"
+            },
+            {
+              "objection": "El paciente está molesto, frustrado o reclama por la cantidad de llamadas",
+              "answer": "Entiendo, solo buscamos ayudarte a confirmar la cita tu obligación y evitar inconvenientes. También puedes gestionarlo directamente por nuestros canales. ¿Hay alguna fecha en la que creas que podrías realizar el turno?"
+            },
+            {
+              "objection": "El paciente pide hablar con un especialista, un ejecutivo, un humano, alguien del sanatorio, que lo pasen, que lo transfieran o que lo deriven",
+              "answer": "Ese tema lo puedes gestionar con Sierra Vital al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com. ¿Podemos confirmar una fecha cercana para el turno?",
+              "on_trigger": {
+                "tipo": "pedido_especialista",
+                "speak_answer": true
+              }
+            },
+            {
+              "objection": "El paciente tiene un problema con su cuenta, un cargo que considera incorrecto o pide hablar con el sanatorio",
+              "answer": "Ese tema lo revisa directamente Sierra Vital. Te recomiendo comunicarte al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com para que validen tu cuenta.",
+              "on_trigger": {
+                "tipo": "problema_cuenta",
+                "speak_answer": true
+              }
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "intent.already_paid_validation"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "intent.end_intencion_de_pago"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ocupado",
+            "goto": "intent.objection.cliente_ocupado"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "intent.end_not_recognized"
+          },
+          "Problema con la app": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Problema con la app",
+            "goto": "final.end_terminal_objection"
+          },
+          "No quiere pagar": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "No quiere agendar",
+            "goto": "final.end_terminal_objection"
+          },
+          "Transferencia": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "pedido_especialista",
+            "goto": "intent.soft_close_no_commitment"
+          }
+        }
+      },
+      "intent.objection.cliente_ocupado": {
+        "type": "intention",
+        "label": "Objeción: paciente ocupado (reprogramar)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo, no te interrumpo.",
+        "on": {
+          "always": {
+            "goto": "task.next_contact_capture"
+          }
+        }
+      },
+      "task.next_contact_capture": {
+        "type": "task",
+        "label": "Captura hora próximo contacto (hoy)",
+        "task_type": "NextContactTask",
+        "params": {
+          "require_day": false,
+          "require_franja": false,
+          "require_hour": true,
+          "allow_today": true,
+          "day": "today"
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Convenio BOT",
+            "ct": true,
+            "goto": "final.end_next_contact"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ocupado_sin_reprogramar",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar cita (una sola vez)",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "Espera la respuesta al recap. Si confirma (sí, claro, ok, cuenta con eso, de acuerdo, está bien) o no objeta → 'Confirma'. Si hace una pregunta breve, respóndela con la KB, NO vuelvas a pedir fecha ni medio de turno, NO presiones, y elige 'Confirma'. Si se retracta de forma explícita (no, no es correcto, no cuenten conmigo, no voy a agendar ese día, cambió de opinión, no dejen el cita) → 'No confirma'. Ya asistió → 'Ya asistió'. Ocupado o que lo llamen después → 'paciente ocupado'. NO uses Continuar si rechaza el recap. Ante duda entre Confirma y No confirma, elige Confirma. Confirma UNA sola vez: no repitas el resumen ni renegocies.",
+        "prompt_by": {
+          "field": "payment_channel",
+          "cases": {
+            "presencial en banco": "Perfecto, ¿contamos con tu turno por {due_balance_palabras} para el {commitment_date_spoken} mediante presencial en sanatorio?",
+            "link de pago": "Perfecto, ¿contamos con tu turno por {due_balance_palabras} para el {commitment_date_spoken} mediante link de turno?",
+            "cupón de pago": "Perfecto, ¿contamos con tu turno por {due_balance_palabras} para el {commitment_date_spoken} mediante cupón de turno?"
+          },
+          "default": "Perfecto, ¿contamos con tu turno por {due_balance_palabras} para el {commitment_date_spoken}?"
+        },
+        "on": {
+          "Confirma": {
+            "goto": "intent.despedida"
+          },
+          "No confirma": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "clear_commitment": true,
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "clear_commitment": true,
+            "goto": "intent.already_paid_validation"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "ocupado",
+            "clear_commitment": true,
+            "goto": "intent.objection.cliente_ocupado"
+          },
+          "always": {
+            "goto": "intent.despedida"
+          }
+        }
+      },
+      "intent.despedida": {
+        "type": "intention",
+        "label": "Despedida estándar",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "decision": "Si el paciente interrumpe o hace una pregunta durante la despedida, respóndela brevemente con la base de conocimiento. No agregues preguntas al final. Termina en afirmación; el sistema cuelga solo.",
+        "prompt": "Gracias por tu tiempo, te atendió {nombre_agente}, de Sierra Vital. Quedamos atentos a tu turno. Que tengas un excelente día.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.already_paid_validation": {
+        "type": "intention",
+        "label": "Validación de turno declarado y despedida",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "decision": "Si el paciente interrumpe o hace una pregunta durante la despedida, respóndela brevemente apoyándote en la base de conocimiento. No agregues preguntas al final. Termina en afirmación; el sistema cuelga solo.",
+        "prompt": "Perfecto, muchas gracias por el turno. Gracias por tu tiempo, te atendió {nombre_agente}, de Sierra Vital. Que tengas un excelente día.",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin cita) y despedida",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "decision": "Si el paciente interrumpe o hace una pregunta durante el cierre, respóndela brevemente apoyándote en la base de conocimiento. No agregues preguntas al final. Termina en afirmación; el sistema cuelga solo.",
+        "prompt": "Está bien, {primer_nombre}. Si necesitas más información puedes comunicarte al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com. Gracias por tu tiempo, te atendió {nombre_agente}, de Sierra Vital. Que tengas un excelente día.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.end_intencion_de_pago": {
+        "type": "intention",
+        "label": "Despedida (intención de turno)",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "decision": "Si el paciente interrumpe o hace una pregunta durante la despedida, respóndela brevemente apoyándote en la base de conocimiento. No agregues preguntas al final. Termina en afirmación; el sistema cuelga solo.",
+        "prompt": "Entiendo, {primer_nombre}. Lamento que no hayamos podido llegar a un acuerdo dentro del plazo, pero registraré tu intención de turno para {payment_intention_date_spoken} para poder darte seguimiento. Gracias por tu tiempo, te atendió {nombre_agente}, de Sierra Vital. Quedamos atentos a tu turno. Que tengas un excelente día.",
+        "on": {
+          "always": {
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.end_not_recognized": {
+        "type": "intention",
+        "label": "Despedida (no reconoce cita pendiente)",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "decision": "Si el paciente interrumpe o hace una pregunta durante la despedida, respóndela brevemente apoyándote en la base de conocimiento. No agregues preguntas al final. Termina en afirmación; el sistema cuelga solo.",
+        "prompt": "Entiendo. Te recomiendo comunicarte al cero, uno, siete, cero, nueve, cinco, siete, siete, uno, o al correo normalización arroba colektia guion informa punto com para que revisen tu cuenta. Gracias por tu tiempo, te atendió {nombre_agente}, de Sierra Vital. Que tengas un excelente día.",
+        "on": {
+          "always": {
+            "goto": "final.end_not_recognized"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Cierre (despedida ya dicha en intent.confirm_commitment)",
+        "prompt": "",
+        "delivery": "say"
+      },
+      "final.end_terminal_objection": {
+        "type": "final",
+        "label": "Cierre tras objeción terminal (respuesta ya dicha por la tarea)",
+        "prompt": "",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Cierre (despedida ya dicha en intent.end_intencion_de_pago)",
+        "prompt": "",
+        "delivery": "say"
+      },
+      "final.end_next_contact": {
+        "type": "final",
+        "label": "Despedida (próximo contacto)",
+        "prompt": "Te contactaremos a la hora acordada. Gracias por tu tiempo, te atendió {nombre_agente}, de Sierra Vital. Que tengas un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Cierre (despedida ya dicha en intent.soft_close_no_commitment)",
+        "prompt": "",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Cierre (despedida ya dicha en intent.already_paid_validation)",
+        "prompt": "",
+        "delivery": "say"
+      },
+      "final.end_not_recognized": {
+        "type": "final",
+        "label": "Cierre (despedida ya dicha en intent.end_not_recognized)",
+        "prompt": "",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, muchas gracias, que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Por favor avísele a {nombre_deudor_completo} que lo contactamos de Sierra Vital. Gracias por su tiempo, que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

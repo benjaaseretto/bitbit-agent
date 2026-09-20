@@ -1,0 +1,190 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Qué es una paquete preventivo? | ¿Qué significa paquete preventivo? | ¿En qué consiste la paquete preventivo? | ¿Cómo funciona la paquete preventivo?",
+    "answer": "La paquete preventivo es una alternativa de turno que permite reducir o eliminar una parte de su cita pendiente, para ayudarle a confirmar la cita su situación."
+  },
+  {
+    "question": "¿Qué es un reprogramación? | ¿Qué significa reprogramación? | ¿En qué consiste el reprogramación? | ¿Cómo funciona el reprogramación?",
+    "answer": "El reprogramación es una alternativa de turno que reorganiza su cita pendiente en nuevas cuotas y plazos para facilitar su turno y confirmar la cita su situación."
+  },
+  {
+    "question": "paciente pregunta por plazo, tasas o cuotas | ¿Cuál es el plazo del reprogramación? | ¿En cuántas cuotas es? | ¿Cuál es el valor de la tasa? | ¿Cuál es la tasa de interés?",
+    "answer": "Con gusto le detallo las condiciones de la opción que elija: el desglose de conceptos, la cantidad de cuotas, la tasa cuando aplique y el valor de la sesión mensual. Dígame qué opción le interesa y le doy el detalle completo antes de continuar."
+  },
+  {
+    "question": "¿Cuándo me cobran la primera sesión? | ¿Cuándo tengo que agendar la primera sesión? | ¿Cuándo turno la primera factura? | ¿Cuándo vence la primera sesión o factura? | ¿Desde cuándo empiezo a agendar el reprogramación? | ¿Cuándo me llega la primera sesión?",
+    "answer": "La sesión se incluirá en su próximo recibo mensual."
+  },
+  {
+    "question": "paciente pregunta por comprobante | ¿Me van a enviar algún comprobante? | ¿Me envían las condiciones del contrato? | ¿Recibiré algún documento del reprogramación? ",
+    "answer": "Le comentamos que la información del contrato será enviada de manera detallada a su correo electrónico una vez aceptado el reprogramación."
+  },
+  {
+    "question": "¿Hasta cuándo puedo agendar para que no me corten el servicio? | ¿Cuál es la fecha límite para agendar antes del corte? | ¿Me van a avisar antes de cortarme el servicio? | ¿Avisan antes del corte? | ¿Me notifican antes del corte?",
+    "answer": "El corte se ejecuta al día siguiente del fecha propuesta del segundo recibo. Cálidda no realiza visitas ni avisos previos para informar el corte del servicio. ¿Le gustaría que revisemos una alternativa de regularización disponible para hoy?"
+  },
+  {
+    "question": "¿Por qué me están cobrando consumo si tengo el servicio cortado? | ¿Por qué me siguen cobrando si no consumo gas? | ¿Por qué mi recibo llegó más alto este mes si consumo lo mismo? | ¿Por qué me cobraron más consumo si uso lo mismo? | ¿Por qué subió mi recibo? | ¿Por qué llega recibo si no consumo? | ¿Por qué llegó más caro el recibo?",
+    "answer": "El importe facturado puede variar por diferentes motivos, como consumo realizado antes del corte, más días facturados, cuotas de financiamiento, intereses, deudas pendientes, cargos por corte o reconexión, consumo estimado, cambios tarifarios aprobados por Osinergmin o cargos fijos regulados. Si deseas evitar que continúen generándose cargos adicionales, ¿te gustaría revisar una alternativa de regularización?"
+  },
+  {
+    "question": "¿Desde cuándo empiezan a cobrar intereses? | ¿Cuándo empiezan los intereses por atraso de agenda? | ¿Desde qué día corren los intereses? | ¿Por qué me cobran intereses?",
+    "answer": "Los intereses compensatorios y de financiamiento se generan desde el día siguiente al fecha propuesta del recibo. Los intereses moratorios se generan desde el décimo día posterior al fecha propuesta. Para evitar que continúen incrementándose los cargos, ¿podemos revisar una opción de turno hoy?"
+  },
+  {
+    "question": "¿Por qué cambia la fecha de fecha propuesta todos los meses? | ¿Por qué no vence siempre el mismo día? | ¿Por qué varía la fecha de turno? | Mi fecha de fecha propuesta cambia cada mes",
+    "answer": "La fecha de fecha propuesta puede variar porque depende de los días útiles del mes en que se emite el recibo."
+  },
+  {
+    "question": "¿Cuánto demora la reconexión después de agendar? | ¿Cuándo reconectan después del turno? | Ya pagué, ¿cuándo reconectan? | Vinieron a reconectar pero no había nadie en casa | No estaba en casa cuando fueron a reconectar | ¿Por qué no reconectaron si ya vinieron?",
+    "answer": "Una vez regularizada la cita pendiente que originó el corte, la visita de reconexión se realiza dentro de las 24 horas siguientes. Para efectuar la reconexión debe encontrarse presente una persona mayor de edad que autorice el ingreso y valide las condiciones de seguridad de los gasodomésticos. Si necesitas reprogramar una visita, puedes comunicarte con Aló Cálidda al cero, uno, seis, uno, cuatro, nueve, cero, cero, cero."
+  },
+  {
+    "question": "Me quedé sin gas de repente, ¿qué puedo hacer? | No tengo gas, ¿qué hago? | Se fue el gas de pronto | No sale gas | Me cortaron el gas",
+    "answer": "Primero verifica que no tengas 2 recibos pendientes, que las llaves de los artefactos estén abiertas, y que la llave general esté abierta. Si alguna llave estaba cerrada, espera aproximadamente 5 minutos para que el servicio se restablezca. Si el problema continúa, comunícate con Aló Cálidda al cero, uno, seis, uno, cuatro, nueve, cero, cero, cero. Si tienes recibos pendientes, ¿quieres que revisemos opciones para confirmar la cita tu servicio?"
+  },
+  {
+    "question": "¿Por qué retiraron mi medidor diciendo que estaba manipulado? | Me sacaron el medidor por manipulación | ¿Por qué retiraron mi medidor? | Dicen que manipularon mi medidor",
+    "answer": "Cuando se detecta manipulación del sistema de medición durante una inspección técnica, Cálidda puede proceder con el corte del servicio y el retiro del medidor. Para reconectar el servicio será necesario adquirir un nuevo medidor y confirmar la cita los consumos observados. Contactos: nueve, siete, nueve, cero, tres, nueve, siete, cero, tres; o nueve, nueve, siete, cero, uno, siete, cero, cinco, tres; o nueve, nueve, siete, cero, uno, seis, ocho, dos, seis."
+  },
+  {
+    "question": "¿Qué significa el concepto 'Gas Natural' en mi recibo? | ¿Qué es gas natural en el recibo? | ¿Por qué me cobran gas natural? | ¿Qué incluye el cargo de gas natural?",
+    "answer": "Es el cargo correspondiente al consumo de gas natural, incluyendo extracción del gas, transporte y distribución variable. Se calcula según el volumen facturado y las tarifas reguladas."
+  },
+  {
+    "question": "¿Qué es el 'Cargo Fijo'? | ¿Por qué me cobran cargo fijo? | ¿Qué significa cargo fijo en el recibo? | ¿El cargo fijo se paga aunque no consuma?",
+    "answer": "Es un cargo regulado que cubre costos operativos y de comercialización del servicio. Este cargo se factura incluso si no hubo consumo durante el periodo."
+  },
+  {
+    "question": "¿Qué significa el periodo de facturación? | ¿Qué es el periodo facturado? | ¿Qué fechas incluye mi recibo? | ¿De cuándo a cuándo me están cobrando?",
+    "answer": "Es el rango de fechas entre la lectura anterior del medidor y la lectura actual. Generalmente comprende entre 28 y 33 días calendario."
+  },
+  {
+    "question": "¿Puedo registrar mi lectura desde internet o WhatsApp? | ¿Dónde puedo registrar mi lectura? | ¿Puedo mandar la lectura por WhatsApp? | ¿Cómo registro la lectura del medidor?",
+    "answer": "Sí. Puedes registrar tu lectura mediante Chatbot Web, WhatsApp, Oficina Virtual App y Web, Registro de lectura Cálidda en Registra Tu Lectura Andes Care, y Oficina Virtual Cálidda en www.Andes Care.com.pe."
+  },
+  {
+    "question": "¿Cómo sé si mi lectura fue real o estimada? | ¿Dónde veo si la lectura fue estimada? | ¿Mi consumo fue estimado o real? | ¿Cómo reviso el tipo de lectura?",
+    "answer": "En el historial de consumo de tu recibo podrás verificar si la lectura fue real o si el consumo fue estimado. Si se acumulan 6 estimaciones consecutivas en un mismo año, el servicio podría suspenderse."
+  },
+  {
+    "question": "¿Por qué me facturaron con lectura estimada? | ¿Por qué estimaron mi consumo? | ¿Por qué no tomaron lectura real? | Me llegó una lectura estimada",
+    "answer": "La lectura estimada se aplica cuando no es posible acceder al medidor, por ejemplo: no había personas en el domicilio, el medidor estaba bloqueado, o no se permitió el ingreso. Si deseas registrar tu lectura actual, puedes hacerlo en Registra Tu Lectura Andes Care."
+  },
+  {
+    "question": "¿Cuál es el número de atención al paciente? | ¿A qué número puedo llamar? | ¿Tienen WhatsApp? | ¿Cómo me comunico con Cálidda? | ¿Cuál es el teléfono de Cálidda? | ¿Cuál es la línea de emergencia? | ¿Cuál es el horario de atención? | ¿A qué hora atienden? | Quiero los datos de contacto",
+    "answer": "Puedes comunicarte con Cálidda por estos medios. WhatsApp del asistente virtual: nueve, ocho, uno, cuatro, cuatro, cuatro, cuatro, cinco, cinco, cinco. Aló Cálidda: cero, uno, seis, uno, cuatro, nueve, cero, cero, cero. Línea de emergencia: uno, ocho, cero, ocho. El horario de atención es de lunes a viernes de ocho de la mañana a cinco de la tarde, y sábados de ocho de la mañana a doce del mediodía."
+  },
+  {
+    "question": "¿Qué es Consumo? | ¿Qué significa Consumo en mi cita pendiente? | ¿A qué se refiere el Consumo? | ¿Qué es el Consumo Total pendiente?",
+    "answer": "Cuando hablamos de Consumo, nos referimos al Consumo Total pendiente, es decir, el importe de gas natural que aún tienes por agendar."
+  },
+  {
+    "question": "¿Qué es GMD? | ¿Qué significa GMD? | ¿A qué se refiere el GMD? | ¿Qué es el importe del gasodoméstico?",
+    "answer": "GMD es el importe total del gasodoméstico, tanto lo que ya está facturado como lo que está por vencer. Corresponde a los artefactos o valores asociados a gasodomésticos en tu cuenta."
+  },
+  {
+    "question": "¿Qué es IRE? | ¿Qué significa IRE? | ¿A qué se refiere el IRE? | ¿Qué es la instalación interna independiente?",
+    "answer": "IRE es el importe total de la instalación interna independiente, facturada y por vencer. Son los ajustes que se hacen al servicio de manera independiente, por ejemplo cuando compras un calentador fuera de los servicios de Cálidda."
+  },
+  {
+    "question": "¿Qué son Internas? | ¿Qué significa Internas? | ¿A qué se refiere Internas en mi cita pendiente? | ¿Qué es el importe de instalación interna?",
+    "answer": "Internas es el importe total de la instalación interna, facturada y por vencer. Son servicios adicionales que adquiriste con Cálidda."
+  },
+  {
+    "question": "¿Qué es Postventa? | ¿Qué significa Postventa? | ¿A qué se refiere Postventa en mi cita pendiente? | ¿Qué incluye el importe de postventa?",
+    "answer": "Postventa es el importe total de postventa, facturado y por vencer. Corresponde a servicios de postventa asociados a tu cuenta."
+  },
+  {
+    "question": "¿Qué es Interés? | ¿Qué significa Interés en mi cita pendiente? | ¿A qué intereses se refieren? | ¿Qué incluye el interés pendiente? | ¿Cuál es la tasa de interés de este concepto?",
+    "answer": "El Interés comprende todo el interés pendiente de turno: interés moratorio, compensatorio y financiero. Este concepto no trae una tasa asociada para detallar."
+  },
+  {
+    "question": "¿Qué es DU? | ¿Qué significa DU? | ¿A qué se refiere el DU? | ¿Qué es el fraccionamiento DU?",
+    "answer": "DU es un fraccionamiento creado y emitido durante la pandemia, que autoriza a los usuarios de gas natural a agendar sus facturas en cuotas, sin intereses ni recargos, en un plazo de hasta veinticuatro meses."
+  },
+  {
+    "question": "¿Qué es FNB? | ¿Qué significa FNB? | ¿Qué es Financiamiento No Bancario? | ¿A qué se refiere el FNB?",
+    "answer": "FNB significa Financiamiento No Bancario. Es una línea de negocio de Cálidda que brinda a los clientes la posibilidad de financiar diversos productos y servicios mediante crédito directo otorgado por Cálidda."
+  },
+  {
+    "question": "¿Qué es DU FNB? | ¿Qué es DU_FNB? | ¿Qué significa DU FNB? | ¿Cuál es la diferencia entre DU FNB y FNB?",
+    "answer": "DU FNB es el Financiamiento No Bancario emitido durante la pandemia. Al igual que el FNB, es una línea de negocio de Cálidda que permite financiar diversos productos y servicios mediante crédito directo otorgado por Cálidda."
+  },
+  {
+    "question": "¿Qué es FISE? | ¿Qué significa FISE? | ¿Qué es el Fondo de Inclusión Social Energético? | ¿Cuál es la tasa del FISE? | ¿Quién administra el FISE? | ¿Quién es el administrador del FISE?",
+    "answer": "FISE es el Fondo de Inclusión Social Energético. Es un subsidio estatal que busca facilitar el acceso al gas natural, cubriendo parcial o totalmente el costo de la instalación interna. Este concepto no trae una tasa asociada. El administrador del FISE es el Ministerio de Energía y Minas, MINEM."
+  },
+  {
+    "question": "¿Qué es DU FISE? | ¿Qué es DU_FISE? | ¿Qué significa DU FISE? | ¿Cuál es la diferencia entre DU FISE y FISE? | ¿Cuál es la tasa del DU FISE?",
+    "answer": "DU FISE es igual que el FISE, pero corresponde a un decreto de urgencia que se hizo en pandemia para que más clientes pudieran acceder. Tampoco trae una tasa asociada."
+  },
+  {
+    "question": "¿Qué es la Cuenta Contrato? | ¿Qué significa Cuenta Contrato? | ¿Cuál es mi número de paciente? | ¿A qué se refiere el código de paciente? | ¿Qué es el número de cuenta contrato? | ¿Cuál es mi código de paciente? | ¿Cuál es mi cuenta contrato? | ¿Me puede dar mi número de paciente? | ¿Me dice el código de paciente?",
+    "answer": "La Cuenta Contrato es tu número de paciente o código de paciente. El suyo es {account_palabras}."
+  },
+  {
+    "question": "¿Qué es la Instalación Externa? | ¿Qué significa Instalación Externa? | ¿A qué se refiere la instalación externa?",
+    "answer": "La Instalación Externa es la instalación que se realiza por fuera de la vivienda, es decir, la parte de la red que llega hasta tu domicilio."
+  },
+  {
+    "question": "¿Qué es la Instalación Interna? | ¿Qué significa Instalación Interna? | ¿A qué se refiere la instalación interna? | ¿En qué se diferencia la instalación interna de la externa?",
+    "answer": "La Instalación Interna es el recorrido de la tubería que inicia y vincula la red externa hasta los artefactos que tienen conexión con el gas natural dentro de tu vivienda."
+  },
+  {
+    "question": "¿Qué son los gasodomésticos? | ¿Qué significa gasodoméstico? | ¿Qué artefactos son gasodomésticos? | ¿Qué equipos funcionan con gas natural?",
+    "answer": "Los gasodomésticos son los artefactos o equipos que funcionan con gas natural, como la cocina, los calentadores de agua o termos, las secadoras, entre otros."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Andes Care, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

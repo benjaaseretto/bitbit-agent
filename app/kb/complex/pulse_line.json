@@ -1,0 +1,138 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Qué es Pulse Line? | ¿Qué empresa es Pulse Line? | Sobre Pulse Line | ¿Quién es Pulse Line?",
+    "answer": "Soy asesor de Pulse Line y estoy aquí para apoyarte con la gestión de tu crédito."
+  },
+  {
+    "question": "¿Qué es Compra a cuota de financiamiento? | ¿Qué producto es este? | ¿En qué consiste Compra a cuota de financiamiento?",
+    "answer": "Compra a cuota de financiamiento es una solución de financiamiento del tipo Compra Ahora y Paga Después, que te permite adquirir productos en comercios afiliados y pagarlos en cuotas, sin intereses si pagas en las fechas establecidas."
+  },
+  {
+    "question": "¿Cómo funciona el modelo de Compra a cuota de financiamiento? | ¿Cómo funciona el negocio? | ¿Cómo se paga al comercio?",
+    "answer": "Te aprobamos una línea de crédito; tú compras en un comercio afiliado y nosotros le pagamos al comercio. Luego tú nos pagas en cuotas: si pagas a tiempo no generas intereses, y si te atrasas se aplica una penalidad fija por cuota de financiamiento vencida."
+  },
+  {
+    "question": "¿De cuándo es la cotización? | ¿Cuándo es la fecha de la cotización? | ¿Cuándo es la fecha de vigencia de oferta? | ¿Cuándo vence?",
+    "answer": "La fecha de vigencia de oferta registrada es el {fecha_vencimiento_spoken}."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿Cuál es mi importe pendiente? | ¿Qué importe tengo?",
+    "answer": "Tu importe pendiente registrado es de {due_balance_palabras}."
+  },
+  {
+    "question": "¿De cuánto es la cuota de financiamiento? | ¿Cuál es la cuota de financiamiento pendiente? | ¿Qué importe tiene la cuota de financiamiento?",
+    "answer": "La cuota de financiamiento registrada para esta gestión es de {invoiced_balance_palabras}."
+  },
+  {
+    "question": "¿Genera intereses? | ¿Cobran intereses? | ¿Tiene intereses el crédito? | ¿Pagaré intereses?",
+    "answer": "No, tu crédito no genera intereses siempre que pagues en la fecha establecida. Por eso es importante cerrar la oferta hoy tu cuenta y evitar cargos adicionales. ¿Te apoyo con tu compra?"
+  },
+  {
+    "question": "¿Qué pasa si me atraso? | ¿Qué sucede si me retraso en el compra? | ¿Qué pasa si compra tarde? | ¿Hay multa por atraso?",
+    "answer": "Si te atrasas se aplica una penalidad fija de cuatro dólares por cada cuota de financiamiento vencida. Esta penalidad no reemplaza el compra del capital y puede acumularse si vencen varias cuotas. Podemos cerrar la oferta hoy mismo tu cuenta. ¿Qué monto puedes cubrir hoy?"
+  },
+  {
+    "question": "¿Pierdo mi cupo si me atraso? | ¿Me bloquean el cupo? | ¿Qué pasa con mi cupo si compra tarde? | ¿Restringen el cupo?",
+    "answer": "Tu cupo podría restringirse temporalmente, podría aplicarse un bloqueo de nuevas compras y se registra como antecedente interno para futuras evaluaciones de crédito. La mejor forma de mantener tu línea activa es realizar tu compra hoy. ¿Te ayudo a ponerte al corriente?"
+  },
+  {
+    "question": "¿Puedo cerrar la compra antes? | ¿Puedo adelantar el compra? | ¿Hay penalización por compra anticipado? | ¿Puedo abonar antes de la fecha?",
+    "answer": "Sí, puedes cerrar la compra antes de la fecha de vigencia de oferta sin ningún tipo de penalización ni cargos por prepago. cerrar la compra anticipadamente te ayuda a mantener tu cuenta al día y evitar atrasos. ¿Quieres aprovechar para realizar tu compra ahora?"
+  },
+  {
+    "question": "¿Puedo cancelar el crédito antes? | ¿Puedo cancelar anticipadamente? | ¿Hay penalidad por cancelar antes?",
+    "answer": "Sí, puedes cancelar tu crédito anticipadamente sin penalidad adicional. Solo debes cerrar la compra el importe total pendiente; no hay cargos por prepago."
+  },
+  {
+    "question": "¿Necesito tarjeta de crédito? | ¿Hace falta tener tarjeta de crédito? | ¿Es obligatorio tener tarjeta de crédito?",
+    "answer": "No, no necesitas tarjeta de crédito para usar Compra a cuota de financiamiento. El proceso es más simple y solo debes mantener tus pagos al día. ¿Te apoyo con la regularización de hoy?"
+  },
+  {
+    "question": "¿Puedo retirar efectivo? | ¿Se puede sacar dinero en efectivo? | ¿Permite retiros en efectivo?",
+    "answer": "No, este producto no permite el retiro de efectivo. Está pensado para compras y financiamiento dentro de la red afiliada. Aprovechemos para mantener tu cuenta al corriente con tu compra de hoy."
+  },
+  {
+    "question": "¿Puedo realizar transferencia de importe a otra cuenta? | ¿Puedo transferir el importe? | ¿Se puede mover el importe a otra cuenta?",
+    "answer": "No, no se puede realizar transferencia de importe. Lo importante ahora es evitar penalización manteniendo tu cuenta regularizada. ¿Podemos proceder con el compra completo el día de hoy?"
+  },
+  {
+    "question": "¿Puedo compartir o prestar mi cupo o crédito con alguien más? | ¿Puede otra persona usar mi crédito? | ¿Es transferible el cupo? | ¿Puedo prestar mi tarjeta?",
+    "answer": "No, el cupo es personal e intransferible. Para conservar todos los beneficios de tu línea, es importante mantener tus pagos al día. ¿Te gustaría que te guíe sobre cómo realizar tu compra en este momento?"
+  },
+  {
+    "question": "¿Puedo usar el cupo en cualquier comercio? | ¿Dónde puedo usar Compra a cuota de financiamiento? | ¿Sirve fuera de la red afiliada?",
+    "answer": "Compra a cuota de financiamiento solo puede usarse en comercios afiliados a la red de Pulse Line. No funciona fuera de la red afiliada."
+  },
+  {
+    "question": "¿Qué es el cupo? | ¿Qué significa cupo? | ¿A qué se refiere el cupo?",
+    "answer": "El cupo es el límite máximo aprobado para tus compras con Compra a cuota de financiamiento. Es personal e intransferible y se mantiene activo siempre que estés al día con tus pagos."
+  },
+  {
+    "question": "¿Qué es una cuota de financiamiento? | ¿Qué significa cuota de financiamiento?",
+    "answer": "Una cuota de financiamiento es cada uno de los pagos parciales en los que se divide el financiamiento de tu compra. cerrar la compra cada cuota de financiamiento en su fecha evita penalizaciones."
+  },
+  {
+    "question": "¿Qué es la seguimiento comercial? | ¿Qué significa seguimiento comercial? | ¿Cuándo entro en seguimiento comercial?",
+    "answer": "La seguimiento comercial se considera cuando no pagas la cuota de financiamiento en su fecha de vigencia de oferta. Eso aplica una penalidad fija de cuatro dólares por cuota de financiamiento vencida y puede afectar tu cupo."
+  },
+  {
+    "question": "¿Qué es un comercio afiliado? | ¿Qué es un aliado comercial? | ¿Qué tiendas aceptan Compra a cuota de financiamiento?",
+    "answer": "Un comercio afiliado o aliado comercial es un retail o tienda que tiene convenio con Pulse Line para aceptar el producto. Solo en estos comercios puedes utilizar tu cupo."
+  },
+  {
+    "question": "¿Cuál es el número de atención? | ¿A qué teléfono puedo llamar? | ¿Cuál es el teléfono de atención? | ¿Cuál es el horario de atención?",
+    "answer": "Puedes comunicarte al cero, cinco, cero, cero, dos, dos, seis, dos, dos, siete, cuatro o escribirnos por WhatsApp al cero, cuatro, uno, cuatro, seis, cuatro, dos, seis, seis, ocho, dos, en horario de lunes a viernes, de ocho de la mañana a cuatro de la tarde. También puedes escribirnos al correo soporte digital arroba Pulse Line punto com punto v e."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "Pulse Line puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

@@ -1,0 +1,170 @@
+[
+  {
+    "question": "¿Qué equipos venden? | ¿Catálogo?",
+    "answer": "En {nombre_empresa} trabajamos la línea {producto} y accesorios relacionados. Esta llamada es para su cotización de {producto}."
+  },
+  {
+    "question": "¿Plazos de entrega? | ¿Cuándo llega?",
+    "answer": "El plazo depende de stock y zona logística. Al confirmar el pedido le indico la ventana de entrega estimada."
+  },
+  {
+    "question": "¿Financiamiento? | ¿Cuotas?",
+    "answer": "Hay contado y planes en cuotas sujetos a aprobación comercial. ¿Quiere que revise opciones para {producto}?"
+  },
+  {
+    "question": "¿Garantía? | ¿Servicio técnico?",
+    "answer": "Cada equipo incluye garantía de fábrica. El detalle queda en la cotización y el contrato de servicio."
+  },
+  {
+    "question": "¿Puedo pedir demo o prueba?",
+    "answer": "Sí, coordinamos demo técnica con un especialista según el equipo y disponibilidad."
+  },
+  {
+    "question": "¿Precio? | ¿Cotización?",
+    "answer": "Le confirmo importe y vigencia de la oferta de {producto}. No invento precios fuera de lo registrado."
+  },
+  {
+    "question": "¿Instalación e insumos?",
+    "answer": "Podemos incluir instalación, capacitación e insumos iniciales según el paquete contratado."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} por su interés o cotización de {producto}."
+  },
+  {
+    "question": "Ya compré | Ya cerré el pedido",
+    "answer": "Excelente. Registramos que el pedido ya está cerrado y, si corresponde, coordinamos seguimiento de entrega."
+  },
+  {
+    "question": "¿Factura A / B? | ¿Datos fiscales?",
+    "answer": "Al confirmar el pedido pedimos datos de facturación. Puedo tomar razón social y CUIT/RUT ahora si lo desea."
+  },
+  {
+    "question": "¿Quién es Mapfre? | ¿Qué es LabTech Sur? | ¿De qué empresa me hablan? | ¿Quiénes son ustedes?",
+    "answer": "LabTech Sur es una compañía de seguros del Grupo Mapfre. En el país ofrece coberturas para personas y empresas, y Colektia la apoya en esta gestión de regularización de cuotas."
+  },
+  {
+    "question": "¿Cuánto debo? | ¿De cuánto es la cotización? | ¿Cuál es el importe pendiente? | ¿Cuánto tengo que cerrar la compra? | ¿A qué corresponde ese monto?",
+    "answer": "El importe pendiente a cerrar la oferta es de {monto_objetivo_palabras} {moneda_hablar}. Regularizarlo a tiempo le permite mantener activos los beneficios de su póliza."
+  },
+  {
+    "question": "¿Cuánto debo de esta póliza? | ¿Cuál es el importe de mi póliza? | ¿De cuánto es la cuota de financiamiento?",
+    "answer": "Su póliza registra un importe pendiente de {saldo_apertura_mono_palabras} {moneda_hablar}."
+  },
+  {
+    "question": "¿Cuánto debo en total? | ¿Cuál es el total de todas mis pólizas? | ¿Cuál es mi cotización total?",
+    "answer": "El total adeudado por sus pólizas es de {total_apertura_palabras} {moneda_hablar}."
+  },
+  {
+    "question": "¿Cuántos días de seguimiento comercial tengo? | ¿Cuántos días llevo atrasado? | ¿Desde cuándo debo? | ¿Hace cuánto no compra?",
+    "answer": "Su póliza presenta {dias_mora_apertura_palabras} días de seguimiento comercial. Por eso le contactamos, para ayudarle a cerrar la oferta y mantener su cobertura."
+  },
+  {
+    "question": "¿Cuándo vence? | ¿Cuál es la fecha de vigencia de oferta? | ¿Qué día vence mi cuota de financiamiento? | ¿Cuál es la FechaVcto?",
+    "answer": "La fecha de vigencia de oferta registrada es el {due_date_spoken}."
+  },
+  {
+    "question": "¿Cuántas pólizas tengo? | ¿Cuántos productos tengo? | ¿Tengo más de una póliza?",
+    "answer": "La cantidad de pólizas que tiene registradas con LabTech Sur es {num_polizas_hablar}."
+  },
+  {
+    "question": "¿De qué ramo es mi póliza? | ¿Qué producto es? | ¿A qué ramo pertenece? | ¿De qué seguro me habla?",
+    "answer": "Su póliza corresponde al ramo {poliza_1_ramo_hablar}."
+  },
+  {
+    "question": "¿Me puede dar el detalle de mis pólizas? | ¿Cuáles son mis pólizas? | Desglóseme la cotización | ¿Qué pólizas tengo pendientes?",
+    "answer": "{mapfre_detalle_polizas_hablar}"
+  },
+  {
+    "question": "¿En qué moneda debo? | ¿Es en soles o dólares? | ¿La cotización es en dólares?",
+    "answer": "El importe se gestiona en {moneda_hablar}."
+  },
+  {
+    "question": "¿En cuántas cuotas está fraccionado? | ¿Cuál es el fraccionamiento? | ¿Cuántos meses de dues tengo?",
+    "answer": "El fraccionamiento registrado de su póliza es de {poliza_1_dues_hablar}."
+  },
+  {
+    "question": "¿Qué tipo de documento tienen registrado? | ¿Con qué documento figura la póliza? | ¿Es con DNI, RUC o carnet de extranjería?",
+    "answer": "En nuestros registros figura el documento del tomador como {dim_2_hablar}."
+  },
+  {
+    "question": "¿Dónde compra? | ¿Cómo puedo cerrar la compra? | ¿Cuáles son los medios de compra? | ¿Por dónde realizo el compra? | ¿Me manda los medios de compra? | ¿Cómo hago el compra?",
+    "answer": "Puede cerrar la compra por agente bancario, en ventanilla del banco, por la APP MAPFRE, en el portal del comprador portal punto mapfre punto com punto pe, o desde la página web de su banco. Si desea, le explico el paso a paso de cualquiera de estos medios."
+  },
+  {
+    "question": "¿Cómo compra en la página web del banco? | ¿Cómo compra por banca por internet? | ¿Cómo compra por banca móvil? | Quiero cerrar la compra por la web del banco",
+    "answer": "Puede cerrar la compra desde la web de BCP, be be uve a, Scotiabank, Interbank o BanBif. Ingrese a la web del banco, elija la opción de Pagos y busque Mapfre, seleccione la moneda, digite el DNI o RUC del contratante, escoja las cuotas que desea cerrar la compra y confirme el compra."
+  },
+  {
+    "question": "¿Cómo compra en agente bancario? | ¿Cuál es el código de compra? | ¿Me da el código Mapfre? | Quiero cerrar la compra en agente",
+    "answer": "En agente bancario indique que va a cerrar la compra su seguro Mapfre y brinde el código según el banco: en BCP el código es cero uno ocho seis seis; en be be uve a dos cero nueve; en Scotiabank uno cero dos; y en Interbank cero dos cero cero dos cero cuatro. Luego proporcione el DNI o RUC del contratante de la póliza."
+  },
+  {
+    "question": "¿Cómo compra en ventanilla? | ¿Puedo cerrar la compra en el banco presencial? | Quiero cerrar la compra en agencia bancaria",
+    "answer": "Puede cerrar la compra en ventanilla de BCP, be be uve a, Scotiabank, Interbank o BanBif. Acérquese a la ventanilla, indique que desea cerrar la compra su seguro Mapfre, consulte la moneda del recibo y proporcione el DNI o RUC del contratante."
+  },
+  {
+    "question": "¿Cómo compra en la APP MAPFRE? | ¿Puedo cerrar la compra por el aplicativo? | Quiero cerrar la compra por la app",
+    "answer": "En la APP MAPFRE ingrese, consulte el detalle de la póliza, seleccione Pagos, elija la cuota de financiamiento, complete los datos de su tarjeta y correo, confirme y finalice el proceso."
+  },
+  {
+    "question": "¿Cómo compra en el portal del comprador? | ¿Cuál es el portal Mapfre? | portal.mapfre.com.pe | Quiero cerrar la compra en el portal",
+    "answer": "Ingrese a portal punto mapfre punto com punto pe, inicie sesión, elija Mis Pagos, seleccione la póliza y la cuota de financiamiento, complete los datos de su tarjeta y correo, confirme y finalice."
+  },
+  {
+    "question": "¿Puedo cerrar la compra por Yape? | ¿Aceptan Yape? | ¿Se puede yapear el compra?",
+    "answer": "Los canales oficiales para esta gestión son agente bancario, ventanilla, APP MAPFRE, portal del comprador y página web del banco. Si necesita apoyo con el medio, puede escribirnos al WhatsApp más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres."
+  },
+  {
+    "question": "¿A qué WhatsApp escribo? | ¿Cuál es el WhatsApp de atención? | ¿A dónde envío el comprobante? | ¿Dónde mando la constancia?",
+    "answer": "Puede escribirnos o enviar su constancia de compra al WhatsApp más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres."
+  },
+  {
+    "question": "Ya pagué | Ya hice el depósito | Ya transferí | Ya cancelé | El compra ya está hecho | Acabo de cerrar la compra",
+    "answer": "De acuerdo. Por favor envíe su constancia de compra por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres para actualizar el sistema."
+  },
+  {
+    "question": "¿Hay descuento? | ¿Hay quita? | ¿Me pueden rebajar? | ¿Hay alguna campaña?",
+    "answer": "En este momento no contamos con descuentos ni quitas. Lo importante es definir una fecha de este mes para mantener activa su cobertura."
+  },
+  {
+    "question": "¿Puedo cerrar la compra en partes? | ¿Aceptan abonos? | ¿Puedo abonar solo una parte? | ¿Puedo dejar un adelanto?",
+    "answer": "Por el momento necesitamos la regularización del importe completo para mantener su cobertura. Podemos registrar una fecha de este mes para el compra total."
+  },
+  {
+    "question": "¿Puedo cerrar la compra después de fin de mes? | ¿Me dan más tiempo? | ¿Puedo dejarlo para el mes que viene?",
+    "answer": "El pedido de compra debe quedar dentro de este mes, a más tardar el {fecha_limite}. ¿Qué día de este mes le sería posible cerrar la oferta?"
+  },
+  {
+    "question": "Quiero hablar con un humano | Páseme con un asesor | Quiero un agente | Transfiérame con una persona",
+    "answer": "Con gusto, puede contactarnos por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres."
+  },
+  {
+    "question": "No reconozco la cotización | Esta cotización no es mía | Ese monto está mal | No estoy de acuerdo con la cotización",
+    "answer": "Comprendo. Vamos a escalar su caso para darle seguimiento especializado. Para mayor información comuníquese al WhatsApp más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres."
+  },
+  {
+    "question": "¿Me van a suspender la póliza? | ¿Pierdo la cobertura? | ¿Qué pasa si no compra? | ¿Me suspenden los beneficios?",
+    "answer": "Para mantener activos los beneficios y coberturas de su póliza, es importante cerrar la oferta el importe pendiente lo antes posible, idealmente dentro de este mes."
+  },
+  {
+    "question": "¿Cuál es mi tramo? | ¿Estoy en preventiva o temprana? | ¿En qué segmento estoy?",
+    "answer": "Su gestión corresponde al tramo {tranche_hablar}."
+  },
+  {
+    "question": "¿Ya figura algún compra? | ¿Tienen registrado un abono? | ¿Cuál es el balance paid?",
+    "answer": "El importe pendiente a cerrar la oferta registrado es de {monto_objetivo_palabras} {moneda_hablar}. Si usted ya compró, envíenos la constancia por WhatsApp al más cincuenta y uno, nueve nueve nueve, nueve uno nueve, uno tres tres."
+  },
+  {
+    "question": "¿Capacitación del personal?",
+    "answer": "LabTech Sur puede incluir inducción operativa al entregar {producto}. Confirmamos al cerrar el pedido."
+  },
+  {
+    "question": "¿Repuestos y consumibles?",
+    "answer": "Hay catálogo de consumibles y repuestos. Puedo sumarlos a la misma cotización si lo necesita."
+  },
+  {
+    "question": "¿Contrato de mantenimiento?",
+    "answer": "Ofrecemos planes de mantenimiento preventivo anuales. ¿Quiere incluirlo en la propuesta?"
+  }
+]

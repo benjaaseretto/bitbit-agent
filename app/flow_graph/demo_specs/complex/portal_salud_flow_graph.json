@@ -1,0 +1,927 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "portal_salud_flow",
+    "visible_name": "Portal Salud",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (24 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/portal_salud.json",
+      "company_id": "portal_salud-demo",
+      "description": "Base de conocimiento de Portal Salud."
+    },
+    "company_id": "portal_salud-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "tenpo_flow_graph.json",
+      "node_count": 24,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Portal Salud",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "2.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Si",
+            "Sí po",
+            "Si po",
+            "Sipo",
+            "Ya po",
+            "Ya",
+            "Con el habla",
+            "Con ella habla",
+            "Con él habla",
+            "Él habla",
+            "Ella habla",
+            "Al habla",
+            "A la orden",
+            "Dígame",
+            "Digame",
+            "Hable",
+            "Sí soy yo",
+            "Si soy yo",
+            "Soy yo",
+            "Correcto",
+            "Claro",
+            "Así es",
+            "Asi es",
+            "Listo",
+            "Dale",
+            "Bueno",
+            "Presente",
+            "El mismo",
+            "La misma"
+          ],
+          "identity_pregunta": "{saludo_por_horario}, ¿habló con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Hola, soy {nombre_agente} de Colektia, en representación de Portal Salud.",
+          "identity_repregunta": "Para continuar, ¿me confirmas que hablo con {nombre_deudor_completo}?",
+          "identity_no_titular_pregunta": "Disculpa la molestia. ¿Conoces a {nombre_deudor_completo}? ¿Me podrías indicar un número actualizado donde pueda contactarlo?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "fast_commitment": true,
+            "fast_commitment_next": "intent.confirm_commitment"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura por segmento Portal Salud",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": false,
+        "prompt_by": {
+          "field": "Portal Salud_segment",
+          "cases": {
+            "promesa_rota": "Hola {nombre_deudor}, te llamamos porque teníamos un cita de turno para el día {payment_date_frase} y no se reflejó el turno. ¿Puedes hacerlo hoy?",
+            "preventiva": "Hola {nombre_deudor}, te llamo de Colektia en representación de Portal Salud. Te contacto para un recordatorio de turno de tu {producto_nombre}: tienes un especialidad próximo a vencer de {due_balance_palabras} pesos con fecha {due_date_spoken}. ¿Podrías pagarlo dentro de los próximos días para mantenerte al día?",
+            "castigada": "Hola {nombre_deudor}, te llamo de Colektia en representación de Portal Salud para ofrecerte una solución de turno de tu {producto_nombre}. Registras un turno pendiente de {due_balance_palabras} pesos. ¿Podríamos revisar un plan de turno para ayudarte a confirmar la cita?",
+            "mora": "Te llamo de Colektia en representación de Portal Salud para recordarte que tu {producto_nombre} presenta un turno pendiente de {due_balance_palabras} pesos con {dias_mora_palabras} días de retraso. ¿Podrías realizar el turno hoy y de esta manera reactivar tu credencial?"
+          },
+          "default": "Te llamo de Colektia en representación de Portal Salud para recordarte que tu {producto_nombre} presenta un turno pendiente de {due_balance_palabras} pesos con {dias_mora_palabras} días de retraso. ¿Podrías realizar el turno hoy y de esta manera reactivar tu credencial?"
+        },
+        "decision": "La apertura YA hizo la pregunta de turno. Clasifica la respuesta del paciente sin repetir esa pregunta. Si dice que ya asistió, elige 'Ya asistió'. Si pide que lo llamen después o está ocupado, elige 'Próximo contacto'. Si no reconoce la cita pendiente, elige 'No reconoce cita pendiente'. Si pide ejecutivo o número de atención, elige 'Quiere ejecutivo'. Si reporta fallecimiento, insolvencia u otro evento especial, elige 'Evento especial'. Si acepta agendar, rechaza, dice que no puede, no tiene dinero, o cualquier otra respuesta sobre el turno, elige 'Continuar'.",
+        "on": {
+          "Continuar": {
+            "goto_by": {
+              "field": "Portal Salud_segment",
+              "cases": {
+                "promesa_rota": "task.negotiation_promesa_rota",
+                "preventiva": "task.negotiation_preventiva",
+                "castigada": "task.negotiation_castigada",
+                "mora": "task.negotiation_mora"
+              },
+              "default": "task.negotiation_mora"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid"
+          },
+          "Próximo contacto": {
+            "goto": "intent.offer_next_contact"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_not_recognized"
+          },
+          "Quiere ejecutivo": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Solicita ejecutivo",
+            "goto": "final.end_ejecutivo"
+          },
+          "Evento especial": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Evento especial",
+            "goto": "final.end_special_event"
+          },
+          "always": {
+            "goto_by": {
+              "field": "Portal Salud_segment",
+              "cases": {
+                "promesa_rota": "task.negotiation_promesa_rota",
+                "preventiva": "task.negotiation_preventiva",
+                "castigada": "task.negotiation_castigada",
+                "mora": "task.negotiation_mora"
+              },
+              "default": "task.negotiation_mora"
+            }
+          }
+        }
+      },
+      "task.negotiation_mora": {
+        "type": "task",
+        "label": "Negociación atraso de agenda (1-180)",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": 3,
+          "suggest_dias": 1,
+          "max_attempts": 3,
+          "empresa": "Portal Salud",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "allow_partial_payments": true,
+          "min_partial_amount": "{provision_balance}",
+          "min_partial_label": "el turno mínimo es de {provision_balance_palabras} pesos",
+          "allow_below_min_partial_payment": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "partial_offer_steps": [
+            "Ya, te entiendo. Mira, ¿podrías al menos agendar el mínimo que son {provision_balance_palabras} pesos para dejar la cuenta al día y de esta manera no seguir afectando el historial de crédito?"
+          ],
+          "rejection_step_messages": [
+            "Te entiendo. ¿Podrías realizar el turno hoy y de esta manera reactivar tu credencial?",
+            "Ya, te entiendo. Mira, ¿podrías al menos agendar el mínimo que son {provision_balance_palabras} pesos para dejar la cuenta al día y de esta manera no seguir afectando el historial de crédito?"
+          ],
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "benefit_hints": [
+            "ponerte al día y reactivar tu credencial",
+            "evitar que el turno siga generando intereses",
+            "salir del boletín comercial si corresponde"
+          ],
+          "modismos_pago_custom": {
+            "hoy": [
+              "turno hoy",
+              "hoy turno",
+              "lo turno hoy",
+              "hoy lo turno",
+              "turno ahora",
+              "lo hago hoy",
+              "hoy mismo",
+              "de hoy no pasa",
+              "ya po turno",
+              "turno al tiro",
+              "al tiro turno"
+            ],
+            "mañana": [
+              "turno mañana",
+              "mañana turno",
+              "lo turno mañana",
+              "mañana lo turno",
+              "mañana sin falta"
+            ],
+            "pasado_mañana": [
+              "turno pasado mañana",
+              "pasado mañana turno",
+              "lo turno pasado mañana"
+            ]
+          },
+          "custom_instructions": "Trato de TÚ, tono cercano, empático y profesional, español neutro latinoamericano con comprensión de chilenismos (sí po, ya, cachei, no tengo lucas, estoy pato, estoy cesante, qué lata, etc.). {Portal Salud_prohibitions} Usa recordatorio de turno, solución de turno, turno pendiente o ponerte al día. NO menciones grabación. NO repitas saludo ni presentación. NO presiones. cita máximo 3 días. Canales de turno (solo si pregunta cómo agendar): App Portal Salud, transferencia a Portal Salud Prepago SA cuenta cinco cinco cinco cinco más RUT sin dígito verificador, email transferencias arroba fintoc punto com, o Toku.",
+          "objection_handlers": [
+            {
+              "objection": "Ya pagué | Ya hice el turno | Ya transferí | Pagué por la app | Ya está pagado | Ya aboné",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "No reconozco esta cita pendiente | Desconozco la cita pendiente | No es mía | De qué me están hablando",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "Ya hice una renegociación | Ya reestructuré | Tengo un plan de cuotas",
+              "answer": "Perfecto. Si tu renegociación está vigente, puedes ver el detalle de tus cuotas en la sección credencial de Crédito de la App. Si tienes dudas o problemas con tu plan, te puedo ayudar."
+            },
+            {
+              "objection": "Quiero hablar con un ejecutivo | Pásame con una persona | Quiero un humano | Dame el número",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Quiere ejecutivo"
+            },
+            {
+              "objection": "Estoy ocupado | Llámame después | Ahora no puedo hablar | Después lo veo | Mañana te llamo | Me fijo | Lo veo",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Falleció | Fallecimiento | Se murió | Es un evento especial | Me acogí a la ley de insolvencia | Estoy en insolvencia",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Evento especial"
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "has_renegotiation_offer",
+              "cases": {
+                "con_oferta": "intent.offer_renegotiation",
+                "sin_oferta": "intent.offer_renegotiation"
+              },
+              "default": "intent.offer_renegotiation"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid_reported"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Ocupado",
+            "goto": "intent.offer_next_contact"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_not_recognized"
+          },
+          "Quiere ejecutivo": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Solicita ejecutivo",
+            "goto": "final.end_ejecutivo"
+          },
+          "Evento especial": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Evento especial",
+            "goto": "final.end_special_event"
+          }
+        }
+      },
+      "task.negotiation_preventiva": {
+        "type": "task",
+        "label": "Negociación preventiva",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias_preventiva}",
+          "suggest_dias": 1,
+          "max_attempts": 3,
+          "empresa": "Portal Salud",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "allow_partial_payments": true,
+          "min_partial_amount": "{provision_balance}",
+          "min_partial_label": "el turno mínimo es de {provision_balance_palabras} pesos",
+          "allow_below_min_partial_payment": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "partial_offer_steps": [
+            "Ya, te entiendo. Mira, ¿podrías al menos agendar el mínimo que son {provision_balance_palabras} pesos para dejar la cuenta al día y de esta manera no seguir afectando el historial de crédito?"
+          ],
+          "rejection_step_messages": [
+            "¿Podrías pagarlo dentro de los próximos días para mantenerte al día?",
+            "Ya, te entiendo. Mira, ¿podrías al menos agendar el mínimo que son {provision_balance_palabras} pesos para dejar la cuenta al día y de esta manera no seguir afectando el historial de crédito?"
+          ],
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "benefit_hints": [
+            "mantener tu credencial al día",
+            "evitar intereses y cargos adicionales",
+            "organizar tu turno a tiempo"
+          ],
+          "custom_instructions": "GESTIÓN PREVENTIVA. Trato de TÚ, tono cercano y preventivo. {Portal Salud_prohibitions} NUNCA menciones atraso de agenda real, atraso, DICOM ni bloqueo. Habla de recordatorio de turno, próximo fecha propuesta y mantenerte al día. NO menciones grabación. NO presiones. cita máximo hasta la fecha de fecha propuesta o 3 días, lo que ocurra primero. Canales: App Portal Salud o transferencia. No ofrezcas planes especiales.",
+          "objection_handlers": [
+            {
+              "objection": "Ya pagué | Ya hice el turno | Ya transferí | Ya está pagado",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "Ya hice una renegociación | Ya reestructuré | Tengo un plan de cuotas",
+              "answer": "Perfecto. Si tu renegociación está vigente, puedes ver el detalle de tus cuotas en la sección credencial de Crédito de la App. Si tienes dudas o problemas con tu plan, te puedo ayudar."
+            },
+            {
+              "objection": "Estoy ocupado | Llámame después | Ahora no puedo hablar",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Quiero hablar con un ejecutivo | Dame el número",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Quiere ejecutivo"
+            },
+            {
+              "objection": "No reconozco esta cita pendiente | Desconozco la cita pendiente | No es mía",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "Falleció | Fallecimiento | Se murió | Es un evento especial | Me acogí a la ley de insolvencia | Estoy en insolvencia",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Evento especial"
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.offer_renegotiation"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid_reported"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Ocupado",
+            "goto": "intent.offer_next_contact"
+          },
+          "Quiere ejecutivo": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Solicita ejecutivo",
+            "goto": "final.end_ejecutivo"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_not_recognized"
+          },
+          "Evento especial": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Evento especial",
+            "goto": "final.end_special_event"
+          }
+        }
+      },
+      "task.negotiation_castigada": {
+        "type": "task",
+        "label": "Negociación cartera castigada",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": 3,
+          "suggest_dias": 1,
+          "max_attempts": 3,
+          "empresa": "Portal Salud",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "allow_partial_payments": true,
+          "min_partial_amount": "{provision_balance}",
+          "min_partial_label": "el abono mínimo aceptable es de {provision_balance_palabras} pesos",
+          "allow_below_min_partial_payment": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "partial_offer_steps": [
+            "Ya, te entiendo. Mira, ¿podrías al menos agendar el mínimo que son {provision_balance_palabras} pesos para dejar la cuenta al día y de esta manera no seguir afectando el historial de crédito?"
+          ],
+          "rejection_step_messages": [
+            "¿Podríamos revisar un plan de turno para ayudarte a confirmar la cita?",
+            "Ya, te entiendo. Mira, ¿podrías al menos agendar el mínimo que son {provision_balance_palabras} pesos para dejar la cuenta al día y de esta manera no seguir afectando el historial de crédito?"
+          ],
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "benefit_hints": [
+            "acceder a un plan de turno para cerrar el turno",
+            "ordenar tu situación financiera",
+            "mejorar tu perfil crediticio a futuro"
+          ],
+          "custom_instructions": "Cartera CASTIGADA (más de 180 días). Trato de TÚ, empático, sin presión agresiva. {Portal Salud_prohibitions} NO menciones grabación. NO repitas saludo ni presentación. NO inventes condonaciones ni condiciones especiales: solo SDP Portal Salud puede aprobarlas. cita máximo 3 días. Si pregunta por plan especial: solucionesdepago arroba Portal Salud punto ce ele o seiscientos quinientos, mil novecientos. Canales: App Portal Salud, transferencia o Toku.",
+          "objection_handlers": [
+            {
+              "objection": "Ya pagué | Ya hice el turno | Ya transferí | Ya está pagado",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "Ya hice una renegociación | Ya reestructuré | Tengo un plan de cuotas",
+              "answer": "Perfecto. Si tu renegociación está vigente, puedes ver el detalle de tus cuotas en la sección credencial de Crédito de la App. Si tienes dudas o problemas con tu plan, te puedo ayudar."
+            },
+            {
+              "objection": "Quiero hablar con un ejecutivo | Dame el número",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Quiere ejecutivo"
+            },
+            {
+              "objection": "No reconozco esta cita pendiente | Desconozco la cita pendiente",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "Estoy ocupado | Llámame después",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Falleció | Fallecimiento | Se murió | Es un evento especial | Me acogí a la ley de insolvencia | Estoy en insolvencia",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Evento especial"
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "has_renegotiation_offer",
+              "cases": {
+                "con_oferta": "intent.offer_renegotiation",
+                "sin_oferta": "intent.offer_renegotiation"
+              },
+              "default": "intent.offer_renegotiation"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid_reported"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Ocupado",
+            "goto": "intent.offer_next_contact"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_not_recognized"
+          },
+          "Quiere ejecutivo": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Solicita ejecutivo",
+            "goto": "final.end_ejecutivo"
+          },
+          "Evento especial": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Evento especial",
+            "goto": "final.end_special_event"
+          }
+        }
+      },
+      "task.negotiation_promesa_rota": {
+        "type": "task",
+        "label": "Negociación promesa rota",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": 3,
+          "suggest_dias": 1,
+          "max_attempts": 3,
+          "empresa": "Portal Salud",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{due_balance}",
+          "monto_deuda_palabras": "{due_balance_palabras}",
+          "allow_partial_payments": true,
+          "min_partial_amount": "{provision_balance}",
+          "min_partial_label": "el turno mínimo es de {provision_balance_palabras} pesos",
+          "allow_below_min_partial_payment": false,
+          "skip_opening_generate_reply": true,
+          "act_on_last_user_message": true,
+          "pass_chat_ctx": true,
+          "partial_offer_steps": [
+            "Ya, te entiendo. Mira, ¿podrías al menos agendar el mínimo que son {provision_balance_palabras} pesos para dejar la cuenta al día y de esta manera no seguir afectando el historial de crédito?"
+          ],
+          "rejection_step_messages": [
+            "Te entiendo pero, ¿Puedes hacerlo hoy?",
+            "Ya, te entiendo. Mira, ¿podrías al menos agendar el mínimo que son {provision_balance_palabras} pesos para dejar la cuenta al día y de esta manera no seguir afectando el historial de crédito?"
+          ],
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "ask_nonpayment_reason": false,
+          "benefit_hints": [
+            "cumplir el cita pendiente",
+            "ponerte al día y evitar que el turno siga aumentando"
+          ],
+          "custom_instructions": "PROMESA ROTA. Trato de TÚ, empático y firme sin agresividad. {Portal Salud_prohibitions} Había un cita para {payment_date_frase} que no se reflejó. Si ya asistió, cierra con tono positivo (puede tardar un par de días en reflejarse). NO menciones grabación. NO presiones. cita máximo 3 días.",
+          "objection_handlers": [
+            {
+              "objection": "Ya pagué | Ya hice el turno | Ya transferí | Ya está pagado | Ya aboné",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "Ya hice una renegociación | Ya reestructuré | Tengo un plan de cuotas",
+              "answer": "Perfecto. Si tu renegociación está vigente, puedes ver el detalle de tus cuotas en la sección credencial de Crédito de la App. Si tienes dudas o problemas con tu plan, te puedo ayudar."
+            },
+            {
+              "objection": "Estoy ocupado | Llámame después",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Quiero hablar con un ejecutivo | Dame el número",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Quiere ejecutivo"
+            },
+            {
+              "objection": "No reconozco esta cita pendiente | Desconozco la cita pendiente | No es mía",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "Falleció | Fallecimiento | Se murió | Es un evento especial | Me acogí a la ley de insolvencia | Estoy en insolvencia",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Evento especial"
+            }
+          ]
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "has_renegotiation_offer",
+              "cases": {
+                "con_oferta": "intent.offer_renegotiation",
+                "sin_oferta": "intent.offer_renegotiation"
+              },
+              "default": "intent.offer_renegotiation"
+            }
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "goto": "final.end_paid_reported"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Ocupado",
+            "goto": "intent.offer_next_contact"
+          },
+          "Quiere ejecutivo": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Solicita ejecutivo",
+            "goto": "final.end_ejecutivo"
+          },
+          "No reconoce la cita": {
+            "action": "set_status",
+            "status": "No reconoce la cita",
+            "goto": "final.end_not_recognized"
+          },
+          "Evento especial": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Evento especial",
+            "goto": "final.end_special_event"
+          }
+        }
+      },
+      "intent.offer_renegotiation": {
+        "type": "intention",
+        "label": "Flujo 3: App / motivo / callback",
+        "delivery": "say",
+        "interruptible": true,
+        "prompt_by": {
+          "field": "flow3_prompt_variant",
+          "cases": {
+            "con_oferta": "Tienes una opción de renegociación disponible en tu App Portal Salud. Ingresa a la sección credencial de Crédito para verla. Con esta alternativa puedes salir del boletín comercial y evitar que la cita pendiente siga incrementando. Para entender mejor tu situación, ¿qué te ha impedido realizar el turno? Si prefieres, también podemos llamarte en otra fecha.",
+            "preventiva_con_oferta": "Tienes una opción disponible en tu App Portal Salud para organizar el turno. Ingresa a la sección credencial de Crédito para verla. Para entender mejor tu situación, ¿qué te ha impedido realizar el turno? Si prefieres, también podemos llamarte en otra fecha.",
+            "sin_oferta": "Ya, te entiendo. Para entender mejor tu situación, ¿qué te ha impedido realizar el turno? Si prefieres, también podemos llamarte en otra fecha."
+          },
+          "default": "Ya, te entiendo. Para entender mejor tu situación, ¿qué te ha impedido realizar el turno? Si prefieres, también podemos llamarte en otra fecha."
+        },
+        "decision": "Clasifica en silencio, sin responder, confirmar ni parafrasear la fecha: el nodo destino se encarga del siguiente mensaje. Elige 'Acepta App' solo si el prompt informó una oferta y el paciente acepta revisarla o dice que la verá. Si pide que lo llamen después, acepta el callback o da una fecha, elige 'Próximo contacto' sin decir nada más. Si comparte motivo de no turno y no quiere callback ni App, elige 'Rechaza'. Si quiere agendar el mínimo o total, elige 'Quiere agendar'.",
+        "on": {
+          "Acepta App": {
+            "goto_by": {
+              "field": "has_renegotiation_offer",
+              "cases": {
+                "con_oferta": "final.end_renegotiation_app",
+                "sin_oferta": "final.end_no_commitment"
+              },
+              "default": "final.end_no_commitment"
+            }
+          },
+          "Próximo contacto": {
+            "goto": "task.next_contact_capture"
+          },
+          "Quiere pagar": {
+            "goto_by": {
+              "field": "Portal Salud_segment",
+              "cases": {
+                "promesa_rota": "task.negotiation_promesa_rota",
+                "preventiva": "task.negotiation_preventiva",
+                "castigada": "task.negotiation_castigada",
+                "mora": "task.negotiation_mora"
+              },
+              "default": "task.negotiation_mora"
+            }
+          },
+          "Rechaza": {
+            "goto": "final.end_no_commitment"
+          },
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.offer_next_contact": {
+        "type": "intention",
+        "label": "Oferta de próximo contacto",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo, no quiero interrumpirte. Coordinemos un próximo contacto para retomar la solución de turno con más calma.",
+        "on": {
+          "always": {
+            "goto": "task.next_contact_capture"
+          }
+        }
+      },
+      "task.next_contact_capture": {
+        "type": "task",
+        "label": "Captura fecha próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "require_franja": false,
+          "require_day": true,
+          "default_to_tomorrow": false,
+          "confirm_ambiguous_week": true,
+          "strict_cancel": true,
+          "allow_today": true
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "agendar_proximo_contacto",
+            "ct": true,
+            "goto": "final.end_next_contact"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "task.payment_intention_date": {
+        "type": "task",
+        "label": "Fecha tentativa de turno",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_retries": 1,
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve.",
+          "max_attempts": 3
+        },
+        "on": {
+          "Fecha tentativa capturada": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "payment_intention_date": "result.tentative_date",
+            "payment_intention_raw": "result.raw_text",
+            "set_payment_intention": true,
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Sin fecha": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar cita y medios de turno",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "Portal Salud_segment",
+          "cases": {
+            "preventiva": "Ya, perfecto {nombre_deudor}, registro en el sistema el turno por {payment_amount_palabras} para el día {commitment_date_spoken}. Recuerda que puedes agendar directamente en la app móvil y así te mantienes al día con tu credencial de Crédito.",
+            "castigada": "Ya, perfecto {nombre_deudor}, registro en el sistema el turno por {payment_amount_palabras} para el día {commitment_date_spoken}. Recuerda que puedes agendar directamente en la app móvil para avanzar con la regularización de tu turno.",
+            "promesa_rota": "Ya, perfecto {nombre_deudor}, registro en el sistema el turno por {payment_amount_palabras} para el día {commitment_date_spoken}. Recuerda que puedes agendar directamente en la app móvil y de esta manera dejas de estar publicado en el boletín comercial.",
+            "mora": "Ya, perfecto {nombre_deudor}, registro en el sistema el turno por {payment_amount_palabras} para el día {commitment_date_spoken}. Recuerda que puedes agendar directamente en la app móvil y de esta manera dejas de estar publicado en el boletín comercial."
+          },
+          "default": "Ya, perfecto {nombre_deudor}, registro en el sistema el turno por {payment_amount_palabras} para el día {commitment_date_spoken}. Recuerda que puedes agendar directamente en la app móvil."
+        },
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Que tengas un buen día Tenpista.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Ah, qué bueno. Muchas veces el turno puede tardar un par de días en reflejarse en el sistema. Muchas gracias y que estés bien.",
+        "delivery": "say"
+      },
+      "final.end_paid_reported": {
+        "type": "final",
+        "label": "Despedida (ya pagué en negociación)",
+        "prompt": "Muchas gracias por informarnos. Los pagos pueden tardar hasta 48 horas en reflejarse. Si el turno fue reciente, te recomendamos verificar en la App Portal Salud.",
+        "delivery": "say"
+      },
+      "final.end_renegotiation_app": {
+        "type": "final",
+        "label": "Despedida (renegociación App)",
+        "prompt": "Perfecto. Revisa la opción en tu App Portal Salud, sección credencial de Crédito. Si necesitas ayuda, llama al seiscientos quinientos, mil novecientos. Que tengas buen día Tenpista.",
+        "delivery": "say"
+      },
+      "final.end_next_contact": {
+        "type": "final",
+        "label": "Despedida (próximo contacto)",
+        "prompt": "Listo, quedó agendado para {next_contact_date_natural}. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Dejamos registro de tu intención de turno. Recuerda que puedes agendar en la App Portal Salud cuando puedas. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Entendido. Si quieres una solución de turno, puedes revisar si hay alternativas disponibles en tu App Portal Salud o escribir a solucionesdepago arroba Portal Salud punto ce ele. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_not_recognized": {
+        "type": "final",
+        "label": "Despedida (no reconoce cita pendiente)",
+        "prompt": "Entiendo. Para investigar tu situación, necesito confirmar que tienes una credencial de Crédito Portal Salud. Te derivamos al área especializada para que revisen tu caso.",
+        "delivery": "say"
+      },
+      "final.end_ejecutivo": {
+        "type": "final",
+        "label": "Despedida (solicita ejecutivo)",
+        "prompt": "Por supuesto. Puedes comunicarte con nuestro equipo al seiscientos quinientos, mil novecientos o al seis mil, sesenta y uno, ciento diez, o escribirnos a solucionesdepago arroba Portal Salud punto ce ele.",
+        "delivery": "say"
+      },
+      "final.end_special_event": {
+        "type": "final",
+        "label": "Despedida (fallecimiento / insolvencia / evento especial)",
+        "prompt": "Entiendo. Este caso debe revisarlo el área de soluciones de turno de Portal Salud. Por favor comunícate al seiscientos quinientos, mil novecientos, o escribe a solucionesdepago arroba Portal Salud punto ce ele. No continuaremos la gestión hasta que se resuelva. Gracias por avisarnos.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpa la molestia. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado / tercero)",
+        "prompt": "Gracias. Por favor indícale al titular que Colektia, en representación de Portal Salud, intentó contactarlo por un recordatorio de turno. No puedo entregar más detalles. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Hola, te habla Colektia en representación de Portal Salud por un recordatorio de turno. Por favor contáctanos o espera nuestra próxima llamada. Gracias.",
+        "delivery": "say"
+      }
+    }
+  }
+}

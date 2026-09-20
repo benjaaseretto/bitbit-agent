@@ -1,0 +1,517 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "bio_analyze_flow",
+    "visible_name": "BioAnalyze",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (18 nodos) venta de equipos: identidad, cotización, multiproducto, financiamiento y próximo contacto.",
+    "fields": [
+      {
+        "label": "Nombre del comprador",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Empresa / marca",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Equipo / línea",
+        "field": "producto",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Cantidad",
+        "field": "cantidad",
+        "type": "number",
+        "required": false
+      },
+      {
+        "label": "Sucursal / depósito",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Modalidad de pago",
+        "field": "financiamiento",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/bio_analyze.json",
+      "company_id": "bio_analyze-demo",
+      "description": "Base de conocimiento de BioAnalyze."
+    },
+    "company_id": "bio_analyze-demo",
+    "meta": {
+      "vertical": "equipos",
+      "structural_pattern": "sanborns_castigo_flow_graph.json",
+      "node_count": 18,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "BioAnalyze",
+    "vertical": "equipos"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí",
+            "soy yo",
+            "con él",
+            "con ella",
+            "dígame",
+            "claro",
+            "sí diga",
+            "sí, diga",
+            "así es",
+            "correcto"
+          ],
+          "invalid_confirmation_identification": [
+            "quiero",
+            "quién",
+            "qué",
+            "por qué",
+            "para qué",
+            "cómo",
+            "cuál",
+            "necesito",
+            "feliz",
+            "{nombre_deudor_completo}",
+            "{nombre_deudor}",
+            "con {nombre_deudor_completo}",
+            "con {nombre_deudor}"
+          ],
+          "identity_pregunta": "{saludo_por_horario}, ¿hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le habla {nombre_agente}, Agente Virtual del área de Servicio y seguimiento de venta de BioAnalyze.",
+          "identity_repregunta": "para continuar, necesito confirmar que me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "delinquency",
+              "rules": [
+                {
+                  "op": ">=",
+                  "value": 240,
+                  "goto": "intent.opening_tramo_9"
+                }
+              ],
+              "default": "intent.opening"
+            }
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura seguimiento comercial Avanzada (resto / fuera de MC4-6)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Hola {nombre_deudor}, le habla {nombre_agente}, Agente Virtual del área de Servicio y seguimiento de venta de BioAnalyze. Le informo que esta llamada está siendo grabada para fines de calidad. Le llamo para apoyarle a cerrar la oferta su cuenta antes de que continúen aplicándose las afectaciones correspondientes. De acuerdo con nuestro sistema, usted presenta un adeudo de {total_balance_palabras}. Revisemos juntos la mejor forma de cubrirlo.",
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "delinquency",
+              "rules": [
+                {
+                  "op": "<=",
+                  "value": 90,
+                  "goto": "task.negotiation_sin_descuento"
+                }
+              ],
+              "default": "task.negotiation"
+            }
+          }
+        }
+      },
+      "intent.opening_tramo_9": {
+        "type": "intention",
+        "label": "Apertura tramo 9 / seguimiento comercial > 240 días (PENDIENTE: construir resto del flujo)",
+        "delivery": "say",
+        "auto_advance_always_after_say": true,
+        "interruptible": false,
+        "prompt": "Hola {nombre_deudor}, le habla {nombre_agente}, Agente Virtual del área de Servicio y seguimiento de venta de BioAnalyze. Le informo que esta llamada está siendo grabada para fines de calidad. Le llamo porque su cuenta se encuentra en una etapa muy avanzada de atraso, y esta es una de las últimas oportunidades que tiene para regularizarla en condiciones preferenciales antes de que el proceso de seguimiento de venta continúe por la vía correspondiente.",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation_sin_descuento": {
+        "type": "task",
+        "label": "Negociación compra total sin descuento (seguimiento comercial 1-90)",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "{max_dias}",
+          "max_attempts_negotiation": 3,
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "allow_partial_payments": false,
+          "ask_nonpayment_reason": false,
+          "require_confirmation": true,
+          "benefit_hints": [
+            "cerrar la oferta su cuenta",
+            "evitar que continúen aplicándose las afectaciones correspondientes",
+            "poner al día su adeudo"
+          ],
+          "empresa": "BioAnalyze",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{total_balance}",
+          "monto_deuda_palabras": "{total_balance_palabras}",
+          "custom_instructions": "Estás negociando una cuenta SIN descuento autorizado (seguimiento comercial temprana, 1-90 días). Solicita el compra TOTAL del adeudo ({total_balance_palabras}). NO ofrezcas descuento, bonificación, rebaja ni compra parcial. Si el comprador no puede cerrar la compra el total, registra sin pedido o intención de compra según corresponda. REGLA: no menciones porcentajes de descuento ni montos mínimos con descuento.",
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy compra",
+              "hoy le compra",
+              "hoy hago el compra",
+              "hoy deposito",
+              "hoy hago la transferencia",
+              "hoy me pongo al día",
+              "hoy mismo compra",
+              "hoy sin falta compra",
+              "de hoy no pasa",
+              "al rato compra"
+            ],
+            "mañana": [
+              "mañana compra",
+              "mañana le compra",
+              "mañana hago el compra",
+              "mañana deposito",
+              "mañana hago la transferencia",
+              "mañana sin falta",
+              "mañana temprano compra",
+              "mañana mismo compra"
+            ]
+          },
+          "objection_handlers": [
+            {
+              "objection": "El comprador indica que no puede cerrar la compra el total | No me alcanza | No puedo cubrir el cien por ciento | No tengo el dinero completo | No puedo cerrar la compra todo | Es mucho dinero | No puedo cerrar la compra tanto | No me da para cerrar la compra todo",
+              "answer": "Entiendo su situación. En este momento la opción disponible para su cuenta es cubrir el total del adeudo de {total_balance_palabras}. ¿Cuándo podría realizar ese compra?"
+            },
+            {
+              "objection": "El comprador exige o pide un porcentaje de descuento | Quiere descuento | Pide una rebaja | Quiere cerrar la compra menos",
+              "answer": "Comprendo. Para su cuenta, en este momento no contamos con una condición de descuento autorizada. La opción es cerrar la oferta el adeudo total de {total_balance_palabras}."
+            },
+            {
+              "objection": "El comprador expresa indisponibilidad para hablar | Está ocupado | No puede hablar ahora | Llámame después | Llamame más tarde | Estoy en reunión | Estoy manejando | Estoy conduciendo | No tengo tiempo | Ahora no puedo | El comprador responde con una hora o momento del día (ej: 'mañana por la mañana', 'a las cinco', 'más tarde') después de que se le preguntó si podía hablar o si podía cerrar la compra",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "El comprador está molesto o enojado por la llamada",
+              "answer": "Entiendo, {nombre_deudor}. La intención de esta llamada es apoyarle a cerrar la oferta su cuenta. También puede realizar su gestión directamente por nuestros canales de atención al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment_sin_descuento"
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "pay_confirmation": false,
+            "goto": "intent.already_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Ocupado",
+            "goto": "final.end_ocupado"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación escalonada seguimiento comercial Avanzada",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "max_dias": "{max_dias}",
+          "max_attempts_negotiation": 3,
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "allow_partial_payments": true,
+          "ask_nonpayment_reason": false,
+          "min_partial_percentage": "{min_pago_pct}",
+          "require_confirmation": true,
+          "benefit_hints": [
+            "cerrar la oferta su cuenta en condiciones preferenciales",
+            "evitar que continúen aplicándose las afectaciones correspondientes",
+            "cerrar este tema con el mayor descuento autorizado para usted"
+          ],
+          "empresa": "BioAnalyze",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{total_balance}",
+          "monto_deuda_palabras": "{total_balance_palabras}",
+          "custom_instructions": "Estás negociando una cuenta en seguimiento comercial Avanzada. Sigue ESTRICTAMENTE este escalonamiento y NUNCA ofrezcas el descuento en el primer planteamiento:\n1) TURNO 1: Solicita el compra total del adeudo SIN mencionar ningún descuento. Solo avanza si el comprador indica que no puede cubrir el cien por ciento.\n2) En cuanto el comprador indique que NO puede cerrar la compra el total (no le alcanza, es mucho, no tiene el dinero completo), debes ofrecer el descuento diciendo EXACTAMENTE esta frase, sin preguntar antes si desea conocerlo: 'Entiendo su situación. Como parte de un beneficio especial, puedo ofrecerle hasta un {max_discount_pct} por ciento de descuento sobre su adeudo, quedando un monto mínimo a cubrir de {monto_minimo_palabras}, para que regularice su cuenta.'\nMenciona el monto mínimo ({monto_minimo_palabras}) cuando el comprador lo pida o pregunte cuánto debe cerrar la compra como mínimo.\nREGLA DE LENGUAJE: refiérete SIEMPRE a esta opción como 'descuento'. NUNCA la llames 'compra parcial', 'abono parcial' ni 'abono'.",
+          "modismos_pago_custom": {
+            "hoy": [
+              "hoy compra",
+              "hoy le compra",
+              "hoy hago el compra",
+              "hoy deposito",
+              "hoy hago la transferencia",
+              "hoy me pongo al día",
+              "hoy mismo compra",
+              "hoy sin falta compra",
+              "de hoy no pasa",
+              "al rato compra"
+            ],
+            "mañana": [
+              "mañana compra",
+              "mañana le compra",
+              "mañana hago el compra",
+              "mañana deposito",
+              "mañana hago la transferencia",
+              "mañana sin falta",
+              "mañana temprano compra",
+              "mañana mismo compra"
+            ]
+          },
+          "objection_handlers": [
+            {
+              "objection": "El comprador indica que no puede cerrar la compra el total | No me alcanza | No puedo cubrir el cien por ciento | No tengo el dinero completo | No puedo cerrar la compra todo | Es mucho dinero | No puedo cerrar la compra tanto | No me da para cerrar la compra todo",
+              "answer": "Entiendo su situación. Como parte de un beneficio especial, puedo ofrecerle hasta un {max_discount_pct} por ciento de descuento sobre su adeudo, quedando un monto mínimo a cubrir de {monto_minimo_palabras}, para que regularice su cuenta. Esto puede liquidarse en un solo compra, o bien distribuirse en hasta seis pagos."
+            },
+            {
+              "objection": "El comprador exige o pide un porcentaje de descuento mayor al máximo autorizado | Quiere más descuento | Dice que el descuento es poco | Pide una rebaja mayor",
+              "answer": "Entiendo su solicitud. Sin embargo, el {max_discount_pct} por ciento es la condición máxima que puedo ofrecerle en este momento para su cuenta. Es una muy buena oportunidad para cerrar la oferta su situación."
+            },
+            {
+              "objection": "El comprador indica que ya hizo un convenio antes y no se aplicó | Ya había llegado a un acuerdo | Me dieron un descuento antes y no me lo respetaron | Ya pagué un convenio y sigue apareciendo",
+              "answer": "Lamento esa situación. Para que pueda aplicarse, es necesario que el correo con la carta firmada y el comprobante de compra hayan sido recibidos. Con gusto le ayudo a generar nuevamente su convenio para que en esta ocasión se concrete correctamente."
+            },
+            {
+              "objection": "El comprador expresa indisponibilidad para hablar | Está ocupado | No puede hablar ahora | Llámame después | Llamame más tarde | Estoy en reunión | Estoy manejando | Estoy conduciendo | No tengo tiempo | Ahora no puedo | El comprador responde con una hora o momento del día (ej: 'mañana por la mañana', 'a las cinco', 'más tarde') después de que se le preguntó si podía hablar o si podía cerrar la compra",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "El comprador está molesto o enojado por la llamada",
+              "answer": "Entiendo, {nombre_deudor}. La intención de esta llamada es apoyarle a cerrar la oferta su cuenta en las mejores condiciones posibles. También puede realizar su gestión directamente por nuestros canales de atención al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+            }
+          ]
+        },
+        "on": {
+          "Pedido confirmado": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "commitment_date": "result.commitment_date",
+            "goto_by": {
+              "field": "substatus",
+              "cases": {
+                "Pago parcial": "intent.confirm_commitment"
+              },
+              "default": "intent.confirm_commitment_sin_descuento"
+            }
+          },
+          "Sin pedido": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya compró": {
+            "action": "set_status",
+            "status": "Ya compró",
+            "pay_confirmation": false,
+            "goto": "intent.already_paid"
+          },
+          "Intención de compra": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "substatus": "Ocupado",
+            "goto": "final.end_ocupado"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar pedido con descuento (compra parcial / carta de acuerdo)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, confirmamos entonces un descuento del {max_discount_pct} por ciento sobre su adeudo, con un compra de {payment_amount_palabras} para el {commitment_date_spoken}.",
+        "on": {
+          "always": {
+            "action": "set_status",
+            "status": "Pedido confirmado",
+            "substatus": "pedido alternativa",
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.confirm_commitment_sin_descuento": {
+        "type": "intention",
+        "label": "Confirmar pedido compra total (sin descuento)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Perfecto, confirmamos entonces su compra de {payment_amount_palabras} para el {commitment_date_spoken}. Recuerde que puede realizarlo desde su Aplicación Móvil o en cualquier tienda BioAnalyze. Su compra le permite cerrar la oferta su cuenta y evitar mayores afectaciones.",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.already_paid": {
+        "type": "intention",
+        "label": "Validación de compra declarado (8.1)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el comprador hace una pregunta, respóndela. Si no, espera a que indique explícitamente la fecha y el monto del compra antes de continuar. NO sigas negociando aquí.",
+        "prompt": "Entiendo. Para validarlo, ¿me podría indicar en qué fecha lo realizó y por qué monto?",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.payment_intention_date": {
+        "type": "task",
+        "label": "Fecha tentativa de compra",
+        "task_type": "PaymentIntentionDateTask",
+        "params": {
+          "max_retries": 1
+        },
+        "on": {
+          "Fecha tentativa capturada": {
+            "action": "set_status",
+            "status": "Intención de compra",
+            "payment_intention_date": "result.tentative_date",
+            "payment_intention_raw": "result.raw_text",
+            "set_payment_intention": true,
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Sin fecha": {
+            "action": "set_status",
+            "status": "Sin pedido",
+            "goto": "intent.soft_close_no_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin pedido)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "delinquency",
+          "rules": [
+            {
+              "op": ">=",
+              "value": 240,
+              "template": "Entiendo que en este momento no pueda tomar la decisión. Le recuerdo que mientras la cuenta permanezca sin cerrar la oferta, continuará reportándose a Buró de Crédito y el proceso de seguimiento de venta seguirá su curso normal. Quedo a sus órdenes si decide retomar esta opción antes de que cierre la vigencia de la oferta."
+            }
+          ],
+          "default": "Comprendo. Le recuerdo que mientras la cuenta permanezca sin cerrar la oferta, el proceso de seguimiento de venta seguirá su curso normal. Quedo a sus órdenes si decide retomar esta opción antes de que cierre la vigencia de la oferta. También puede comunicarse al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero."
+        },
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (pedido)",
+        "prompt": "Muchas gracias por su atención. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_ocupado": {
+        "type": "final",
+        "label": "Despedida (comprador ocupado)",
+        "prompt": "Claro, no le quito más tiempo. Lo contactaremos en otro momento. Muchas gracias por su atención. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado declarado)",
+        "prompt": "Excelente, quedamos a realizar la validación. Muchas gracias por su gestión.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de compra)",
+        "prompt": "Comprendo, dejamos registro de su intención de compra. Le recuerdo que es importante cerrar la oferta su cuenta cuanto antes para conservar las condiciones preferenciales. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin pedido)",
+        "prompt": "Muchas gracias por su atención. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele que desde BioAnalyze intentamos ponernos en contacto con el titular.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

@@ -1,0 +1,158 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Por qué me están llamando? | ¿De qué empresa es esta llamada? | ¿Quién habla? | ¿De dónde me llaman? | ¿Con quién estoy hablando?",
+    "answer": "Te contactamos de Colektia en representación de Hospital Celeste respecto a tu sesión."
+  },
+  {
+    "question": "¿Qué es Colektia? | ¿Colektia quiénes son? | ¿Por qué me llama Colektia? | ¿Colektia qué es?",
+    "answer": "Somos Colektia y te contactamos en representación de Hospital Celeste respecto a tu sesión, para ayudarte a confirmar la cita el estado de tu cuenta."
+  },
+  {
+    "question": "¿Qué es Hospital Celeste? | ¿Qué es Hospital CelestePay? | No sé qué es Hospital Celeste | ¿Hospital Celeste qué hace?",
+    "answer": "Hospital Celeste es una plataforma chilena de pagos digitales. Te permite comprar en comercios online y agendar en cuotas con credencial de débito o crédito, sin intereses. Si compraste en alguna tienda y elegiste agendar en cuotas, lo más probable es que lo hayas hecho con Hospital Celeste."
+  },
+  {
+    "question": "¿De qué compra me hablas? | ¿A cuál comercio corresponde la compra? | ¿A qué comercio corresponde la compra? | ¿A qué comercio se refiere? | ¿En qué comercio compré? | ¿De qué comercio es la compra?",
+    "answer": "La sesión que estamos revisando ahora es la de ese comercio que te acabo de mencionar."
+  },
+  {
+    "question": "¿Cuánto es lo que debo? | ¿Cuánto debo? | ¿Cuál es mi turno pendiente? | ¿De cuánto es la sesión? | Confírmame el especialidad | ¿Cuánto debo de esta sesión? | ¿De cuánto es esta sesión?",
+    "answer": "Te cuento, el especialidad pendiente de tu sesión es de {monto_cuota_en_curso_palabras} pesos{frase_monto_multa}"
+  },
+  {
+    "question": "¿Cuál es mi turno total? | ¿Cuánto debo en total? | ¿Cuál es el total de mi cuenta en Hospital Celeste?",
+    "answer": "Tu turno total con Hospital Celeste es de {total_balance_palabras} pesos."
+  },
+  {
+    "question": "Tengo más de una sesión pendiente, ¿debo pagarlas todas juntas? | ¿Puedo agendar solo una sesión? | ¿Tengo que agendar todo junto? | ¿Puedo agendar de a poco?",
+    "answer": "Lo ideal es que regularices el total de {total_balance_palabras} pesos para ponerte al día con todo. Hospital Celeste no acepta abonos ni pagos parciales: cada sesión se paga por el especialidad completo."
+  },
+  {
+    "question": "¿Cuál es el cupo máximo que tengo con Hospital Celeste? | ¿Cuánto es mi cupo? | ¿Qué pasa con mi cupo si me atraso? | ¿Por qué no puedo comprar más?",
+    "answer": "Te explico: tu cupo con Hospital Celeste es de hasta trescientos mil pesos, pero en cuanto una sesión cae en atraso de agenda se bloquea automáticamente hasta que regularices. Por eso conviene ponerse al día pronto, así recuperas el cupo."
+  },
+  {
+    "question": "¿Cuándo vencía la sesión? | ¿Cuál era la fecha de fecha propuesta? | ¿Cuándo tenía que agendar? | ¿Qué día vencía?",
+    "answer": "La fecha de fecha propuesta de tu sesión fue el {due_date_spoken}."
+  },
+  {
+    "question": "¿Cuántos días de atraso llevo? | ¿Cuántos días de atraso de agenda tengo? | ¿Hace cuánto que no turno? | ¿Desde cuándo estoy atrasado?",
+    "answer": "Según el registro, llevas {dias_mora_palabras} días de atraso."
+  },
+  {
+    "question": "¿Qué es la multa? | ¿Por qué debo más de lo que compré? | ¿De dónde sale ese especialidad extra? | ¿Me están cobrando intereses? | No me avisaron de la multa",
+    "answer": "Hospital Celeste no cobra intereses. Lo que se aplica cuando una sesión se atrasa es una multa fija de diez mil pesos por concepto de atraso, y por eso el especialidad es mayor al de tu compra original."
+  },
+  {
+    "question": "¿Me van a cobrar intereses? | ¿La cita pendiente crece todos los días? | ¿Cuánto más va a subir?",
+    "answer": "No, Hospital Celeste no cobra intereses. El servicio es sin intereses y lo único que se aplica por el atraso es la multa de diez mil pesos."
+  },
+  {
+    "question": "¿Qué es DICOM? | ¿Qué es el Boletín Comercial? | ¿Me van a publicar en DICOM? | ¿Estoy en DICOM?",
+    "answer": "DICOM, o Boletín Comercial, es el registro donde quedan informadas las deudas impagas y que las instituciones consultan cuando evalúan darte un crédito. Si tu sesión supera los quince días de atraso, tu cuenta queda informada ahí."
+  },
+  {
+    "question": "¿Cuándo me reportan a DICOM? | ¿Cuánto tiempo tengo antes de que me publiquen? | ¿A partir de qué día me informan?",
+    "answer": "El reporte al Boletín Comercial se realiza a partir de los quince días de atraso de la sesión. Si pagas antes de esa fecha, tu cuenta no queda informada."
+  },
+  {
+    "question": "Ya estoy en DICOM, ¿cómo lo saco? | ¿Cuánto tarda en borrarse el reporte? | Si turno, ¿me limpian el DICOM? | ¿Cómo aclaro mi historial?",
+    "answer": "Al momento de agendar, nosotros gestionamos de inmediato la eliminación del reporte. El proceso tarda hasta treinta días hábiles en verse reflejado, así que mientras antes pagues, antes empieza a correr ese plazo."
+  },
+  {
+    "question": "¿Cómo turno? | ¿Dónde turno? | ¿Cuáles son los medios de turno? | ¿Por dónde hago el turno? | ¿Me pueden mandar el link?",
+    "answer": "Tienes tres formas. La más directa es el link de turno que te llega en las notificaciones de WhatsApp, mensaje de texto y correo, con el botón que dice paga tu sesión aquí. También puedes agendar con credencial de débito o crédito por la pasarela de Hospital Celeste. Y si prefieres, puedes hacer una transferencia y enviar el comprobante al WhatsApp de soporte de Hospital Celeste para que lo validen."
+  },
+  {
+    "question": "No me llegó el link | Perdí el link de turno | ¿Me pueden reenviar el link? | No encuentro el correo",
+    "answer": "El link te llega en las notificaciones de Hospital Celeste por WhatsApp, mensaje de texto y correo, con el botón que dice paga tu sesión aquí. Si no lo encuentras, revisa el WhatsApp de Hospital Celeste o escríbele al soporte y te lo reenvían."
+  },
+  {
+    "question": "¿Puedo agendar por transferencia? | ¿Tienen cuenta para transferir? | ¿Dónde mando el comprobante?",
+    "answer": "Sí, puedes agendar por transferencia electrónica y después enviar el comprobante al WhatsApp de soporte de Hospital Celeste para que hagan la validación manual del turno."
+  },
+  {
+    "question": "¿Me van a seguir cobrando automáticamente? | ¿Me van a descontar de la credencial? | ¿Por qué me descontaron plata? | ¿Qué es el cobro automático?",
+    "answer": "Hospital Celeste mantiene activos los intentos de cobro automático a la credencial que tienes registrada en la plataforma. Ese proceso corre en paralelo, así que si pagas por el link o por transferencia conviene que avises para que quede todo conciliado."
+  },
+  {
+    "question": "¿Qué pasa si no turno? | ¿Qué consecuencias tiene? | ¿Qué me puede pasar?",
+    "answer": "Si la sesión sigue impaga, se mantiene la multa por atraso, tu cupo de Hospital Celeste queda bloqueado y a partir de los quince días tu cuenta queda informada en el Boletín Comercial, lo que afecta tu historial cuando quieras acceder a otros créditos."
+  },
+  {
+    "question": "¿En cuántas cuotas era mi compra? | ¿Cómo funcionan las cuotas de Hospital Celeste? | ¿Cada cuánto me cobran?",
+    "answer": "Con Hospital Celeste las compras se dividen en hasta tres cuotas, con frecuencia semanal, quincenal o mensual según lo que hayas elegido al comprar, y sin intereses."
+  },
+  {
+    "question": "¿Con quién hablo en Hospital Celeste? | Quiero hablar con una persona | ¿Tienen atención al paciente? | Quiero hablar con un ejecutivo",
+    "answer": "Puedes escribirle al soporte de Hospital Celeste por su WhatsApp y ahí te ayudan con cualquier tema de tu cuenta."
+  },
+  {
+    "question": "¿Esta llamada está grabada? | ¿Me estás grabando? | ¿Para qué graban la llamada?",
+    "answer": "Sí, esta llamada está siendo grabada para brindarte un mejor servicio y para efectos de calidad."
+  },
+  {
+    "question": "¿Eres un robot? | ¿Eres una persona? | ¿Estoy hablando con una máquina? | ¿Eres inteligencia artificial?",
+    "answer": "Soy un agente virtual de Colektia, actuando en representación de Hospital Celeste. Puedo ayudarte a revisar tu sesión pendiente y a dejar registrada una fecha de turno."
+  },
+  {
+    "question": "¿De dónde sacaron mis datos? | ¿Cómo consiguieron mi número? | ¿Quién les dio mi teléfono?",
+    "answer": "Tus datos de contacto son los que registraste al momento de comprar con Hospital Celeste. Los usamos solo para informarte sobre el estado de tu cuenta."
+  },
+  {
+    "question": "¿Cuál es mi número de crédito? | ¿Cuál es la referencia? | ¿Qué número de operación es? | ¿Cómo identifico esta compra?",
+    "answer": "Tu compra la identificamos por el comercio donde la hiciste y por la fecha de fecha propuesta de la sesión. Si necesitas el número de operación exacto, lo tienes en el detalle de tu cuenta en el WhatsApp de Hospital Celeste."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Hospital Celeste, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

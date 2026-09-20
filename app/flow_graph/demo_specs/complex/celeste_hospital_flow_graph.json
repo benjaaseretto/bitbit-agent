@@ -1,0 +1,989 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "celeste_hospital_flow",
+    "visible_name": "Hospital Celeste",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (27 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/celeste_hospital.json",
+      "company_id": "celeste_hospital-demo",
+      "description": "Base de conocimiento de Hospital Celeste."
+    },
+    "company_id": "celeste_hospital-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "ventipay_flow_graph.json",
+      "node_count": 27,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Hospital Celeste",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "Sí",
+            "Si",
+            "Sí po",
+            "Si po",
+            "Sipo",
+            "Ya po",
+            "Ya",
+            "Con él habla",
+            "Con ella habla",
+            "Con el habla",
+            "Él habla",
+            "Ella habla",
+            "Al habla",
+            "Sí soy yo",
+            "Si soy yo",
+            "Soy yo",
+            "El mismo",
+            "La misma",
+            "Dime",
+            "Dígame",
+            "Digame",
+            "Correcto",
+            "Claro",
+            "Así es",
+            "Asi es",
+            "Listo",
+            "Dale",
+            "Bueno",
+            "Presente"
+          ],
+          "identity_pregunta": "Hola, ¿tengo el gusto con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Te saluda {nombre_agente}, de Colektia, en representación de Hospital Celeste.",
+          "identity_repregunta": "Para poder continuar, ¿me confirmas que hablo con {nombre_deudor_completo}?",
+          "identity_no_titular_pregunta": "Disculpa, ¿conoces a {nombre_deudor_completo}?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto_by": {
+              "field": "Hospital Celestepay_ruta",
+              "cases": {
+                "multi": "intent.opening_multi"
+              },
+              "default": "intent.opening"
+            },
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "pay_confirmation_config": {
+              "recolectar_datos_pago": false,
+              "recolectar_medio_pago": true,
+              "medio_pago_opciones": [
+                "link de turno",
+                "transferencia",
+                "cobro automático",
+                "otro"
+              ],
+              "medio_pago_pregunta": "¿El turno lo hiciste con el link de turno, por transferencia, o te lo cobraron automáticamente de la credencial?",
+              "pay_identification_phrases": [
+                "ya pagué",
+                "ya lo pagué",
+                "ya cancelé",
+                "ya transferí",
+                "ya hice el turno",
+                "lo pagué al tiro",
+                "ya está pagado",
+                "lo pagué ayer",
+                "ya lo deposité"
+              ]
+            }
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura por tramo de atraso de agenda (monoproducto)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "comment": "No pregunta ni espera turno: el primer mensaje del paciente llega ya dentro del negociador, que pregunta el día de turno. Así 'no turno hoy' no se clasifica como desconocimiento.",
+        "prompt_by": {
+          "field": "Hospital Celestepay_apertura",
+          "cases": {
+            "preventivo_mono": "Mucho gusto, {nombre_deudor}. Te contactamos de Colektia en representación de Hospital Celeste respecto a tu sesión. Te saluda {nombre_agente}. Te informo que esta llamada está siendo grabada para brindarte un mejor servicio. Tu sesión de {due_balance_palabras} pesos {frase_comercio_1} vence el {due_date_spoken}. Te llamamos solo para recordarte, ya que el cobro se intentará automáticamente ese día en tu credencial registrada.",
+            "temprana_mono": "Mucho gusto, {nombre_deudor}. Te contactamos de Colektia en representación de Hospital Celeste respecto a tu sesión. Te saluda {nombre_agente}. Te informo que esta llamada está siendo grabada para brindarte un mejor servicio. Te llamo porque no pudimos realizar el cobro automático de tu sesión {frase_comercio_1}. El especialidad pendiente es de {due_balance_palabras} pesos, incluyendo la multa por atraso. Es importante regularizarlo pronto para que tu cuenta no sea informada a DICOM el día quince.",
+            "dicom_mono": "Mucho gusto, {nombre_deudor}. Te contactamos de Colektia en representación de Hospital Celeste respecto a tu sesión. Te saluda {nombre_agente}. Te informo que esta llamada está siendo grabada para brindarte un mejor servicio. Te llamo por tu sesión {frase_comercio_1}, por {due_balance_palabras} pesos. Como ya tiene más de quince días de atraso, tu cuenta fue informada al Boletín Comercial, DICOM. Si pagas hoy, nosotros gestionamos de inmediato la eliminación del reporte, aunque el proceso tarda hasta treinta días hábiles."
+          },
+          "default": "Mucho gusto, {nombre_deudor}. Te contactamos de Colektia en representación de Hospital Celeste respecto a tu sesión. Te saluda {nombre_agente}. Te informo que esta llamada está siendo grabada para brindarte un mejor servicio. Te llamo por tu sesión pendiente de {due_balance_palabras} pesos, incluyendo la multa por atraso."
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "intent.opening_multi": {
+        "type": "intention",
+        "label": "Apertura multiproducto por tramo de atraso de agenda",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "comment": "No pregunta ni espera turno: el primer mensaje del paciente llega ya dentro del negociador. Así no hay que clasificar 'no reconozco' en la apertura.",
+        "prompt_by": {
+          "field": "Hospital Celestepay_apertura",
+          "cases": {
+            "preventivo_multi": "Mucho gusto, {nombre_deudor}. Te contactamos de Colektia en representación de Hospital Celeste respecto a tus cuotas. Te saluda {nombre_agente}. Te informo que esta llamada está siendo grabada para brindarte un mejor servicio. Te recordamos que tienes {resumen_num_productos_palabras} cuotas por vencer. La más próxima es {frase_comercio_1}. Vamos a revisarlas una por una.",
+            "temprana_multi": "Mucho gusto, {nombre_deudor}. Te contactamos de Colektia en representación de Hospital Celeste respecto a tus cuotas. Te saluda {nombre_agente}. Te informo que esta llamada está siendo grabada para brindarte un mejor servicio. Te contacto porque tienes {resumen_num_productos_palabras} cuotas pendientes por un total de {resumen_saldo_total_global_palabras} pesos. La más antigua es {frase_comercio_1}. El cobro automático a tu credencial no fue exitoso. Es importante dejarlas al día antes del día quince para evitar el reporte a DICOM. Vamos a revisarlas una por una.",
+            "dicom_multi": "Mucho gusto, {nombre_deudor}. Te contactamos de Colektia en representación de Hospital Celeste respecto a tus cuotas. Te saluda {nombre_agente}. Te informo que esta llamada está siendo grabada para brindarte un mejor servicio. Te llamo por tus {resumen_num_productos_palabras} cuotas pendientes, que suman {resumen_saldo_total_global_palabras} pesos. Por el atraso, tu cita pendiente ya fue reportada a DICOM. Lo ideal es agendar ahora para que podamos solicitar que borren el reporte lo antes posible. Vamos a revisarlas una por una."
+          },
+          "default": "Mucho gusto, {nombre_deudor}. Te contactamos de Colektia en representación de Hospital Celeste respecto a tus cuotas. Te saluda {nombre_agente}. Te informo que esta llamada está siendo grabada para brindarte un mejor servicio. Te llamo por tus cuotas pendientes con Hospital Celeste. Vamos a revisarlas una por una."
+        },
+        "on": {
+          "always": {
+            "goto": "task.negotiation_multi"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación V2",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{Hospital Celestepay_max_dias}",
+          "monto_deuda": "{due_balance}",
+          "benefit_hints": [
+            "confirmar la cita tu cuenta y proteger tu cupo de Hospital Celeste",
+            "mantener un buen historial crediticio",
+            "evitar gestiones adicionales"
+          ],
+          "allow_partial_payments": false,
+          "require_confirmation": false,
+          "collect_payment_method": false,
+          "rejection_step_messages": [
+            "{Hospital Celestepay_persistencia_rechazo}",
+            "Comprendo. Igual necesitamos una fecha para confirmar la cita la sesión. ¿Qué día te quedaría mejor?"
+          ],
+          "custom_instructions": "PRIMERA PREGUNTA OBLIGATORIA: el saludo y el especialidad ya se dijeron. No los repitas. No preguntes si puede agendar hoy ni uses las variantes del paso 4 en el primer turno. Di EXACTAMENTE: {Hospital Celestepay_pregunta_negociacion} CONTEXTO DEL COBRO: la sesión pendiente es {frase_comercio_1}. Cuando pregunte a qué comercio corresponde la compra o en qué tienda compró, dile que la compra corresponde al comercio {info_1} (o {producto_1_cadena} si aplica). DESCONOCIMIENTO REITERADO — REGLA ABSOLUTA: si niega la cita pendiente, la compra, la sesión o Hospital Celeste, o lo insiste después de que ya se lo preguntaste, DETÉN de inmediato la gestión de cobro de esa sesión. Está PROHIBIDO pedir fecha, especialidad o medio de turno, explicar el comercio o seguir negociando. No uses la base de conocimiento para responder un desconocimiento: llama de inmediato finalizar_objecion_terminal con la etiqueta 'No reconoce cita pendiente' (objeción terminal). No verbalices la tool ni sigas cobrando. El flujo confirma una sola vez y, si insiste, escala el caso. RECHAZO DE turno — NO ES DESCONOCIMIENTO: si dice 'no creo', 'no creo que pague', 'no voy a agendar', 'no voy a agendar hoy', 'no turno hoy', 'no voy a poder' o 'no pienso agendar' SIN negar la cita pendiente, la compra ni Hospital Celeste, es un RECHAZO. Llama de inmediato cliente_dispuesto con dispuesto=false, sin texto antes de la tool. NO improvises una frase de objeción: sin esa tool el intento no cuenta y la negociación no cierra. NO lo trates como desconocimiento. Si pide que lo llamen después o dice que está ocupado, eso es próximo contacto, no este rechazo. PRIORIDAD SI PIDE VARIAS COSAS: si menciona abono, turno parcial, mitad, descuento o condonar, aunque lo combine con otra solicitud, responde PRIMERO la objeción de que Hospital Celeste no acepta abonos y que el turno es por el especialidad completo; recién después atiende lo demás. Si menciona desempleo o dificultad económica, usa la objeción empática ANTES de pedir fecha: no pases directo a negociar. IDIOMA Y TRATO: español de Chile, trato de TÚ en todo momento. NUNCA uses 'usted', 'le', 'su' ni ninguna forma formal, ni siquiera si el paciente te trata de usted. Preséntate como agente de Colektia actuando en representación de Hospital Celeste, nunca como un cobrador externo: eres un facilitador que ayuda a confirmar la cita y a proteger el historial crediticio. Tono cercano, directo y colaborador, sin rigidez corporativa y sin presión agresiva. Tu propia habla es profesional y clara: entiendes los modismos chilenos pero respondes en español estándar, sin imitarlos. MODISMOS QUE DEBES INTERPRETAR: 'lucas' es dinero en miles de pesos y 'no tengo ni una luca' significa que no tiene dinero; 'pega' es trabajo, así que 'estoy sin pega' significa desempleado y 'ando en la pega' significa que está trabajando y probablemente no puede hablar, en cuyo caso ofrécele agendar una rellamada; 'al tiro' significa de inmediato, así que 'lo turno al tiro' es un cita para hoy mismo y debes registrarlo como tal; 'cachai' es '¿entiendes?' y es una muletilla de confirmación; 'estai' es 'estás'; 'ya' o 'ya po' es una confirmación o aceptación, y al escucharla debes anclar el cierre repitiendo el especialidad y la fecha exacta; 'estoy pato' significa que no tiene dinero. Interpreta estas expresiones con empatía y lógica financiera, pero responde siempre con términos estándar.",
+          "modismos_pago_custom": {
+            "hoy": [
+              "lo turno al tiro",
+              "lo turno altiro",
+              "turno al tiro",
+              "turno altiro",
+              "te lo turno al tiro",
+              "te lo turno altiro",
+              "lo transfiero al tiro",
+              "lo transfiero altiro",
+              "lo hago al tiro",
+              "lo hago altiro",
+              "al tiro turno",
+              "altiro turno",
+              "al tiro lo turno",
+              "altiro lo turno",
+              "al tiro transfiero",
+              "altiro transfiero",
+              "al tiro lo hago",
+              "altiro lo hago",
+              "hoy día turno",
+              "hoy día lo turno",
+              "hoy día transfiero",
+              "hoy mismo turno",
+              "hoy sin falta turno",
+              "de hoy no pasa",
+              "al rato turno",
+              "al ratito turno",
+              "en un rato turno",
+              "esta tarde turno",
+              "en la tarde turno",
+              "ahora turno",
+              "ahora mismo turno",
+              "ahora mismo lo hago"
+            ],
+            "mañana": [
+              "mañana turno",
+              "mañana lo turno",
+              "mañana transfiero",
+              "mañana sin falta",
+              "mañana sin falta turno",
+              "mañana mismo turno",
+              "mañana sí o sí turno",
+              "mañana sipo",
+              "mañana po",
+              "mañana poh",
+              "mañana temprano turno",
+              "mañana tempranito turno",
+              "mañana a primera hora turno"
+            ],
+            "pasado_mañana": [
+              "pasado mañana turno",
+              "pasado mañana lo turno",
+              "pasado mañana transfiero",
+              "pasado mañana sin falta",
+              "pasado mañana temprano turno"
+            ]
+          },
+          "objection_handlers": [
+            {
+              "objection": "Puedo agendar una parte | Me aceptan un abono | Puedo agendar la mitad | Hacen un descuento | Me pueden condonar algo | turno parcial | Quiero abonar | Solo puedo agendar una parte",
+              "answer": "Hospital Celeste no acepta abonos ni pagos parciales. El turno tiene que ser por el especialidad completo de {due_balance_palabras} pesos. ¿Qué día podrías pagarla completa?"
+            },
+            {
+              "objection": "No tengo dinero ahora | No tengo plata | No tengo ni una luca | Estoy sin lucas | Estoy pato | No me alcanza | Estoy sin pega | Me quedé sin trabajo | Estoy cesante | Estoy desempleado | Quedé sin trabajo | No tengo ingresos | Me echaron | Está difícil el mes",
+              "answer": "Entiendo, es una situación difícil. Ojalá se resuelva pronto. Igual necesitamos una fecha para agendar la sesión completa. ¿Qué día crees que podrías hacerlo? {frase_urgencia}"
+            },
+            {
+              "objection": "Ya pagué una de las cuotas | Ya pagué uno de los créditos | Pagué una compra pero no las otras | Ya pagué la primera sesión",
+              "answer": "Gracias por ese turno. Te cuento que aún queda una sesión pendiente en tu cuenta de Hospital Celeste. ¿Para cuándo podrías regularizarla?"
+            },
+            {
+              "objection": "El link de turno no funciona | La app no me deja agendar | No me carga la página | Me rechazó la credencial | Falla la pasarela | No me llegó el link",
+              "answer": "Lamento el inconveniente. Puedes agendar con el link que te llega por WhatsApp, correo o mensaje de texto, o por transferencia enviando después el comprobante al soporte de Hospital Celeste. Para que esto no siga avanzando, ¿qué día podrías dejarlo resuelto?"
+            },
+            {
+              "objection": "Por qué debo más de lo que compré | De dónde sale ese especialidad extra | Qué es esa multa | No me avisaron de la multa | Ese no es el especialidad que yo compré",
+              "answer": "Te explico: Hospital Celeste no cobra intereses, pero cuando una sesión se atrasa se aplica una multa de diez mil pesos por concepto de atraso. Por eso el especialidad es mayor al de tu compra. ¿Te parece si vemos una fecha para dejarlo al día?"
+            },
+            {
+              "objection": "No entiendo | No comprendo | De qué se trata | Qué significa esto | Me explicas | No escuché | Me puedes repetir | Me puedes decir de qué es",
+              "answer": "Te llamo por tu sesión {frase_comercio_1}. ¿Qué día podrías pagarla?"
+            },
+            {
+              "objection": "No soy yo | Número equivocado | Se equivocó de persona | Esta no es mi cuenta y no conozco a esa persona",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Equivocado"
+            },
+            {
+              "objection": "Estoy fuera del país | Estoy en el extranjero | Me fui de Chile | Vuelvo en unos meses",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Fuera de la ciudad"
+            },
+            {
+              "objection": "Llámame después | Ahora no puedo hablar | Estoy en la pega | Estoy ocupado | Estoy manejando | Más tarde | No es buen momento",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Solicita próximo contacto"
+            },
+            {
+              "objection": "No reconozco la cita pendiente | No reconozco esa cita pendiente | No reconozco esta cita pendiente | No reconozco esa compra | No reconozco esta compra | No reconozco esa sesión | No reconozco esta sesión | No reconozco la sesión | Yo no compré nada | Esa compra no es mía | Esa cita pendiente no es mía | Esa sesión no es mía | Esta sesión no es mía | No es mi sesión | Esa no es mi sesión | Esta no es mi sesión | Eso no es mi sesión | Es que no es mi sesión | No debo nada | Nunca usé Hospital Celeste | No sé de qué cita pendiente | No sé de qué es esta cita pendiente | No sé de qué sesión | No sé de qué me estás hablando | No sabes qué me estás hablando | No me acuerdo de esa compra | No recuerdo haber comprado ahí",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "No reconoce la cita"
+            },
+            {
+              "objection": "Esto es un fraude | Me suplantaron la identidad | Me robaron los datos | Alguien usó mi cuenta | Usaron mi credencial sin permiso",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Reporta fraude"
+            },
+            {
+              "objection": "Estoy molesto | Dejen de llamarme | Me tienen harto | No me llamen más | Esto es acoso",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "paciente molesto"
+            }
+          ],
+          "skip_opening_generate_reply": false,
+          "act_on_last_user_message": false,
+          "pass_chat_ctx": true,
+          "accept_out_of_window_as_intention": true,
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "pay_confirmation": false,
+            "goto": "intent.pay_confirmation"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Fuera de la ciudad": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fuera de la ciudad",
+            "goto": "final.end_fuera_del_pais"
+          },
+          "Solicita próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Solicita próximo contacto",
+            "goto": "intent.objection.proximo_contacto"
+          },
+          "No reconoce la cita": {
+            "goto": "intent.confirm_no_reconoce"
+          },
+          "Reporta fraude": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Reporta fraude",
+            "goto": "final.end_fraude"
+          },
+          "Cliente molesto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "paciente molesto",
+            "goto": "final.end_cliente_molesto"
+          }
+        }
+      },
+      "intent.objection.proximo_contacto": {
+        "type": "intention",
+        "label": "Objeción: pide que lo llamen después",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt": "Entiendo, no te quito más tiempo. Agendemos un momento que te acomode para retomarlo.",
+        "on": {
+          "always": {
+            "goto": "task.next_contact"
+          }
+        }
+      },
+      "task.next_contact": {
+        "type": "task",
+        "label": "Agendar próximo contacto",
+        "task_type": "NextContactTask",
+        "params": {
+          "require_day": true,
+          "require_hour": true,
+          "require_franja": false,
+          "default_to_tomorrow": false,
+          "confirm_ambiguous_week": true,
+          "strict_cancel": true,
+          "allow_today": true,
+          "ask_phone": false
+        },
+        "on": {
+          "Próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "agendar_proximo_contacto",
+            "ct": true,
+            "goto": "final.end_next_contact"
+          },
+          "Cancelado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "sin_proximo_contacto",
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "task.negotiation_multi": {
+        "type": "task",
+        "label": "Negociación multiproducto",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "comment": "Paso 2B del playbook. shared_negotiation_kwargs replica los params de task.negotiation, pero con flow_objection_handlers en vez de objection_handlers: acá los kwargs van DIRECTO al constructor de NegotiationTaskV2, no pasan por la traduccion que hace base.py a nivel de nodo. Si cambias estilo, modismos u objeciones, hay que cambiarlos en los dos nodos. La transicion \"Datos incompletos\" es una red defensiva: Hospital Celestepay_ruta ya exige producto_1_saldo > 0 antes de entrar aca, asi que el primer slot nunca esta vacio y la task no deberia emitir missing_product_data. Se conserva por si cambia el filtrado del engine.",
+          "announce_first_product": true,
+          "continue_after_commitment": true,
+          "auto_advance_on_decline": true,
+          "resume_across_reentries": true,
+          "retake_pending_product": "{multiproducto_retomar}",
+          "max_products": "{resumen_num_productos}",
+          "shared_negotiation_kwargs": {
+            "max_dias": "{Hospital Celestepay_max_dias}",
+            "benefit_hints": [
+              "confirmar la cita tu cuenta y proteger tu cupo de Hospital Celeste",
+              "mantener un buen historial crediticio",
+              "evitar gestiones adicionales"
+            ],
+            "allow_partial_payments": false,
+            "require_confirmation": false,
+            "collect_payment_method": false,
+            "custom_instructions": "CONTEXTO DEL COBRO: cuando el paciente pregunte a qué comercio corresponde la compra, a qué comercio se refiere o en qué tienda compró, nombra SOLO el comercio de la sesión en curso (el que te indiquen las instrucciones de esa sesión), nunca el de otra. DESCONOCIMIENTO REITERADO — REGLA ABSOLUTA: si niega la cita pendiente, la compra, la sesión o Hospital Celeste, o lo insiste después de que ya se lo preguntaste, DETÉN de inmediato la gestión de cobro de ESA sesión. Está PROHIBIDO pedir fecha, especialidad o medio de turno, explicar el comercio o seguir negociando esa sesión. No uses la base de conocimiento para responder un desconocimiento: llama de inmediato la objeción terminal de no reconocimiento. El flujo confirma una sola vez y, si insiste, escala esa sesión. PRIORIDAD SI PIDE VARIAS COSAS: si menciona abono, turno parcial, mitad, descuento o condonar, aunque lo combine con otra solicitud, responde PRIMERO la objeción de que Hospital Celeste no acepta abonos y que el turno es por el especialidad completo; recién después atiende lo demás. Si menciona desempleo o dificultad económica, usa la objeción empática ANTES de pedir fecha: no pases directo a negociar. IDIOMA Y TRATO: español de Chile, trato de TÚ en todo momento. NUNCA uses 'usted', 'le', 'su' ni ninguna forma formal, ni siquiera si el paciente te trata de usted. Preséntate como agente de Colektia actuando en representación de Hospital Celeste, nunca como un cobrador externo: eres un facilitador que ayuda a confirmar la cita y a proteger el historial crediticio. Tono cercano, directo y colaborador, sin rigidez corporativa y sin presión agresiva. Tu propia habla es profesional y clara: entiendes los modismos chilenos pero respondes en español estándar, sin imitarlos. MODISMOS QUE DEBES INTERPRETAR: 'lucas' es dinero en miles de pesos y 'no tengo ni una luca' significa que no tiene dinero; 'pega' es trabajo, así que 'estoy sin pega' significa desempleado y 'ando en la pega' significa que está trabajando y probablemente no puede hablar, en cuyo caso ofrécele agendar una rellamada; 'al tiro' significa de inmediato, así que 'lo turno al tiro' es un cita para hoy mismo y debes registrarlo como tal; 'cachai' es '¿entiendes?' y es una muletilla de confirmación; 'estai' es 'estás'; 'ya' o 'ya po' es una confirmación o aceptación, y al escucharla debes anclar el cierre repitiendo el especialidad y la fecha exacta; 'estoy pato' significa que no tiene dinero. Interpreta estas expresiones con empatía y lógica financiera, pero responde siempre con términos estándar.",
+            "modismos_pago_custom": {
+              "hoy": [
+                "lo turno al tiro",
+                "lo turno altiro",
+                "turno al tiro",
+                "turno altiro",
+                "te lo turno al tiro",
+                "te lo turno altiro",
+                "lo transfiero al tiro",
+                "lo transfiero altiro",
+                "lo hago al tiro",
+                "lo hago altiro",
+                "al tiro turno",
+                "altiro turno",
+                "al tiro lo turno",
+                "altiro lo turno",
+                "al tiro transfiero",
+                "altiro transfiero",
+                "al tiro lo hago",
+                "altiro lo hago",
+                "hoy día turno",
+                "hoy día lo turno",
+                "hoy día transfiero",
+                "hoy mismo turno",
+                "hoy sin falta turno",
+                "de hoy no pasa",
+                "al rato turno",
+                "al ratito turno",
+                "en un rato turno",
+                "esta tarde turno",
+                "en la tarde turno",
+                "ahora turno",
+                "ahora mismo turno",
+                "ahora mismo lo hago"
+              ],
+              "mañana": [
+                "mañana turno",
+                "mañana lo turno",
+                "mañana transfiero",
+                "mañana sin falta",
+                "mañana sin falta turno",
+                "mañana mismo turno",
+                "mañana sí o sí turno",
+                "mañana sipo",
+                "mañana po",
+                "mañana poh",
+                "mañana temprano turno",
+                "mañana tempranito turno",
+                "mañana a primera hora turno"
+              ],
+              "pasado_mañana": [
+                "pasado mañana turno",
+                "pasado mañana lo turno",
+                "pasado mañana transfiero",
+                "pasado mañana sin falta",
+                "pasado mañana temprano turno"
+              ]
+            },
+            "skip_opening_generate_reply": true,
+            "act_on_last_user_message": false,
+            "pass_chat_ctx": true,
+            "flow_objection_handlers": [
+              {
+                "objection": "Puedo agendar una parte | Me aceptan un abono | Puedo agendar la mitad | Hacen un descuento | Me pueden condonar algo | turno parcial | Quiero abonar | Solo puedo agendar una parte",
+                "answer": "Hospital Celeste no acepta abonos ni pagos parciales. El turno tiene que ser por el especialidad completo de esa sesión. ¿Qué día podrías pagarla completa?"
+              },
+              {
+                "objection": "No tengo dinero ahora | No tengo plata | No tengo ni una luca | Estoy sin lucas | Estoy pato | No me alcanza | Estoy sin pega | Me quedé sin trabajo | Estoy cesante | Estoy desempleado | Quedé sin trabajo | No tengo ingresos | Me echaron | Está difícil el mes",
+                "answer": "Entiendo, es una situación difícil. Ojalá se resuelva pronto. Igual necesitamos una fecha para agendar la sesión completa. ¿Qué día crees que podrías hacerlo? {frase_urgencia}"
+              },
+              {
+                "objection": "Ya pagué una de las cuotas | Ya pagué uno de los créditos | Pagué una compra pero no las otras | Ya pagué la primera sesión",
+                "answer": "Gracias por ese turno. Te cuento que aún queda una sesión pendiente en tu cuenta de Hospital Celeste. ¿Para cuándo podrías regularizarla?"
+              },
+              {
+                "objection": "El link de turno no funciona | La app no me deja agendar | No me carga la página | Me rechazó la credencial | Falla la pasarela | No me llegó el link",
+                "answer": "Lamento el inconveniente. Puedes agendar con el link que te llega por WhatsApp, correo o mensaje de texto, o por transferencia enviando después el comprobante al soporte de Hospital Celeste. Para que esto no siga avanzando, ¿qué día podrías dejarlo resuelto?"
+              },
+              {
+                "objection": "Por qué debo más de lo que compré | De dónde sale ese especialidad extra | Qué es esa multa | No me avisaron de la multa | Ese no es el especialidad que yo compré",
+                "answer": "Te explico: Hospital Celeste no cobra intereses, pero cuando una sesión se atrasa se aplica una multa de diez mil pesos por concepto de atraso. Por eso el especialidad es mayor al de tu compra. ¿Te parece si vemos una fecha para dejarlo al día?"
+              },
+              {
+                "objection": "No entiendo | No comprendo | De qué se trata | Qué significa esto | Me explicas | No escuché | Me puedes repetir | Me puedes decir de qué es",
+                "answer": "La sesión que estamos revisando ahora es la de ese comercio que te acabo de mencionar. Si la reconoces, ¿qué día podrías pagarla?"
+              },
+              {
+                "objection": "No soy yo | Número equivocado | Se equivocó de persona | Esta no es mi cuenta y no conozco a esa persona",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Equivocado"
+              },
+              {
+                "objection": "Estoy fuera del país | Estoy en el extranjero | Me fui de Chile | Vuelvo en unos meses",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Fuera de la ciudad"
+              },
+              {
+                "objection": "Llámame después | Ahora no puedo hablar | Estoy en la pega | Estoy ocupado | Estoy manejando | Más tarde | No es buen momento",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Solicita próximo contacto"
+              },
+              {
+                "objection": "No reconozco la cita pendiente | No reconozco esa cita pendiente | No reconozco esta cita pendiente | No reconozco esa compra | No reconozco esta compra | No reconozco esa sesión | No reconozco esta sesión | No reconozco la sesión | Yo no compré nada | Esa compra no es mía | Esa cita pendiente no es mía | Esa sesión no es mía | Esta sesión no es mía | No es mi sesión | Esa no es mi sesión | Esta no es mi sesión | Eso no es mi sesión | Es que no es mi sesión | No debo nada | Nunca usé Hospital Celeste | No sé de qué cita pendiente | No sé de qué es esta cita pendiente | No sé de qué sesión | No sé de qué me estás hablando | No sabes qué me estás hablando | No me acuerdo de esa compra | No recuerdo haber comprado ahí",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "No reconoce la cita"
+              },
+              {
+                "objection": "Esto es un fraude | Me suplantaron la identidad | Me robaron los datos | Alguien usó mi cuenta | Usaron mi credencial sin permiso",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "Reporta fraude"
+              },
+              {
+                "objection": "Estoy molesto | Dejen de llamarme | Me tienen harto | No me llamen más | Esto es acoso",
+                "end_call_after_answer": true,
+                "terminal_flow_label": "paciente molesto"
+              }
+            ],
+            "monto_deuda": "{due_balance}",
+            "accept_out_of_window_as_intention": true
+          },
+          "products": [
+            {
+              "label": "tu sesión en {producto_1_cadena}",
+              "output_key": "producto_1",
+              "negotiation": {
+                "monto_deuda": "{producto_1_saldo}"
+              },
+              "output": {
+                "comercio": "{producto_1_cadena}"
+              },
+              "intro_prompt": "Empecemos por tu sesión en {producto_1_cadena}, que son {producto_1_saldo_palabras} pesos. ¿Qué día podrías pagarla?"
+            },
+            {
+              "label": "tu sesión en {producto_2_cadena}",
+              "intro_prompt": "Ahora, sobre tu sesión en {producto_2_cadena}, quedan {producto_2_saldo_palabras} pesos pendientes. ¿Para cuándo podrías agendar esta?",
+              "output_key": "producto_2",
+              "negotiation": {
+                "monto_deuda": "{producto_2_saldo}"
+              },
+              "output": {
+                "comercio": "{producto_2_cadena}"
+              }
+            },
+            {
+              "label": "tu sesión en {producto_3_cadena}",
+              "intro_prompt": "Y queda tu sesión en {producto_3_cadena}, por {producto_3_saldo_palabras} pesos. ¿Qué día la dejamos agendada?",
+              "output_key": "producto_3",
+              "negotiation": {
+                "monto_deuda": "{producto_3_saldo}"
+              },
+              "output": {
+                "comercio": "{producto_3_cadena}"
+              }
+            }
+          ],
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve.",
+          "max_attempts": 3
+        },
+        "on": {
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "substatus": "",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.soft_close_commitment"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "substatus": "",
+            "pay_confirmation": false,
+            "goto": "intent.pay_confirmation"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "substatus": "",
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Fuera de la ciudad": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Fuera de la ciudad",
+            "goto": "final.end_fuera_del_pais"
+          },
+          "Solicita próximo contacto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Solicita próximo contacto",
+            "goto": "intent.objection.proximo_contacto"
+          },
+          "No reconoce la cita": {
+            "goto": "intent.confirm_no_reconoce"
+          },
+          "Reporta fraude": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Reporta fraude",
+            "goto": "final.end_fraude"
+          },
+          "Cliente molesto": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "paciente molesto",
+            "goto": "final.end_cliente_molesto"
+          },
+          "Datos incompletos": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Datos incompletos",
+            "goto": "final.end_missing_product_data"
+          }
+        }
+      },
+      "intent.confirm_no_reconoce": {
+        "type": "intention",
+        "label": "Doble confirmación - no reconoce cita pendiente",
+        "delivery": "say",
+        "interruptible": true,
+        "decision": "El paciente está respondiendo a si confirma que no reconoce la sesión con Hospital Celeste. Si reitera el desconocimiento (no, no la reconozco, no es mía, no es mi sesión, no debo nada, nunca usé Hospital Celeste, no sé de qué me estás hablando) o no afirma reconocerla, selecciona 'Confirma negativa': se detiene el cobro de esa sesión y el caso se escala. Un 'sí' aislado junto a una negación ('sí, sí, no sé de qué me estás hablando') es Confirma negativa, no un reconocimiento. Selecciona 'Reconoce compra' ÚNICAMENTE si dice de forma clara y explícita que SÍ la reconoce o que hubo un malentendido (por ejemplo: 'ah sí', 'perdón sí la reconozco', 'sí compré ahí', 'sí es mía', 'sí lo usé', 'ya me acordé'). En cualquier otro caso —incluso si no responde, responde con evasivas, se queda en silencio o su respuesta es ambigua— selecciona 'Confirma negativa'. PROHIBIDO pedir fecha, especialidad o medio de turno, y PROHIBIDO continuar negociando en este nodo.",
+        "prompt_by": {
+          "comment": "frase_comercio_1 sale siempre de producto_1_cadena. frase_cuota_no_reconocida usa negotiated_product_label cuando el loop ya ancló la sesión; si negó en la apertura esa variable no existe y cae a 'esta cuenta'.",
+          "field": "Hospital Celestepay_ruta",
+          "cases": {
+            "multi": "Entiendo. Solo para asegurarme, ¿me confirmas que no reconoces {frase_cuota_no_reconocida}?"
+          },
+          "default": "Entiendo. Solo para asegurarme, ¿me confirmas que no reconoces la sesión {frase_comercio_1}?"
+        },
+        "on": {
+          "Niega datos": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "No reconoce la cita",
+            "set_variables": {
+              "multiproducto_retomar": "no"
+            },
+            "goto_by": {
+              "field": "Hospital Celestepay_ruta",
+              "cases": {
+                "multi": "intent.no_reconoce_continuar"
+              },
+              "default": "intent.cierre_no_reconoce"
+            }
+          },
+          "Confirma datos": {
+            "action": "set_status",
+            "substatus": "",
+            "set_variables": {
+              "multiproducto_retomar": "si"
+            },
+            "goto": "intent.resume_after_reconoce"
+          },
+          "default": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "No reconoce la cita",
+            "set_variables": {
+              "multiproducto_retomar": "no"
+            },
+            "goto_by": {
+              "field": "Hospital Celestepay_ruta",
+              "cases": {
+                "multi": "intent.no_reconoce_continuar"
+              },
+              "default": "intent.cierre_no_reconoce"
+            }
+          }
+        }
+      },
+      "intent.no_reconoce_continuar": {
+        "type": "intention",
+        "label": "sesión en revisión y seguir con las demás",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "prompt": "Entendido. Escalamos {frase_cuota_no_reconocida} a revisión y detenemos el cobro de esa sesión.",
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "ruta_post_no_reconoce",
+              "cases": {
+                "seguir": "task.negotiation_multi"
+              },
+              "default": "intent.cierre_no_reconoce"
+            }
+          }
+        }
+      },
+      "intent.cierre_no_reconoce": {
+        "type": "intention",
+        "label": "Cierre obligatorio por desconocimiento de cita pendiente",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "auto_advance_after_interrupt": true,
+        "comment": "Cierre hablado obligatorio. auto_advance + after_interrupt evitan que un barge-in o una pregunta de KB dejen la llamada colgada: al terminar el audio se va al final silencioso, que cuelga. No preguntar ni esperar otro turno.",
+        "decision": "Este nodo solo se despide. Si el paciente te interrumpe, no hagas preguntas, no negocies y no uses la base de conocimiento: termina el guion y avanza con always. Nunca te quedes en este nodo.",
+        "prompt": "Entiendo. Escalamos tu caso de inmediato para que el equipo revise lo que pasó con {frase_cuota_no_reconocida} y, mientras tanto, detenemos las gestiones de cobro. Que tengas un buen día.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_reconoce"
+          }
+        }
+      },
+      "intent.resume_after_reconoce": {
+        "type": "intention",
+        "label": "Retomar negociación tras reconocer compra",
+        "delivery": "say",
+        "interruptible": true,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "Hospital Celestepay_ruta",
+          "cases": {
+            "multi": "Perfecto, sin problema. Volvamos entonces a esa sesión."
+          },
+          "default": "Perfecto, sin problema. Entonces volvemos al tema de tu sesión {frase_comercio_1} por {due_balance_palabras} pesos. ¿Para cuándo podrías realizar el turno?"
+        },
+        "on": {
+          "always": {
+            "goto_by": {
+              "field": "Hospital Celestepay_ruta",
+              "cases": {
+                "multi": "task.negotiation_multi"
+              },
+              "default": "task.negotiation"
+            }
+          }
+        }
+      },
+      "intent.pay_confirmation": {
+        "type": "intention",
+        "label": "Confirmación o negación de turno",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Gracias por avisarme. ¿El turno lo hiciste con el link de turno, por transferencia, o te lo cobraron automáticamente de la credencial?",
+        "decision": "Acabas de preguntar por qué medio realizó el turno. Es OBLIGATORIO esperar la respuesta del paciente antes de elegir cualquier opción. Cuando responda, clasifica en UNA sola opción. Si dice que asistió con el link, el botón, la app, la página o el WhatsApp de Hospital Celeste, elige 'link de turno'. Si dice que transfirió o depositó, elige 'transferencia'. Si dice que se lo descontaron o cobraron solos de la credencial, elige 'cobro automático'. Si menciona otro medio o no lo especifica, elige 'otro'. Si se desdice y admite que todavía NO asistió (por ejemplo 'no, todavía no', 'pensaba pagarlo', 'lo iba a agendar', 'me confundí'), elige 'aún no asistió'. No repitas la pregunta ni agregues comentarios.",
+        "on": {
+          "link de pago": {
+            "set_agent_output": {
+              "medio_pago": "link de turno"
+            },
+            "goto": "final.end_paid"
+          },
+          "transferencia": {
+            "set_agent_output": {
+              "medio_pago": "transferencia"
+            },
+            "goto": "final.end_paid"
+          },
+          "cobro automático": {
+            "set_agent_output": {
+              "medio_pago": "cobro automático"
+            },
+            "goto": "final.end_paid"
+          },
+          "otro": {
+            "set_agent_output": {
+              "medio_pago": "otro"
+            },
+            "goto": "final.end_paid"
+          },
+          "aún no pagó": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto_by": {
+              "field": "Hospital Celestepay_ruta",
+              "cases": {
+                "multi": "task.negotiation_multi"
+              },
+              "default": "task.negotiation"
+            }
+          }
+        }
+      },
+      "intent.soft_close_commitment": {
+        "type": "intention",
+        "label": "Confirmación de cita y medios de turno",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "Hospital Celestepay_ruta",
+          "cases": {
+            "multi": "Perfecto, {nombre_deudor}. Queda registrado: {commitments_summary_spoken}. Puedes agendar con el link que recibiste en tus notificaciones, con el botón paga tu sesión aquí desde el WhatsApp de Hospital Celeste, o por transferencia electrónica enviando después el comprobante al soporte. Cualquier duda, el equipo de soporte de Hospital Celeste está atento para ayudarte."
+          },
+          "default": "Perfecto, {nombre_deudor}, quedamos en que realizas el turno de {due_balance_palabras} pesos de tu sesión {frase_comercio_1} el {commitment_date_spoken}. Puedes agendar con el link que recibiste en tus notificaciones, con el botón paga tu sesión aquí desde el WhatsApp de Hospital Celeste, o por transferencia electrónica enviando después el comprobante al soporte. Si necesitas algo, nos puedes escribir al soporte de Hospital Celeste."
+        },
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt_by": {
+          "field": "dias_mora",
+          "rules": [
+            {
+              "op": "<=",
+              "value": 0,
+              "template": "Entiendo, {nombre_deudor}. Lo importante es que puedas dejar tu sesión al día para evitar la multa por atraso y que se bloquee tu cupo. Cuando puedas, revisa el link que te enviamos o escríbenos al soporte de Hospital Celeste."
+            },
+            {
+              "op": "<=",
+              "value": 14,
+              "template": "Entiendo, {nombre_deudor}. Lo importante es que puedas ponerte al día pronto, para evitar que el reporte en el Boletín Comercial afecte tu historial. Cuando puedas, revisa el link que te enviamos o escríbenos al soporte de Hospital Celeste."
+            },
+            {
+              "op": ">=",
+              "value": 15,
+              "template": "Entiendo, {nombre_deudor}. Lo importante es que puedas ponerte al día pronto: al agendar, gestionamos de inmediato la eliminación del reporte en el Boletín Comercial, aunque el proceso tarda hasta treinta días hábiles. Cuando puedas, revisa el link que te enviamos o escríbenos al soporte de Hospital Celeste."
+            }
+          ],
+          "default": "Entiendo, {nombre_deudor}. Lo importante es que puedas ponerte al día pronto. Cuando puedas, revisa el link que te enviamos o escríbenos al soporte de Hospital Celeste."
+        },
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Gracias por tu cita. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Gracias por tu tiempo. Dejamos registro de tu intencion de turno para contactarnos en otra ocasión.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Gracias por tu tiempo.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpa la molestia. Que tengas buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. ¿Podrías pedirle de favor que se comunique con nosotros de Colektia, en representación de Hospital Celeste, por un tema de su cuenta? Muchas gracias.",
+        "delivery": "say"
+      },
+      "final.end_missing_product_data": {
+        "type": "final",
+        "label": "Cierre por datos incompletos de los productos",
+        "prompt": "Disculpa, en este momento no tengo el detalle de tus cuotas a la vista. Para no darte información equivocada, mejor revisa el estado de tu cuenta en el WhatsApp de Hospital Celeste o escríbele al soporte. Que estés muy bien.",
+        "delivery": "say"
+      },
+      "final.end_next_contact": {
+        "type": "final",
+        "label": "Despedida (próximo contacto agendado)",
+        "prompt": "Listo, quedamos en contactarte {next_contact_date_natural}. Que estés muy bien.",
+        "delivery": "say"
+      },
+      "final.end_fuera_del_pais": {
+        "type": "final",
+        "label": "Despedida (fuera del país)",
+        "prompt": "Gracias por avisarme. Dejamos el mensaje registrado para cuando regreses. Que estés muy bien.",
+        "delivery": "say"
+      },
+      "final.end_no_reconoce": {
+        "type": "final",
+        "label": "Hangup silencioso tras desconocimiento",
+        "comment": "El texto de despedida ya lo dijo intent.cierre_no_reconoce. Prompt vacío = colgar sin repetir el audio.",
+        "prompt": "",
+        "delivery": "say",
+        "interruptible": false
+      },
+      "final.end_fraude": {
+        "type": "final",
+        "label": "Despedida (reporta fraude)",
+        "prompt": "Entiendo, y es un tema serio. Vamos a escalar tu caso de inmediato a un especialista de Hospital Celeste para que lo revise. Que estés muy bien.",
+        "delivery": "say"
+      },
+      "final.end_cliente_molesto": {
+        "type": "final",
+        "label": "Despedida (paciente molesto)",
+        "prompt": "Disculpa la molestia, solo queríamos informarte el estado de tu cuenta de Hospital Celeste. Que estés muy bien.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}

@@ -1,0 +1,138 @@
+[
+  {
+    "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
+    "answer": "En {nombre_empresa} coordinamos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+  },
+  {
+    "question": "¿Dónde queda? | ¿Cuál es la dirección? | ¿Sucursal?",
+    "answer": "La atención es en {sucursal}. Si necesita cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿Cuánto cuesta? | ¿Aceptan prepaga u obra social?",
+    "answer": "Costos y coberturas dependen del convenio. En recepción de {sucursal} confirman el importe. Yo puedo reservar el turno."
+  },
+  {
+    "question": "¿Qué debo llevar? | ¿Documentos?",
+    "answer": "Documento de identidad, credencial de cobertura y estudios previos si los tiene. Llegue unos diez minutos antes."
+  },
+  {
+    "question": "¿Puedo cancelar o reprogramar?",
+    "answer": "Sí, con anticipación según disponibilidad. ¿Quiere que agendemos otra fecha ahora?"
+  },
+  {
+    "question": "¿Atienden urgencias? | Me siento mal",
+    "answer": "Urgencias graves: guardia o emergencias. Si es consulta programable de {especialidad}, ofrezco el turno más cercano."
+  },
+  {
+    "question": "¿Horarios? | ¿Mañana o tarde?",
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por franjas. ¿Prefiere mañana o tarde?"
+  },
+  {
+    "question": "¿Dan diagnóstico o receta por teléfono?",
+    "answer": "No. Por teléfono solo coordinamos agenda. Diagnóstico e indicaciones las da el médico en consulta."
+  },
+  {
+    "question": "¿Por qué me llaman?",
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
+  },
+  {
+    "question": "Ya tengo cita | Ya estoy agendado",
+    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea dejar registrado que ya estaba agendado?"
+  },
+  {
+    "question": "¿Quién me está llamando? | ¿De dónde me llaman? | ¿Con quién estoy hablando?",
+    "answer": "Le habla un asesor de coordinación de agenda de Sanatorio Pacífico para acompañarle con la regularización de su crédito."
+  },
+  {
+    "question": "¿Cuál es la línea de atención? | ¿Dónde puedo pedir ayuda? | ¿Cuál es el teléfono de Sanatorio Pacífico?",
+    "answer": "Puede comunicarse con Sanatorio Pacífico al seis cero uno, tres dos ocho, ocho nueve cuatro nueve, de lunes a viernes entre las ocho de la mañana y las seis de la tarde."
+  },
+  {
+    "question": "¿Cuánto debo en total? | ¿Cuál es mi turno pendiente? | ¿Cuál es la cita pendiente total?",
+    "answer": "El turno total pendiente de su obligación es de {due_balance_palabras}."
+  },
+  {
+    "question": "¿Cuánto tengo atrasado? | ¿Cuál es el especialidad atrasado? | ¿Cuánto debo agendar para confirmar la cita completamente el atraso? | ¿Cuál es el valor de la sesión vencida? | ¿Cuál es el valor de las cuotas vencidas? | ¿Cuál es el valor de la sesión por vencer? | ¿Cuánto es la próxima sesión?",
+    "answer": "{respuesta_consulta_cuotas}"
+  },
+  {
+    "question": "¿Cuál es el descuento por turno total? | ¿Cuánto es la oferta de cancelación con descuento? | ¿Hay un descuento si turno todo?",
+    "answer": "{respuesta_descuento_total}"
+  },
+  {
+    "question": "¿Cuánto es el turno de dos cuotas? | ¿Cuál es el turno equivalente a dos cuotas completas? | Si no puedo agendar todo el atraso, ¿qué alternativa hay?",
+    "answer": "{respuesta_dos_cuotas}"
+  },
+  {
+    "question": "¿Cuánto vale una sesión completa? | ¿Cuánto es agendar solamente una sesión? | ¿Cuál es el valor de la sesión más vencida?",
+    "answer": "{respuesta_cuota_completa}"
+  },
+  {
+    "question": "¿Cuántas cuotas tengo atrasadas? | ¿Cuántas cuotas están vencidas?",
+    "answer": "Actualmente presenta {dim_1} cuotas atrasadas."
+  },
+  {
+    "question": "¿Desde cuándo estoy en atraso de agenda? | ¿Cuántos días de atraso tengo desde el primer fecha propuesta?",
+    "answer": "Su obligación presenta {info_8} días de atraso desde el primer fecha propuesta."
+  },
+  {
+    "question": "¿Cuál fue la fecha de la primera sesión vencida? | ¿Desde qué fecha está vencida la obligación?",
+    "answer": "La fecha del primer fecha propuesta registrado es {info_10_spoken}."
+  },
+  {
+    "question": "¿Cuándo vence la sesión más reciente? | ¿Cuál es mi fecha límite habitual? | ¿Cuál es la fecha de fecha propuesta?",
+    "answer": "La fecha de fecha propuesta de su sesión más reciente es {due_date_spoken}."
+  },
+  {
+    "question": "¿Hasta cuándo puedo comprometer el turno? | ¿Cuál es la última fecha permitida? | ¿Cuánto plazo tengo? | ¿Cuál es la fecha límite para agendar? | ¿Hasta qué día puedo hacer el turno?",
+    "answer": "El plazo máximo para registrar su cita de turno es el {commitment_limit_spoken}."
+  },
+  {
+    "question": "¿Hasta cuándo puedo agendar en mi situación de atraso de agenda avanzada? | ¿Cuál es el plazo para las ofertas de PAR 120 o PAR 180? | ¿Hasta qué fecha aplica el acuerdo de atraso de agenda tardía?",
+    "answer": "En su caso el turno debe quedar dentro del mes en curso, a más tardar el {commitment_limit_mora_tardia_spoken}."
+  },
+  {
+    "question": "¿Y si no puedo agendar dentro de ese plazo? | ¿Puedo darte una fecha más adelante? | ¿Qué pasa si necesito más tiempo del plazo? | ¿Puedo agendar después de esa fecha?",
+    "answer": "Si no puede comprometerse dentro de ese plazo, puedo registrar una fecha tentativa como intención de turno, sin formalizar un cita. Para esa fecha tentativa el margen llega hasta el {end_of_month_spoken}."
+  },
+  {
+    "question": "¿Cómo puedo agendar? | ¿Dónde realizo el turno? | ¿Puedo agendar por PSE? | ¿Puedo agendar en Bancolombia?",
+    "answer": "Puede agendar por PSE en pagos punto bravocredito punto co o en Bancolombia, ya sea en una sucursal o en un corresponsal."
+  },
+  {
+    "question": "¿Dónde envío el comprobante? | ¿A qué correo mando el soporte de turno?",
+    "answer": "Puede enviar el soporte de turno al correo creditocol arroba respaldocolombia punto co."
+  },
+  {
+    "question": "¿Cuál es el número de mi crédito? | ¿Qué obligación están gestionando? | ¿Cuál es la referencia del crédito?",
+    "answer": "La referencia de la obligación que estamos gestionando es {reference}."
+  },
+  {
+    "question": "¿Qué pasa si no turno? | ¿Me reportan a centrales de riesgo? | ¿Cómo afecta mi historial crediticio?",
+    "answer": "Es importante recordar que el no turno genera reportes negativos en centrales de riesgo, lo que afecta su historial crediticio y sus posibilidades de acceder a nuevos productos financieros en el futuro."
+  },
+  {
+    "question": "¿La cita pendiente sigue creciendo? | ¿Me siguen cobrando intereses? | ¿Qué costos adicionales se generan por la atraso de agenda?",
+    "answer": "Continuar en atraso de agenda ocasiona el incremento continuo de intereses corrientes, de atraso de agenda y costos asociados a la gestión de cobro, aumentando el valor total de la cita pendiente."
+  },
+  {
+    "question": "¿Qué gano si regularizo hoy? | ¿Cuál es el beneficio de ponerme al día ahora?",
+    "answer": "Normalizar su obligación hoy le permite congelar cobros adicionales, detener las consecuencias financieras y recuperar el control de su tranquilidad crediticia."
+  },
+  {
+    "question": "¿Puedo refinanciar? | ¿Hay opción de refinanciación? | ¿Un asesor me puede ayudar con una refinanciación?",
+    "answer": "Existe la posibilidad de acceder a una refinanciación de su crédito, la cual será evaluada por un especialista. Si manifiesta interés, un asesor lo contactará el día de mañana para revisar esta alternativa."
+  },
+  {
+    "question": "¿Estudios previos? | ¿Necesito análisis?",
+    "answer": "Según el motivo de consulta en Sanatorio Pacífico, recepción indica si debe traer estudios. Puedo anotar el pedido al agendar."
+  },
+  {
+    "question": "¿Internación? | ¿Cirugía?",
+    "answer": "Para internación o quirófano derivamos a admisión. En esta llamada priorizamos consulta ambulatoria o estudio."
+  },
+  {
+    "question": "¿Resultados de estudios?",
+    "answer": "Los resultados los entrega el área correspondiente o el médico. Yo no informo hallazgos clínicos por teléfono."
+  }
+]

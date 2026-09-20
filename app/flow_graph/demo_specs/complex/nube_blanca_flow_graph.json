@@ -1,0 +1,801 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "nube_blanca_flow",
+    "visible_name": "Nube Blanca",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo complejo (21 nodos) sanatorio: identidad, agenda, reprogramación, coberturas y derivaciones.",
+    "fields": [
+      {
+        "label": "Nombre del paciente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre del sanatorio",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Especialidad / estudio",
+        "field": "especialidad",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Médico",
+        "field": "nombre_medico",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Sucursal",
+        "field": "sucursal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "label": "Cobertura / prepaga",
+        "field": "cobertura",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "knowledge_base": {
+      "file": "complex/nube_blanca.json",
+      "company_id": "nube_blanca-demo",
+      "description": "Base de conocimiento de Nube Blanca."
+    },
+    "company_id": "nube_blanca-demo",
+    "meta": {
+      "vertical": "sanatorio",
+      "structural_pattern": "sanborns_castigo_mora_9_flow_graph.json",
+      "node_count": 21,
+      "runtime_note": "IdentityVerificationTask y AppointmentSchedulingTask implementadas; otras task_type en app/tasks/stubs.py."
+    }
+  },
+  "flow_config": {
+    "company_pronunciation": "Nube Blanca",
+    "vertical": "sanatorio"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identificacion_flexible": true,
+          "identificacion_flexible_custom": [
+            "sí",
+            "soy yo",
+            "con él",
+            "con ella",
+            "dígame",
+            "claro",
+            "sí diga",
+            "sí, diga",
+            "así es",
+            "correcto"
+          ],
+          "invalid_confirmation_identification": [
+            "quiero",
+            "quién",
+            "qué",
+            "por qué",
+            "para qué",
+            "cómo",
+            "cuál",
+            "necesito",
+            "feliz",
+            "{nombre_deudor_completo}",
+            "{nombre_deudor}",
+            "con {nombre_deudor_completo}",
+            "con {nombre_deudor}"
+          ],
+          "identity_pregunta": "{saludo_por_horario}, ¿hablo con {nombre_deudor_completo}?",
+          "identity_identificacion_breve": "Le habla {nombre_agente}, Agente Virtual del área de Servicio y coordinación de agenda de Nube Blanca.",
+          "identity_repregunta": "para continuar, necesito confirmar que me encuentro hablando con {nombre_deudor_completo}. ¿Es usted?"
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura atraso de agenda 9",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Hola {nombre_deudor}, le habla {nombre_agente}, Agente Virtual del área de Servicio y coordinación de agenda de Nube Blanca. Le informo que esta llamada está siendo grabada para fines de calidad. Le llamo para apoyarle a confirmar la cita su cuenta antes de que continúen aplicándose las afectaciones correspondientes. De acuerdo con nuestro sistema, usted presenta un adeudo de {total_balance_palabras}.",
+        "on": {
+          "always": {
+            "set_variables": {
+              "agreement_type": "",
+              "discount_offered_pct": "0"
+            },
+            "goto": "task.negotiation_paso1"
+          }
+        }
+      },
+      "task.negotiation_paso1": {
+        "type": "task",
+        "label": "Paso 1° — turno total sin descuento/ Convenio A",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias}",
+          "suggest_dias": 1,
+          "max_attempts": 3,
+          "currency": "MXN",
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "ask_nonpayment_reason": false,
+          "restrict_to_current_month": true,
+          "require_acceptance": true,
+          "acceptance_label": "cubrir el total de su adeudo",
+          "acceptance_explanation": "Objetivo: cubrir el cien por ciento del adeudo ({total_balance_palabras}), de contado o en pagos. Trato de usted.",
+          "acceptance_confirmation_prompt": "¿Podría cubrir el total de su adeudo de {total_balance_palabras} en un solo turno, idealmente en los próximos días?",
+          "allow_split_payment_schedule_ladder": true,
+          "split_ladder_speak_monthly_schedule_summary": false,
+          "split_ladder_plans_intro": "Entiendo su situación. Como parte de un beneficio especial, podemos ofrecerle agendar en hasta 3 cuotas, sin ningún descuento, para que pueda confirmar la cita su cuenta.",
+          "split_ladder_installment_plans": [
+            {
+              "label": "tres pagos mensuales",
+              "min_installments": 3,
+              "max_installments": 3,
+              "max_months": 3,
+              "total_amount": "{total_balance}"
+            }
+          ],
+          "benefit_hints": [
+            "confirmar la cita su cuenta cubriendo el cien por ciento del adeudo",
+            "evitar mayores afectaciones a su historial"
+          ],
+          "empresa": "Nube Blanca",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{total_balance}",
+          "monto_deuda_palabras": "{total_balance_palabras}",
+          "instructions": "OBJETIVO: cubrir el total ({total_balance_palabras}). Si puede agendar de inmediato, cierra ya.\n\nESCALONAMIENTO: 1) una sola exhibición. 2) Solo si no puede: el puente pregunta si le acomodan hasta 3 cuotas. ESPERA esa respuesta. Si acepta → plan de 3 cuotas iguales. Si rechaza cuotas → rechazar_planes_division (sale a Paso 2). Nunca ofrezcas cuotas sin haber ofrecido antes el turno único. Máximo 3 cuotas.\n\nSi tampoco puede con 3 cuotas → sin cita (Paso 2).\nTrato de usted. No digas 'turno parcial' ni 'abono'.",
+          "objection_handlers": [
+            {
+              "objection": "El paciente pide un descuento o rebaja | Quiere un porcentaje de descuento | Pregunta si hay descuento | Quiere más descuento | Exige un porcentaje mayor",
+              "answer": "Entiendo su solicitud. En este momento estamos revisando primero la opción de cubrir el total de su adeudo, de contado o en pagos. Si esa alternativa no le funciona, con gusto le presento otras condiciones disponibles."
+            },
+            {
+              "objection": "Ya hice un convenio antes y no se aplicó | Ya había negociado y no quedó registrado | Antes me ofrecieron un convenio y no valió",
+              "answer": "Lamento esa situación. Para que pueda aplicarse, es necesario contar con la grabación de la negociación con su aceptación expresa. Con gusto le ayudo a generar nuevamente su convenio para que en esta ocasión quede correctamente registrado."
+            },
+            {
+              "objection": "Ya pagué | Yo ya hice el turno | Hice el turno hace unos días | turno realizado | Ya abonó",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "El paciente expresa indisponibilidad para hablar | Está ocupado | No puede hablar ahora | Llámame después",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Estoy molesto | Por qué me molestan | Me están acosando | Estoy enojado | Está enojado",
+              "answer": "Entiendo, {nombre_deudor}. La intención de esta llamada es apoyarle a confirmar la cita su cuenta en las mejores condiciones posibles. También puede realizar su gestión directamente por nuestros canales de atención."
+            },
+            {
+              "objection": "¿A qué número puedo llamar? | Canales de atención | Teléfono de atención | Quiero hablar con alguien | Número de contacto",
+              "answer": "Para cualquier tema de su credencial de Crédito se puede comunicar al cinco cinco nueve siete siete siete uno siete tres cero, en horario de lunes a viernes de ocho de la mañana a nueve de la noche, y sábado y domingo de nueve de la mañana a tres de la tarde."
+            }
+          ],
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve."
+        },
+        "on": {
+          "Cita agendada": {
+            "commitment_date": "result.commitment_date",
+            "set_variables": {
+              "discount_offered_pct": "0"
+            },
+            "goto": "intent.confirm_convenio_a"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "set_variables": {
+              "discount_offered_pct": "{max_discount_contado_pct}"
+            },
+            "goto": "task.negotiation_paso2"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "pay_confirmation": false,
+            "goto": "intent.already_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Ocupado",
+            "goto": "final.end_ocupado"
+          }
+        }
+      },
+      "task.negotiation_paso2": {
+        "type": "task",
+        "label": "Paso 2 - Contado con descuento 70% (paga 30%) / Convenio C",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias}",
+          "suggest_dias": 3,
+          "max_attempts": 3,
+          "currency": "MXN",
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "ask_nonpayment_reason": false,
+          "restrict_to_current_month": true,
+          "require_acceptance": true,
+          "acceptance_label": "un descuento especial de contado sobre su adeudo",
+          "acceptance_explanation": "Solo contado. Hasta 70% de descuento; especialidad a agendar {monto_contado_min_palabras} (30% del turno). Sin cuotas.",
+          "acceptance_confirmation_prompt": "¿Podría cubrirlo el día que le quede bien dentro de los próximos {max_dias} días?",
+          "allow_split_payment_schedule_ladder": true,
+          "split_ladder_speak_monthly_schedule_summary": false,
+          "split_ladder_opening_statement": "Entiendo su situación. Como parte de un beneficio especial y por tiempo limitado, podemos ofrecerle un descuento sobre su adeudo si lo cubre en un solo turno.",
+          "split_ladder_installment_plans": [],
+          "benefit_hints": [
+            "confirmar la cita su cuenta cuanto antes con un solo turno"
+          ],
+          "empresa": "Nube Blanca",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{monto_contado_min}",
+          "monto_deuda_palabras": "{monto_contado_min_palabras}",
+          "instructions": "Solo contado. Hasta 70% de descuento; especialidad a agendar = {monto_contado_min_palabras} (30% del turno).\n\nORDEN:\n1) Apertura sin % + pregunta de día. ESPERA.\n2) Si pregunta CUÁNTO PAGARÍA / especialidad: responde con {monto_contado_min_palabras} (objeción de especialidad). NO llames registrar_rechazo_oferta solo por preguntar.\n3) Ante NO / no puedo / no me queda / no me sirve (rechazo): SIEMPRE llama registrar_rechazo_oferta. PROHIBIDO usar manejar_objecion ni respuestas de objeción de descuento cuando dijo NO.\n4) Primer rechazo → di la frase que te devuelva la tool y espera. Segundo rechazo → la tool cierra (Paso 3). No insistas ni rehagas la oferta a mano.\nSi acepta: registrar_aceptacion_oferta(monto_aceptado=... si dio cifra ≥ {monto_contado_min}). PROHIBIDO necesita_dividir.",
+          "objection_handlers": [
+            {
+              "objection": "Cuánto tendría que agendar | Qué especialidad | Cuánto quedaría | Cuánto es | Cuánto sería | Cuánto debo agendar | De cuánto sería el turno",
+              "answer": "Con el descuento del {discount_offered_pct} por ciento, el especialidad a agendar en un solo turno sería de {monto_contado_min_palabras}. ¿Podría cubrirlo el día que le quede bien dentro de los próximos {max_dias} días?"
+            },
+            {
+              "objection": "Cuánto es el descuento | Qué porcentaje | Cuánto se reduce | Cuánto es el beneficio | Qué descuento",
+              "answer": "Puedo ofrecerle hasta un {discount_offered_pct} por ciento de descuento sobre su adeudo total; con eso el especialidad a agendar sería de {monto_contado_min_palabras}, cubriéndolo en un solo turno. ¿Le quedaría bien alguna fecha dentro de los próximos {max_dias} días?"
+            },
+            {
+              "objection": "Quiere más descuento | Exige un porcentaje mayor | Quiere el cincuenta por ciento | Pide más descuento | Quiere más del setenta",
+              "answer": "Puedo ofrecerle hasta un {discount_offered_pct} por ciento de descuento sobre su adeudo total; el especialidad a agendar sería de {monto_contado_min_palabras} en un solo turno. Es la condición especial disponible en este momento."
+            },
+            {
+              "objection": "Ya hice un convenio antes y no se aplicó | Ya había negociado y no quedó registrado | Antes me ofrecieron un convenio y no valió",
+              "answer": "Lamento esa situación. Para que pueda aplicarse, es necesario contar con la grabación de la negociación con su aceptación expresa. Con gusto le ayudo a generar nuevamente su convenio para que en esta ocasión quede correctamente registrado."
+            },
+            {
+              "objection": "Ya pagué | Yo ya hice el turno | Hice el turno hace unos días | turno realizado | Ya abonó",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "El paciente expresa indisponibilidad para hablar | Está ocupado | No puede hablar ahora | Llámame después",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Estoy molesto | Por qué me molestan | Me están acosando | Estoy enojado | Está enojado",
+              "answer": "Entiendo, {nombre_deudor}. La intención de esta llamada es apoyarle a confirmar la cita su cuenta en las mejores condiciones posibles. También puede realizar su gestión directamente por nuestros canales de atención."
+            },
+            {
+              "objection": "¿A qué número puedo llamar? | Canales de atención | Teléfono de atención | Quiero hablar con alguien | Número de contacto",
+              "answer": "Para cualquier tema de su credencial de Crédito se puede comunicar al cinco cinco nueve siete siete siete uno siete tres cero, en horario de lunes a viernes de ocho de la mañana a nueve de la noche, y sábado y domingo de nueve de la mañana a tres de la tarde."
+            }
+          ],
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve."
+        },
+        "on": {
+          "Cita agendada": {
+            "commitment_date": "result.commitment_date",
+            "set_variables": {
+              "discount_offered_pct": "{max_discount_contado_pct}"
+            },
+            "goto": "intent.confirm_convenio_c"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "set_variables": {
+              "discount_offered_pct": "{max_discount_pct}"
+            },
+            "goto": "task.negotiation_paso3"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "pay_confirmation": false,
+            "goto": "intent.already_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Ocupado",
+            "goto": "final.end_ocupado"
+          }
+        }
+      },
+      "task.negotiation_paso3": {
+        "type": "task",
+        "label": "Paso 3 — Cuotas con descuento 60% (paga 40%) / Convenio C",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias}",
+          "suggest_dias": 3,
+          "max_attempts": 3,
+          "currency": "MXN",
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "ask_nonpayment_reason": false,
+          "restrict_to_current_month": true,
+          "require_acceptance": true,
+          "acceptance_label": "un descuento del {discount_offered_pct} por ciento en hasta 3 cuotas",
+          "acceptance_explanation": "TOTAL a agendar con {discount_offered_pct}% dto: {monto_minimo_palabras}. En 3 cuotas iguales: aproximadamente {monto_cuota_3_aprox_palabras} cada una (NO digas que cada sesión es el total). Si rechaza, sale al siguiente paso.",
+          "acceptance_confirmation_prompt": "Si prefiere, también podemos ofrecerle un {discount_offered_pct} por ciento de descuento sobre su adeudo, distribuido en hasta 3 cuotas. ¿Le funciona así?",
+          "allow_split_payment_schedule_ladder": true,
+          "split_ladder_speak_monthly_schedule_summary": false,
+          "split_ladder_opening_statement": "",
+          "split_ladder_plans_intro": "",
+          "split_ladder_installment_plans": [
+            {
+              "label": "tres pagos mensuales",
+              "min_installments": 3,
+              "max_installments": 3,
+              "max_months": 3,
+              "total_amount": "{monto_minimo}"
+            }
+          ],
+          "benefit_hints": [
+            "confirmar la cita con hasta 3 cuotas y {discount_offered_pct} por ciento de descuento"
+          ],
+          "empresa": "Nube Blanca",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{monto_minimo}",
+          "monto_deuda_palabras": "{monto_minimo_palabras}",
+          "instructions": "PASO 3 — CUOTAS al {discount_offered_pct}% dto.\nMONTOS (no los confundas):\n- TOTAL a agendar = {monto_minimo_palabras}\n- Cada sesión de 3 = aprox. {monto_cuota_3_aprox_palabras}\nPROHIBIDO decir que cada sesión es {monto_minimo_palabras}.\n\n1) Ya se preguntó si le funcionan las cuotas al {discount_offered_pct}%. ESPERA.\n2) Si pregunta montos: aclara TOTAL {monto_minimo_palabras} y cada sesión ~{monto_cuota_3_aprox_palabras}; vuelve a preguntar si le funciona. NO llames tools todavía.\n3) Si dice SÍ → registrar_aceptacion_oferta(necesita_dividir_en_varios_pagos=true) y ofrece el plan.\n4) Si dice NO / no le funciona → llama YA registrar_rechazo_oferta y SALE (Paso 4). PROHIBIDO reofrecer el mismo plan ni insistir.\nTrato de usted.",
+          "objection_handlers": [
+            {
+              "objection": "Cuánto tendría que agendar | Qué especialidad | Cuánto queda | De cuánto sería cada turno | Cuánto es cada sesión | Por qué ese especialidad",
+              "answer": "Con el {discount_offered_pct} por ciento de descuento, el total a agendar es {monto_minimo_palabras}. Si lo reparte en 3 cuotas, cada una sería de aproximadamente {monto_cuota_3_aprox_palabras}. ¿Le funciona así?"
+            },
+            {
+              "objection": "Quiere más descuento | Exige un porcentaje mayor | Pide más del descuento ofrecido | Quiere el setenta por ciento | Quiere el descuento de contado en cuotas",
+              "answer": "Entiendo su solicitud. En pagos diferidos el descuento disponible es del {discount_offered_pct} por ciento sobre su adeudo, en hasta 3 cuotas. Si esa alternativa no le funciona, con gusto revisamos otra condición."
+            },
+            {
+              "objection": "Ya hice un convenio antes y no se aplicó | Ya había negociado y no quedó registrado | Antes me ofrecieron un convenio y no valió",
+              "answer": "Lamento esa situación. Para que pueda aplicarse, es necesario contar con la grabación de la negociación con su aceptación expresa. Con gusto le ayudo a generar nuevamente su convenio para que en esta ocasión quede correctamente registrado."
+            },
+            {
+              "objection": "Ya pagué | Yo ya hice el turno | Hice el turno hace unos días | turno realizado | Ya abonó",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "El paciente expresa indisponibilidad para hablar | Está ocupado | No puede hablar ahora | Llámame después",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Estoy molesto | Por qué me molestan | Me están acosando | Estoy enojado | Está enojado",
+              "answer": "Entiendo, {nombre_deudor}. La intención de esta llamada es apoyarle a confirmar la cita su cuenta en las mejores condiciones posibles. También puede realizar su gestión directamente por nuestros canales de atención."
+            },
+            {
+              "objection": "¿A qué número puedo llamar? | Canales de atención | Teléfono de atención | Quiero hablar con alguien | Número de contacto",
+              "answer": "Para cualquier tema de su credencial de Crédito se puede comunicar al cinco cinco nueve siete siete siete uno siete tres cero, en horario de lunes a viernes de ocho de la mañana a nueve de la noche, y sábado y domingo de nueve de la mañana a tres de la tarde."
+            }
+          ],
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve."
+        },
+        "on": {
+          "Cita agendada": {
+            "commitment_date": "result.commitment_date",
+            "set_variables": {
+              "discount_offered_pct": "{max_discount_pct}"
+            },
+            "goto": "intent.confirm_convenio_c"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "set_variables": {
+              "discount_offered_pct": "{max_discount_pct}"
+            },
+            "goto": "task.negotiation_paso4"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "pay_confirmation": false,
+            "goto": "intent.already_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Ocupado",
+            "goto": "final.end_ocupado"
+          }
+        }
+      },
+      "task.negotiation_paso4": {
+        "type": "task",
+        "label": "Paso 4 — Cuotas con descuento 60% (última oferta, máx 3) / Convenio C",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_dias": "{max_dias}",
+          "suggest_dias": 3,
+          "max_attempts": 3,
+          "currency": "MXN",
+          "tone_profile": "empatico",
+          "objection_handlers_builtin": true,
+          "ask_nonpayment_reason": false,
+          "restrict_to_current_month": true,
+          "require_acceptance": true,
+          "acceptance_label": "el descuento del {discount_offered_pct} por ciento sobre su adeudo, en 2 o 3 pagos",
+          "acceptance_explanation": "Última opción: {discount_offered_pct}% dto. TOTAL {monto_minimo_palabras}. En 2 cuotas ≈ {monto_cuota_2_aprox_palabras} c/u; en 3 ≈ {monto_cuota_3_aprox_palabras} c/u. Trato de usted.",
+          "acceptance_confirmation_prompt": "Para ayudarle a cerrar esto de la mejor manera, puedo ofrecerle un {discount_offered_pct} por ciento de descuento sobre su adeudo, distribuido en hasta 3 cuotas. ¿Cuántas cuotas le funcionan mejor?",
+          "allow_split_payment_schedule_ladder": true,
+          "split_ladder_speak_monthly_schedule_summary": false,
+          "split_ladder_opening_statement": "",
+          "split_ladder_plans_intro": "",
+          "split_ladder_installment_plans": [
+            {
+              "label": "2 o 3 pagos mensuales",
+              "min_installments": 2,
+              "max_installments": 3,
+              "max_months": 3,
+              "total_amount": "{monto_minimo}"
+            }
+          ],
+          "benefit_hints": [
+            "aprovechar el descuento del {discount_offered_pct} por ciento",
+            "cerrar el adeudo con el especialidad mínimo en cuotas"
+          ],
+          "empresa": "Nube Blanca",
+          "deudor": "{nombre_deudor}",
+          "monto_deuda": "{monto_minimo}",
+          "monto_deuda_palabras": "{monto_minimo_palabras}",
+          "instructions": "{discount_offered_pct}% dto. TOTAL = {monto_minimo_palabras}. 2 cuotas ≈ {monto_cuota_2_aprox_palabras} c/u; 3 cuotas ≈ {monto_cuota_3_aprox_palabras} c/u. NO digas el descuento de contado ({max_discount_contado_pct}%).\n\nYa se preguntó cuántas cuotas. ESPERA.\n- Si dice 2 / dos: en el MISMO turno llama registrar_aceptacion_oferta(necesita_dividir_en_varios_pagos=true) Y seleccionar_plan_pagos(num_pagos=2). Di ~{monto_cuota_2_aprox_palabras} cada una. PROHIBIDO ofrecer tres pagos si pidió 2.\n- Si dice 3 / tres: registrar_aceptacion_oferta(necesita_dividir_en_varios_pagos=true) Y seleccionar_plan_pagos(num_pagos=3).\n- Si acepta sin número → pregunta 2 o 3; luego seleccionar_plan_pagos con ese N.\n- Si dice 1 / un solo turno → registrar_aceptacion_oferta() sin necesita_dividir y pide fecha.\n- Si dice NO → registrar_rechazo_oferta (soft close).\nTrato de usted; di 'descuento', no 'abono'.",
+          "objection_handlers": [
+            {
+              "objection": "Cuánto tendría que agendar | Qué especialidad | De cuánto sería cada turno | Cuánto es cada sesión",
+              "answer": "Con el {discount_offered_pct} por ciento de descuento, el total a agendar es {monto_minimo_palabras}. En 2 cuotas serían aproximadamente {monto_cuota_2_aprox_palabras} cada una; en 3 cuotas, aproximadamente {monto_cuota_3_aprox_palabras} cada una. ¿Cuántas cuotas le funcionan mejor?"
+            },
+            {
+              "objection": "Quiere más descuento | Exige un porcentaje mayor | Pide más del descuento ofrecido | Quiere el setenta por ciento | Quiere el cincuenta por ciento",
+              "answer": "Entiendo su solicitud. Sin embargo, el {discount_offered_pct} por ciento es la condición máxima que puedo ofrecerle en pagos diferidos para su cuenta. Es una muy buena oportunidad para confirmar la cita su situación."
+            },
+            {
+              "objection": "Ya hice un convenio antes y no se aplicó | Ya había negociado y no quedó registrado | Antes me ofrecieron un convenio y no valió",
+              "answer": "Lamento esa situación. Para que pueda aplicarse, es necesario contar con la grabación de la negociación con su aceptación expresa. Con gusto le ayudo a generar nuevamente su convenio para que en esta ocasión quede correctamente registrado."
+            },
+            {
+              "objection": "Ya pagué | Yo ya hice el turno | Hice el turno hace unos días | turno realizado | Ya abonó",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Ya atendido"
+            },
+            {
+              "objection": "El paciente expresa indisponibilidad para hablar | Está ocupado | No puede hablar ahora | Llámame después",
+              "end_call_after_answer": true,
+              "terminal_flow_label": "Cliente ocupado"
+            },
+            {
+              "objection": "Estoy molesto | Por qué me molestan | Me están acosando | Estoy enojado | Está enojado",
+              "answer": "Entiendo, {nombre_deudor}. La intención de esta llamada es apoyarle a confirmar la cita su cuenta en las mejores condiciones posibles. También puede realizar su gestión directamente por nuestros canales de atención."
+            },
+            {
+              "objection": "¿A qué número puedo llamar? | Canales de atención | Teléfono de atención | Quiero hablar con alguien | Número de contacto",
+              "answer": "Para cualquier tema de su credencial de Crédito se puede comunicar al cinco cinco nueve siete siete siete uno siete tres cero, en horario de lunes a viernes de ocho de la mañana a nueve de la noche, y sábado y domingo de nueve de la mañana a tres de la tarde."
+            }
+          ],
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve."
+        },
+        "on": {
+          "Cita agendada": {
+            "commitment_date": "result.commitment_date",
+            "set_variables": {
+              "discount_offered_pct": "{max_discount_pct}"
+            },
+            "goto": "intent.confirm_convenio_c"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Ya atendido",
+            "pay_confirmation": false,
+            "goto": "intent.already_paid"
+          },
+          "Intención de agendar": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "goto": "task.payment_intention_date"
+          },
+          "Cliente ocupado": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "substatus": "Ocupado",
+            "goto": "final.end_ocupado"
+          }
+        }
+      },
+      "intent.confirm_convenio_a": {
+        "type": "intention",
+        "label": "Confirmar Convenio A (speech aprobado)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto', selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra frase sin esa forma exacta, selecciona 'Repetir'. Si rechaza el convenio, selecciona 'No acepta'.",
+        "prompt": "{nombre_deudor_completo}, a continuación le diré unas preguntas para confirmar lo pactado; al final podrá aceptar o rechazar las condiciones otorgadas en este convenio. ¿Confirma ser titular de la cuenta terminación {info_1_palabras}? ¿Reconoce el adeudo existente con G S Tiendas Departamentales S A de C V / Nube Blanca Hermanos S A de C V por la cantidad de {monto_compromiso_palabras}? ¿Acepta cubrir dicho adeudo mediante {plan_pagos_convenio_a_spoken}? Se le informa que el incumplimiento ocasionará la pérdida de los beneficios otorgados en este convenio. ¿Confirma que acepta las condiciones descritas y que su aceptación es voluntaria? Si acepta, responda con claridad: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "set_variables": {
+              "agreement_type": "Convenio A",
+              "discount_offered_pct": "0"
+            },
+            "set_agent_output": {
+              "tipo_convenio": "A"
+            },
+            "goto": "final.end_commitment"
+          },
+          "Repetir": {
+            "goto": "intent.confirm_convenio_a_repregunta"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "set_variables": {
+              "agreement_type": ""
+            },
+            "set_agent_output": {
+              "tipo_convenio": ""
+            },
+            "goto": "intent.soft_close_no_commitment"
+          }
+        }
+      },
+      "intent.confirm_convenio_a_repregunta": {
+        "type": "intention",
+        "label": "Repregunta Convenio A (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad o rechaza, selecciona 'No acepta'.",
+        "prompt": "Disculpe, para que la grabación sea válida ante auditoría, necesito que responda exactamente: Sí, acepto. ¿Confirma que acepta las condiciones del Convenio de manera voluntaria?",
+        "on": {
+          "Acepta": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "set_variables": {
+              "agreement_type": "Convenio A",
+              "discount_offered_pct": "0"
+            },
+            "set_agent_output": {
+              "tipo_convenio": "A"
+            },
+            "goto": "final.end_commitment"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "set_variables": {
+              "agreement_type": ""
+            },
+            "set_agent_output": {
+              "tipo_convenio": ""
+            },
+            "goto": "intent.soft_close_no_commitment"
+          }
+        }
+      },
+      "intent.confirm_convenio_c": {
+        "type": "intention",
+        "label": "Confirmar Convenio C (speech aprobado)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "El paciente debe aceptar respondiendo EXACTAMENTE 'Sí, acepto'. Si dice 'Sí, acepto', selecciona 'Acepta'. Si responde solo 'sí', 'ya', 'claro' u otra frase sin esa forma exacta, selecciona 'Repetir'. Si rechaza el convenio, selecciona 'No acepta'.",
+        "prompt": "{nombre_deudor_completo}, a continuación le diré unas preguntas para confirmar lo pactado; al final podrá aceptar o rechazar las condiciones otorgadas en este convenio. ¿Confirma que es titular de la cuenta terminación {info_1_palabras}? ¿Confirma que reconoce un adeudo con G S Tiendas Departamentales S A de C V / Nube Blanca Hermanos S A de C V por la cantidad de {monto_compromiso_palabras}? ¿Acepta liquidar dicho adeudo mediante {plan_pagos_aceptacion_spoken}, conforme al convenio celebrado? Se le informa que, en caso de incumplimiento, perderá el beneficio otorgado y el turno se actualizará conforme a las condiciones originales de la cuenta. ¿Confirma que acepta este convenio de manera libre y voluntaria y se obliga a cumplir con los pagos pactados? Si acepta, responda con claridad: Sí, acepto.",
+        "on": {
+          "Acepta": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "substatus": "cita alternativa",
+            "set_variables": {
+              "agreement_type": "Convenio C"
+            },
+            "set_agent_output": {
+              "tipo_convenio": "C"
+            },
+            "goto": "final.end_commitment"
+          },
+          "Repetir": {
+            "goto": "intent.confirm_convenio_c_repregunta"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "set_variables": {
+              "agreement_type": ""
+            },
+            "set_agent_output": {
+              "tipo_convenio": ""
+            },
+            "goto": "intent.soft_close_no_commitment"
+          }
+        }
+      },
+      "intent.confirm_convenio_c_repregunta": {
+        "type": "intention",
+        "label": "Repregunta Convenio C (Sí, acepto)",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si responde con la frase exacta 'Sí, acepto', selecciona 'Acepta'. Si nuevamente no la dice con claridad o rechaza, selecciona 'No acepta'.",
+        "prompt": "Disculpe, para que la grabación sea válida ante auditoría, necesito que responda exactamente: Sí, acepto. ¿Confirma que acepta este Convenio de manera libre y voluntaria?",
+        "on": {
+          "Acepta": {
+            "action": "set_status",
+            "status": "Cita agendada",
+            "substatus": "cita alternativa",
+            "set_variables": {
+              "agreement_type": "Convenio C"
+            },
+            "set_agent_output": {
+              "tipo_convenio": "C"
+            },
+            "goto": "final.end_commitment"
+          },
+          "No acepta": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "set_variables": {
+              "agreement_type": ""
+            },
+            "set_agent_output": {
+              "tipo_convenio": ""
+            },
+            "goto": "intent.soft_close_no_commitment"
+          }
+        }
+      },
+      "intent.already_paid": {
+        "type": "intention",
+        "label": "Validación de turno declarado",
+        "delivery": "say",
+        "interruptible": false,
+        "decision": "Si el paciente hace una pregunta, respóndela. Si no, espera a que indique la fecha y el especialidad del turno antes de continuar.",
+        "prompt": "Entiendo. Para validarlo, ¿me podría indicar en qué fecha lo realizó y por qué especialidad?",
+        "on": {
+          "always": {
+            "goto": "final.end_paid"
+          }
+        }
+      },
+      "task.payment_intention_date": {
+        "type": "task",
+        "label": "Fecha tentativa de turno",
+        "task_type": "AppointmentSchedulingTask",
+        "params": {
+          "max_retries": 1,
+          "custom_instructions": "Sos asistente de agenda de sanatorio. No des diagnósticos ni recetas. Confirmá día y franja. Ofrecé alternativas si rechaza. Tono empático y breve.",
+          "max_attempts": 3
+        },
+        "on": {
+          "Fecha tentativa capturada": {
+            "action": "set_status",
+            "status": "Intención de agendar",
+            "payment_intention_date": "result.tentative_date",
+            "payment_intention_raw": "result.raw_text",
+            "set_payment_intention": true,
+            "goto": "final.end_intencion_de_pago"
+          },
+          "Sin fecha": {
+            "action": "set_status",
+            "status": "Sin cita",
+            "goto": "intent.soft_close_no_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin cita)",
+        "delivery": "say",
+        "interruptible": false,
+        "auto_advance_always_after_say": true,
+        "prompt": "Comprendo. Le recuerdo que mientras la cuenta permanezca sin confirmar la cita, el proceso de coordinación de agenda seguirá su curso normal. Quedo a sus órdenes si decide retomar esta opción. También puede comunicarse al cinco, cinco, nueve, siete, siete, siete, uno, siete, tres, cero.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (cita)",
+        "prompt": "Muchas gracias por su atención. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_ocupado": {
+        "type": "final",
+        "label": "Despedida (paciente ocupado)",
+        "prompt": "Claro, no le quito más tiempo. Lo contactaremos en otro momento. Muchas gracias por su atención. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado declarado)",
+        "prompt": "Excelente, quedamos a realizar la validación. Muchas gracias por su gestión.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de turno)",
+        "prompt": "Comprendo, dejamos registro de su intención de turno. Le recuerdo que es importante confirmar la cita su cuenta cuanto antes. Que tenga un buen día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin cita)",
+        "prompt": "Muchas gracias por su atención. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor, comuníquele que desde Nube Blanca intentamos ponernos en contacto con el titular.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      }
+    }
+  }
+}
