@@ -21,6 +21,8 @@ Regenerar: `python scripts/adapt_complex_flows.py --limit 45`.
 
 Por defecto: `clinica_vida_flow` (`BITBIT_FLOW_KEY`).
 
+Studio (front propio, no el `/client` de Pipecat): `http://localhost:7860/`
+
 ```bash
 BITBIT_FLOW_KEY=clinica_vida_flow python -m app.pipecat_runtime.bot --transport webrtc
 ```

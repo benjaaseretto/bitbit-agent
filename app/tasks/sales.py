@@ -27,10 +27,14 @@ class _SalesCloseMixin(KbMixin):
             f"Contacto: {self.session.nombre_deudor}. Línea/equipo: {producto}.\n"
             "No inventes precios fuera de la KB. No prometas stock que no consta.\n"
             "- confirmar_pedido(fecha_iso) si acepta comprar/reservar (fecha de entrega o cierre).\n"
+            "- ofrecer_descuento(evidencia) si dice que NO puede cubrir el total "
+            "(no me alcanza, es mucho, no tengo el completo). NO improvises el texto del descuento.\n"
             "- registrar_intencion_compra si quiere pero no cierra ahora.\n"
             "- cerrar_sin_pedido si rechaza.\n"
             "- ya_compro si dice que ya compró.\n"
             "- responder_kb para FAQ (garantía, plazos, financiamiento).\n"
+            "Hablá en UNA o DOS oraciones cortas. No repitas el script de apertura. "
+            "Si no se entiende el audio, pedí que lo repita; no improvises.\n"
             f"{extra}\n{custom}"
         )
 
@@ -51,6 +55,15 @@ class _SalesCloseMixin(KbMixin):
             return
         self.session.commitment_date = normalized
         self.session.commitment_date_spoken = spoken_date(normalized)
+        if self.session.variables.get("descuento_ofrecido"):
+            self.session.variables["substatus"] = "Pago parcial"
+            minimo = self.session.variables.get("monto_minimo")
+            if minimo:
+                self.session.variables["payment_amount"] = minimo
+                self.session.variables.setdefault(
+                    "payment_amount_palabras",
+                    str(self.session.variables.get("monto_minimo_palabras") or ""),
+                )
         self.session.final_status = "Pedido confirmado"
         landed = await self.advance("Pedido confirmado")
         if not landed:
@@ -98,6 +111,43 @@ class _SalesCloseMixin(KbMixin):
             {"ok": True, "outcome": "Ya compró", "evidence": evidencia}, properties=_WAIT
         )
 
+    def _allows_discount(self) -> bool:
+        return bool(self.node_params().get("allow_partial_payments"))
+
+    @register_tool(type="normal")
+    async def ofrecer_descuento(self, params, evidencia: str) -> None:
+        """Cuando no puede cubrir el 100%. evidencia = frase literal del comprador."""
+        if not self._allows_discount():
+            await params.result_callback(
+                {
+                    "ok": False,
+                    "no_discount": True,
+                    "note": "Esta cuenta no tiene descuento. Pedí el total o registrá sin pedido.",
+                },
+                properties=_CONTINUE,
+            )
+            return
+        pct = str(self.session.variables.get("max_discount_pct") or "").strip()
+        minimo = str(self.session.variables.get("monto_minimo_palabras") or "").strip()
+        if self.session.variables.get("descuento_ofrecido"):
+            await self.speak(
+                f"El máximo autorizado sigue siendo un {pct} por ciento, "
+                f"con un monto mínimo de {minimo}."
+            )
+            await params.result_callback({"ok": True, "already": True}, properties=_WAIT)
+            return
+        self.session.variables["descuento_ofrecido"] = True
+        self.session.variables["substatus"] = "Pago parcial"
+        await self.speak(
+            "Entiendo su situación. Como parte de un beneficio especial, puedo "
+            f"ofrecerle hasta un {pct} por ciento de descuento sobre su adeudo, "
+            f"quedando un monto mínimo a cubrir de {minimo}, para que regularice su cuenta."
+        )
+        await params.result_callback(
+            {"ok": True, "discount_pct": pct, "evidence": evidencia},
+            properties=_WAIT,
+        )
+
 
 @register_task
 class NegotiationTaskV2(_SalesCloseMixin, BaseTask):
@@ -112,13 +162,16 @@ class NegotiationTaskV2(_SalesCloseMixin, BaseTask):
         return self._sales_prompt()
 
     def tools(self) -> Sequence[Callable[..., Any]]:
-        return [
+        listed = [
             self.confirmar_pedido,
             self.registrar_intencion_compra,
             self.cerrar_sin_pedido,
             self.ya_compro,
             self.responder_kb,
         ]
+        if self._allows_discount():
+            listed.insert(1, self.ofrecer_descuento)
+        return listed
 
 
 @register_task
@@ -136,7 +189,7 @@ class MultiProductNegotiationTask(_SalesCloseMixin, BaseTask):
         )
 
     def tools(self) -> Sequence[Callable[..., Any]]:
-        return [
+        listed = [
             self.seleccionar_producto,
             self.confirmar_pedido,
             self.registrar_intencion_compra,
@@ -144,6 +197,9 @@ class MultiProductNegotiationTask(_SalesCloseMixin, BaseTask):
             self.ya_compro,
             self.responder_kb,
         ]
+        if self._allows_discount():
+            listed.insert(2, self.ofrecer_descuento)
+        return listed
 
     @register_tool(type="normal")
     async def seleccionar_producto(self, params, nombre: str) -> None:

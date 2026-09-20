@@ -19,6 +19,11 @@ class CallSession:
     max_dias: int = 7
     timezone: str = "America/Mexico_City"
     fecha_limite: str = ""
+    fecha_turno: str = ""
+    fecha_turno_spoken: str = ""
+    hora_turno: str = ""
+    hora_turno_spoken: str = ""
+    franja_turno: str = ""
     commitment_date: Optional[str] = None
     commitment_date_spoken: Optional[str] = None
     final_status: Optional[str] = None
@@ -42,9 +47,16 @@ class CallSession:
             "nombre_medico": self.nombre_medico,
             "sucursal": self.sucursal,
             "max_dias": self.max_dias,
+            "fecha_turno": self.fecha_turno,
+            "fecha_turno_spoken": self.fecha_turno_spoken,
+            "hora_turno": self.hora_turno,
+            "hora_turno_spoken": self.hora_turno_spoken,
+            "franja_turno": self.franja_turno,
             "commitment_date": self.commitment_date or "",
             "commitment_date_spoken": self.commitment_date_spoken or "",
             "fecha_limite": self.fecha_limite,
+            "nombre_deudor_completo": self.nombre_deudor,
+            "saludo_por_horario": str(self.variables.get("saludo_por_horario") or "Buenos días"),
             **self.variables,
         }
 

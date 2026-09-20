@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
 import os
 
 import httpx
@@ -24,17 +23,18 @@ from pipecat.runner.utils import create_transport
 from pipecat.services.deepseek.llm import DeepSeekLLMService
 from pipecat.services.openai.llm import OpenAILLMService
 from pipecat.transports.base_transport import TransportParams
-from pipecat.turns.user_start.min_words_user_turn_start_strategy import (
-    MinWordsUserTurnStartStrategy,
-)
 from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from pipecat.workers.runner import WorkerRunner
 
 from app.orchestrator import FlowController, build_session
-from app.pipecat_runtime.config import ROOT, RuntimeConfig
+from app.pipecat_runtime.config import RuntimeConfig
 from app.pipecat_runtime.deepseek_llm import BitbitDeepSeekLLMService
+from app.pipecat_runtime.hud import attach_hud, wire_text_input
 from app.pipecat_runtime.mlx_services import MLXAudioEngine, MLXSTTService, QwenMLXTTSService
-from app.utils.templates import render_template
+from app.pipecat_runtime.studio import install_studio_frontend, merge_call_metadata
+from app.pipecat_runtime.turn_start import MacMinWordsUserTurnStartStrategy
+from app.utils.call_metadata import load_call_metadata
+from app.utils.templates import render_template, split_tts_utterances
 
 _THINKING_OFF = DeepSeekLLMService.ThinkingConfig(type="disabled")
 
@@ -57,11 +57,7 @@ class ClosedSessionGate(FrameProcessor):
 
 
 def load_metadata():
-    raw = os.getenv("BITBIT_METADATA_JSON", "").strip()
-    if raw:
-        return json.loads(raw)
-    path = ROOT / os.getenv("BITBIT_METADATA_FILE", "presets/demo_call.json")
-    return json.loads(path.read_text(encoding="utf-8"))
+    return load_call_metadata()
 
 
 def build_llm(config: RuntimeConfig, prompt: str):
@@ -112,7 +108,7 @@ async def run_bot(transport, runner_args: RunnerArguments):
         )
     config = RuntimeConfig.from_env()
     await check_llm(config)
-    session, flow = build_session(load_metadata())
+    session, flow = build_session(merge_call_metadata(load_metadata(), runner_args))
     _active_call = True
     engine = _engine or MLXAudioEngine(config)
     owned = _engine is None
@@ -135,9 +131,13 @@ async def run_bot(transport, runner_args: RunnerArguments):
             )
 
         async def speak(text):
-            await tts.queue_frame(TTSSpeakFrame(text))
+            for chunk in split_tts_utterances(text):
+                await tts.queue_frame(TTSSpeakFrame(chunk))
+
+        hud = attach_hud(session, transport)
 
         async def on_phase(phase):
+            await hud.emit_phase(phase)
             if phase == "done":
                 context.set_tools([])
                 context.set_tool_choice("none")
@@ -168,19 +168,21 @@ async def run_bot(transport, runner_args: RunnerArguments):
             user_params=LLMUserAggregatorParams(
                 vad_analyzer=SileroVADAnalyzer(
                     params=VADParams(
-                        start_secs=float(os.getenv("VAD_START_SECS", "0.2")),
-                        stop_secs=float(os.getenv("VAD_STOP_SECS", "0.2")),
+                        start_secs=float(os.getenv("VAD_START_SECS", "0.35")),
+                        stop_secs=float(os.getenv("VAD_STOP_SECS", "0.45")),
                     )
                 ),
                 user_turn_strategies=UserTurnStrategies(
                     start=[
-                        MinWordsUserTurnStartStrategy(
-                            min_words=int(os.getenv("INTERRUPTION_MIN_WORDS", "2"))
+                        MacMinWordsUserTurnStartStrategy(
+                            min_words=int(os.getenv("INTERRUPTION_MIN_WORDS", "0")),
+                            use_interim=False,
                         )
                     ]
                 ),
             ),
         )
+        wire_text_input(transport, user)
         latency = UserBotLatencyObserver()
 
         @latency.event_handler("on_latency_measured")
@@ -207,7 +209,7 @@ async def run_bot(transport, runner_args: RunnerArguments):
                 enable_metrics=True,
                 enable_usage_metrics=True,
             ),
-            observers=[latency],
+            observers=[latency, hud],
             idle_timeout_secs=runner_args.pipeline_idle_timeout_secs,
             processor_unusable_policy=ProcessorUnusablePolicy.CONTINUE,
         )
@@ -217,6 +219,7 @@ async def run_bot(transport, runner_args: RunnerArguments):
 
         @transport.event_handler("on_client_connected")
         async def connected(transport, client):
+            await hud.emit_session()
             opening = flow["flow_graph"]["nodes"]["task.identity_verification"][
                 "params"
             ]["identity_identificacion_breve"]
@@ -262,6 +265,7 @@ def main():
     from pipecat.runner.run import main as run
 
     try:
+        install_studio_frontend()
         asyncio.run(prepare())
         run()
     finally:

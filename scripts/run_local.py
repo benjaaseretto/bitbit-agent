@@ -92,7 +92,11 @@ def main() -> int:
                 flush=True,
             )
         print(
-            "Preparando audio MLX. WebRTC: http://localhost:7860/client/",
+            f"Flujo BITBIT_FLOW_KEY={os.getenv('BITBIT_FLOW_KEY') or 'clinica_vida_flow'}",
+            flush=True,
+        )
+        print(
+            "Preparando audio MLX. Studio: http://localhost:7860/",
             flush=True,
         )
         child = subprocess.Popen(

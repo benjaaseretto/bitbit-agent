@@ -1,50 +1,54 @@
 [
   {
     "question": "¿Qué especialidades tienen? | ¿Qué médicos atienden?",
-    "answer": "En {nombre_empresa} atendemos {especialidad} y otras especialidades según agenda. Esta llamada es para su consulta de {especialidad} con {nombre_medico}."
+    "answer": "En {nombre_empresa} atendemos {especialidad} y otras especialidades según agenda. Este turno es de {especialidad} con {nombre_medico}."
   },
   {
-    "question": "¿Dónde queda la clínica? | ¿Cuál es la dirección? | ¿Sucursal?",
-    "answer": "La consulta es en {sucursal}. Si necesita la dirección exacta o cómo llegar, indíqueme y le oriento con lo que tengo registrado."
+    "question": "¿Dónde queda la clínica? | ¿Cuál es la dirección? | ¿Sucursal? | ¿Cómo llego?",
+    "answer": "El turno es en {sucursal}. Llegue unos diez minutos antes. Si necesita la dirección exacta o cómo llegar, indíqueme y le oriento con lo registrado."
+  },
+  {
+    "question": "¿A qué hora es? | ¿Qué hora es el turno? | ¿Horario de la cita?",
+    "answer": "Su turno es el {fecha_turno_spoken} a {hora_turno_spoken} con {nombre_medico} en {sucursal}."
   },
   {
     "question": "¿Cuánto cuesta la consulta? | ¿Cuál es el precio? | ¿Aceptan seguro?",
-    "answer": "Los costos y coberturas dependen del convenio o seguro. En recepción de {sucursal} le confirman el importe al llegar. Yo puedo ayudarle a reservar el turno."
+    "answer": "Los costos y coberturas dependen del convenio o seguro. En recepción de {sucursal} le confirman el importe al llegar."
   },
   {
-    "question": "¿Necesito llevar algo? | ¿Qué documentos llevo?",
-    "answer": "Le pedimos documento de identidad y, si tiene, estudios previos o carnet de seguros. Llegue unos diez minutos antes."
+    "question": "¿Necesito llevar algo? | ¿Qué documentos llevo? | ¿Qué tengo que llevar?",
+    "answer": "Documento de identidad y, si tiene, estudios previos o carnet de seguro. Llegue unos diez minutos antes."
   },
   {
-    "question": "¿Puedo cancelar o reprogramar? | ¿Cómo cambio la cita?",
-    "answer": "Sí. Puede reprogramar llamando a {nombre_empresa} o avisando con anticipación. ¿Quiere que agendemos otra fecha ahora?"
+    "question": "¿Puedo cancelar o reprogramar? | ¿Cómo cambio la cita? | ¿Puedo cambiar el día?",
+    "answer": "Sí. En esta misma llamada puedo reprogramar el turno a otra fecha o cancelarlo. ¿Qué prefiere?"
   },
   {
     "question": "¿Atienden urgencias? | Me siento mal",
-    "answer": "Para urgencias graves debe acudir a guardia o emergencias. Si es una consulta programable de {especialidad}, puedo ofrecerle el turno más cercano disponible."
+    "answer": "Para urgencias graves debe acudir a guardia o emergencias. Si puede esperar, confirmamos el turno del {fecha_turno_spoken} o lo adelantamos si hay lugar."
   },
   {
     "question": "¿Horarios de atención? | ¿A qué hora abren?",
-    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por turnos. ¿Prefiere franja de mañana o de tarde dentro de los próximos días?"
+    "answer": "La agenda de {especialidad} con {nombre_medico} se coordina por turnos. El suyo es el {fecha_turno_spoken} a {hora_turno_spoken}."
   },
   {
     "question": "¿Quién es el doctor? | ¿Con qué médico es?",
-    "answer": "Su consulta de {especialidad} sería con {nombre_medico} en {sucursal}."
+    "answer": "Su consulta de {especialidad} es con {nombre_medico} en {sucursal}."
   },
   {
     "question": "¿Por qué me llaman?",
-    "answer": "Lo contactamos desde {nombre_empresa} para confirmar o agendar su consulta de {especialidad}."
-  },
-  {
-    "question": "Ya tengo cita | Ya estoy agendado",
-    "answer": "Perfecto. Si ya tiene turno, solo confirmamos. ¿Desea que deje registrado que ya estaba agendado?"
+    "answer": "Lo contactamos desde {nombre_empresa} para confirmar su asistencia al turno del {fecha_turno_spoken} a {hora_turno_spoken}."
   },
   {
     "question": "¿Número de teléfono? | ¿WhatsApp?",
-    "answer": "Puede contactar a {nombre_empresa} por el canal habitual de la clínica. En esta llamada también puedo ayudarle a agendar."
+    "answer": "Puede contactar a {nombre_empresa} por el canal habitual de la clínica. En esta llamada también confirmo, reprogramo o cancelo el turno."
   },
   {
     "question": "¿Dan recetas o diagnóstico por teléfono?",
-    "answer": "No. Por teléfono solo coordinamos la agenda. El diagnóstico y las indicaciones las da el médico en la consulta presencial."
+    "answer": "No. Por teléfono solo confirmamos o coordinamos la agenda. El diagnóstico y las indicaciones las da el médico en la consulta presencial."
+  },
+  {
+    "question": "¿Estacionamiento? | ¿Hay cochera?",
+    "answer": "En {sucursal} hay opciones de llegada a pie o en vehículo según la zona. En recepción le indican al llegar. ¿Confirmamos su asistencia al turno?"
   }
 ]

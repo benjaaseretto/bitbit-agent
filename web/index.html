@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>bitbit · agente conversacional</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="stage" id="stage">
+      <div id="globe-host" class="globe-host" aria-hidden="true"></div>
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="scanlines" aria-hidden="true"></div>
+
+      <header class="chrome">
+        <p class="chrome-mark">BITBIT</p>
+        <p class="chrome-sub">agente conversacional</p>
+      </header>
+
+      <main id="lobby" class="lobby">
+        <section class="lobby-brand">
+          <p class="kicker">Inteligencia operativa · en tiempo real</p>
+          <h1>
+            BITBIT
+            <span>agente conversacional</span>
+          </h1>
+          <p class="manifesto">
+            El mundo gira detrás. La voz responde adelante. Un enlace WebRTC
+            con el mismo núcleo 3D del inicio.
+          </p>
+        </section>
+
+        <aside class="lobby-panel aurus-panel">
+          <p class="panel-kicker">Establecer enlace</p>
+          <label class="field">
+            <span>Flujo</span>
+            <select id="flow-select"></select>
+          </label>
+          <p id="lobby-status" class="lobby-status" role="status">
+            Listo para conectar.
+          </p>
+          <button id="connect-btn" class="btn-primary" type="button">
+            Iniciar enlace
+          </button>
+        </aside>
+      </main>
+
+      <section id="hud" class="hud is-hidden" aria-label="Consola de conversación">
+        <div class="hud-frame">
+          <header class="hud-top">
+            <article class="hud-chip">
+              <p>CONVERSATION STATUS</p>
+              <strong id="conv-status">STANDBY</strong>
+              <span>SESSION ID: <code id="session-id">—</code></span>
+            </article>
+
+            <div class="hud-logo">
+              <div class="logo-mark" aria-hidden="true"></div>
+              <div>
+                <p class="logo-name">BITBIT</p>
+                <p class="logo-sub">agente conversacional</p>
+              </div>
+            </div>
+
+            <article class="hud-chip hud-chip-right">
+              <p>SYSTEM METRICS</p>
+              <ul>
+                <li>LATENCIA RED: <strong id="m-rtt">—</strong></li>
+                <li>LATENCIA INFERENCIA: <strong id="m-infer">—</strong></li>
+                <li>LATENCIA TOTAL: <strong id="m-total">—</strong></li>
+              </ul>
+            </article>
+          </header>
+
+          <div class="hud-body">
+            <aside class="hud-left">
+              <div class="identity-row">
+                <div class="avatar avatar-human" aria-hidden="true"></div>
+                <span class="identity-arrow">→</span>
+                <div class="avatar avatar-bitbit" aria-hidden="true"></div>
+              </div>
+              <p class="identity-cap"><span>HUMANO</span><span>BITBIT</span></p>
+              <div id="voice-host" class="voice-host" aria-hidden="true"></div>
+              <p class="voice-caption">NÚCLEO DE VOZ · 3D EN VIVO</p>
+              <dl class="meta-list">
+                <div><dt>MODO</dt><dd>CONVERSACIONAL</dd></div>
+                <div><dt>FLUJO</dt><dd id="m-flow">—</dd></div>
+                <div><dt>FASE</dt><dd id="m-phase">identity</dd></div>
+              </dl>
+            </aside>
+
+            <section class="hud-chat">
+              <div class="chat-cols">
+                <article class="chat-col">
+                  <header>
+                    <h2>USUARIO</h2>
+                    <span class="pill" id="pill-user">SILENCIO</span>
+                  </header>
+                  <ol id="user-log" class="chat-log"></ol>
+                </article>
+                <article class="chat-col chat-col-ai">
+                  <header>
+                    <h2>BITBIT</h2>
+                    <span class="pill pill-ai" id="pill-bot">EN ESPERA</span>
+                  </header>
+                  <ol id="bot-log" class="chat-log"></ol>
+                </article>
+              </div>
+              <form id="text-form" class="composer">
+                <label class="sr-only" for="text-input">Mensaje de texto</label>
+                <input
+                  id="text-input"
+                  type="text"
+                  autocomplete="off"
+                  placeholder="Escribí o hablá — el micrófono ya está abierto"
+                />
+                <button type="submit" class="btn-send" aria-label="Enviar">➤</button>
+              </form>
+            </section>
+
+            <aside class="hud-right">
+              <h2>TOKENS &amp; PERFORMANCE</h2>
+              <ul class="token-list">
+                <li>PROCESADOS (USER): <strong id="m-prompt">0</strong></li>
+                <li>GENERADOS (BITBIT): <strong id="m-completion">0</strong></li>
+                <li>TOTAL: <strong id="m-tokens">0</strong></li>
+              </ul>
+              <p class="chart-label">LATENCIA (ms)</p>
+              <canvas id="chart-latency" width="280" height="88"></canvas>
+              <p class="chart-label">TOKENS</p>
+              <canvas id="chart-tokens" width="280" height="88"></canvas>
+            </aside>
+          </div>
+
+          <footer class="hud-foot">
+            <button id="hangup-btn" type="button">Cortar enlace</button>
+            <p id="hud-live" role="status">ESCUCHANDO…</p>
+          </footer>
+        </div>
+      </section>
+    </div>
+
+    <audio id="remote-audio" autoplay playsinline></audio>
+    <script type="module" src="./js/app.js"></script>
+  </body>
+</html>

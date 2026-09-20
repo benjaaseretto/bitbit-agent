@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Optional, Sequence
 
 from app.session.call_session import CallSession
+from app.utils.templates import render_value
 
 SpeakFn = Callable[[str], Awaitable[None]]
 PhaseFn = Callable[[str], Awaitable[None]]
@@ -62,7 +63,8 @@ class BaseTask(ABC):
     def node_params(self, node_id: Optional[str] = None) -> dict[str, Any]:
         nid = node_id or self.node_id
         nodes = self.flow.get("flow_graph", {}).get("nodes") or {}
-        return dict((nodes.get(nid) or {}).get("params") or {})
+        raw = dict((nodes.get(nid) or {}).get("params") or {})
+        return render_value(raw, self.session.as_template_vars())
 
     @abstractmethod
     def system_prompt(self) -> str:

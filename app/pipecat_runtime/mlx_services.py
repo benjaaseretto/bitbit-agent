@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import io
+import re
 import time
 import wave
 from concurrent.futures import ThreadPoolExecutor
@@ -22,6 +23,103 @@ from pipecat.transcriptions.language import Language
 from pipecat.utils.time import time_now_iso8601
 
 from app.pipecat_runtime.config import RuntimeConfig
+from app.pipecat_runtime.turn_start import is_turn_filler
+
+_WORD_RE = re.compile(r"[a-záéíóúüñ]+", re.IGNORECASE)
+_STOP = {
+    "el",
+    "la",
+    "los",
+    "las",
+    "un",
+    "una",
+    "de",
+    "del",
+    "al",
+    "y",
+    "o",
+    "que",
+    "qué",
+    "se",
+    "te",
+    "me",
+    "le",
+    "lo",
+    "su",
+    "sus",
+    "es",
+    "en",
+    "por",
+    "para",
+    "con",
+    "a",
+    "algo",
+    "asi",
+    "así",
+    "este",
+    "esta",
+    "eso",
+    "esa",
+    "da",
+    "pasa",
+}
+_DOMAIN = {
+    "pago",
+    "pagar",
+    "compra",
+    "descuento",
+    "cuenta",
+    "adeudo",
+    "deuda",
+    "alcanza",
+    "dinero",
+    "total",
+    "minimo",
+    "mínimo",
+    "manana",
+    "mañana",
+    "hoy",
+    "quien",
+    "quién",
+    "habla",
+    "empresa",
+    "garantia",
+    "garantía",
+    "cuanto",
+    "cuánto",
+    "cuota",
+    "pedido",
+    "fecha",
+    "llam",
+    "ocupado",
+    "despues",
+    "después",
+    "repetir",
+    "perdon",
+    "perdón",
+    "entiendo",
+    "confirmo",
+    "confirmar",
+    "cancelar",
+    "equipo",
+    "analizador",
+    "financiamiento",
+    "precio",
+    "correcto",
+    "claro",
+    "soy",
+    "yo",
+    "hola",
+    "espera",
+    "paso",
+    "juan",
+    "carla",
+    "ana",
+    "doctora",
+    "turno",
+    "cita",
+    "bioanalyze",
+}
 
 
 class MLXAudioEngine:
@@ -32,6 +130,9 @@ class MLXAudioEngine:
         self.tts = None
         self.whisper_path = None
         self._closed = False
+        self.last_spoken = ""
+        self.tts_busy = False
+        self.tts_ended_at = 0.0
 
     async def call(self, fn, *args, **kwargs):
         return await asyncio.get_running_loop().run_in_executor(
@@ -99,6 +200,13 @@ class MLXAudioEngine:
     def transcribe(self, audio: bytes) -> str:
         import mlx.core as mx
 
+        # Eco del parlante: no transcribir mientras Qwen habla ni 2 s después.
+        if self.tts_busy:
+            return ""
+        if self.tts_ended_at and (time.monotonic() - self.tts_ended_at) < 2.0:
+            logger.debug("STT skip post-TTS cooldown")
+            return ""
+
         with wave.open(io.BytesIO(audio), "rb") as wav:
             if wav.getframerate() != 16000 or wav.getnchannels() != 1 or wav.getsampwidth() != 2:
                 raise ValueError("STT expects 16 kHz mono PCM16")
@@ -131,12 +239,40 @@ class MLXAudioEngine:
                 no_speech_threshold=0.6,
             )["text"].strip()
 
-        return self._sanitize_transcript(text)
+        return self._sanitize_transcript(text, last_spoken=self.last_spoken)
 
     @staticmethod
-    def _sanitize_transcript(text: str) -> str:
+    def _is_repetitive_hallucination(text: str) -> bool:
+        """Whisper en silencio/eco: 'No, no, no…' o una sola palabra repetida."""
+        words = _WORD_RE.findall((text or "").lower())
+        if len(words) < 8:
+            return False
+        counts: dict[str, int] = {}
+        for word in words:
+            counts[word] = counts.get(word, 0) + 1
+        top = max(counts.values())
+        return top >= 8 or (top / len(words)) >= 0.5
+
+    def remember_spoken(self, text: str) -> None:
+        chunk = " ".join((text or "").split())
+        if not chunk:
+            return
+        merged = f"{self.last_spoken} {chunk}".strip()
+        self.last_spoken = merged[-800:]
+
+    @staticmethod
+    def _words(text: str) -> set[str]:
+        return set(_WORD_RE.findall((text or "").lower()))
+
+    @classmethod
+    def _sanitize_transcript(cls, text: str, last_spoken: str = "") -> str:
         t = " ".join((text or "").strip().split())
         if len(t) < 2:
+            return ""
+        if is_turn_filler(t):
+            return ""
+        if cls._is_repetitive_hallucination(t):
+            logger.warning("STT dropped repetitive hallucination: {}", t[:120])
             return ""
         lower = t.lower()
         # Alucinaciones típicas de STT con eco/ruido en demos locales
@@ -151,9 +287,32 @@ class MLXAudioEngine:
             "interpresiones",
             "www.",
             "http",
+            "te trago",
+            "se te da",
+            "la cabeza",
+            "el corazón",
         )
         if any(m in lower for m in junk_markers):
             logger.warning("STT dropped hallucination: {}", t)
+            return ""
+        tokens = cls._words(t)
+        # Confirmaciones cortas. No uses "si" suelto: "¿qué pasa si…?" no es un sí.
+        if tokens & {"sí", "correcto", "claro", "soy", "yo"} and len(tokens) <= 8:
+            return t
+        if len(tokens) <= 2 and tokens & {"si", "no", "sí"}:
+            return t
+        content = tokens - _STOP
+        if not content:
+            logger.warning("STT dropped empty-content: {}", t)
+            return ""
+        spoken_words = cls._words(last_spoken) - _STOP
+        if spoken_words:
+            overlap = len(content & spoken_words) / len(content)
+            if overlap >= 0.45:
+                logger.warning("STT dropped echo of TTS: {}", t)
+                return ""
+        if not (content & _DOMAIN) and not (content & spoken_words):
+            logger.warning("STT dropped off-domain: {}", t)
             return ""
         # Muy inglés sin señales de confirmación/identidad ES
         es_hits = ("sí", "si", "hola", "soy", "habla", "espera", "paso", "no", "juan", "doctora")
@@ -163,6 +322,7 @@ class MLXAudioEngine:
             logger.warning("STT dropped english-like: {}", t)
             return ""
         return t
+
     def speech(self, text: str):
         kwargs = dict(
             text=text,
@@ -244,6 +404,8 @@ class QwenMLXTTSService(TTSService):
         return True
 
     async def run_tts(self, text: str, context_id: str):
+        self.engine.remember_spoken(text)
+        self.engine.tts_busy = True
         generator = self.engine.speech(text)
         started = time.perf_counter()
         first = True
@@ -268,6 +430,8 @@ class QwenMLXTTSService(TTSService):
             logger.exception("Qwen TTS failed")
             yield ErrorFrame(error=f"MLX TTS: {type(exc).__name__}")
         finally:
+            self.engine.tts_busy = False
+            self.engine.tts_ended_at = time.monotonic()
             # Runs after any in-flight next() in the same executor, including
             # cancellation; never call generator.close() while it is executing.
             await self.engine.call(generator.close)

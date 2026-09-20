@@ -72,12 +72,68 @@ def test_llm_mlx_uses_local_endpoint_and_serial_tools():
     assert service._run_in_parallel is False
 
 
-def test_stt_sanitize_drops_hallucinations():
-    from app.pipecat_runtime.mlx_services import MLXAudioEngine
+def test_stt_skips_while_tts_busy_and_cooldown():
+    import time
 
+    engine = MLXAudioEngine(RuntimeConfig())
+    engine.tts_busy = True
+    assert engine.transcribe(b"not-a-wav") == ""
+    engine.tts_busy = False
+    engine.tts_ended_at = time.monotonic()
+    assert engine.transcribe(b"not-a-wav") == ""
+
+
+def test_stt_sanitize_drops_hallucinations():
     assert MLXAudioEngine._sanitize_transcript("Noticias desde Berlín.") == ""
     assert MLXAudioEngine._sanitize_transcript("Obvious service. Yeah, so") == ""
+    assert MLXAudioEngine._sanitize_transcript("Ehh...") == ""
     assert MLXAudioEngine._sanitize_transcript("sí, soy Juan") == "sí, soy Juan"
+    opening = (
+        "Hola Carla Méndez, le habla Ana de BioAnalyze. "
+        "Usted presenta un adeudo de dieciocho mil quinientos."
+    )
+    assert MLXAudioEngine._sanitize_transcript("¿Qué pasa si te trago algo?", opening) == ""
+    assert MLXAudioEngine._sanitize_transcript("Así que, se te da un...", opening) == ""
+    assert MLXAudioEngine._sanitize_transcript("No, " * 40, opening) == ""
+    assert MLXAudioEngine._sanitize_transcript(
+        "como lo que yo siento es aquí y entonces uno se te da la cabeza, el corazón",
+        opening,
+    ) == ""
+    assert MLXAudioEngine._sanitize_transcript("no me alcanza el total", opening)
+
+
+def test_split_tts_utterances_breaks_long_script():
+    from app.utils.templates import split_tts_utterances
+
+    text = (
+        "Hola Carla Méndez, le habla Ana, Agente Virtual del área de Servicio y "
+        "seguimiento de venta de BioAnalyze. Le informo que esta llamada está siendo "
+        "grabada para fines de calidad. Le llamo para apoyarle a cerrar la oferta su "
+        "cuenta. De acuerdo con nuestro sistema, usted presenta un adeudo de "
+        "dieciocho mil quinientos. Revisemos juntos la mejor forma de cubrirlo."
+    )
+    chunks = split_tts_utterances(text)
+    assert chunks == [text]
+    huge = ". ".join([text] * 4)
+    split = split_tts_utterances(huge)
+    assert len(split) > 1
+    assert all(len(chunk) <= 800 for chunk in split)
+    assert "dieciocho mil quinientos" in " ".join(split)
+
+
+def test_mac_turn_start_ignores_fillers_and_disables_barge_in():
+    from app.pipecat_runtime.turn_start import (
+        interruption_word_threshold,
+        is_turn_filler,
+    )
+
+    assert is_turn_filler("Ehh...")
+    assert is_turn_filler("mmm")
+    assert not is_turn_filler("sí")
+    assert not is_turn_filler("no")
+    assert not is_turn_filler("¿De parte de quién?")
+    assert interruption_word_threshold(bot_speaking=True, min_words=0) == 0
+    assert interruption_word_threshold(bot_speaking=False, min_words=0) == 1
 
 
 @pytest.mark.asyncio
@@ -106,6 +162,12 @@ class FakeEngine:
         self.config = RuntimeConfig()
         self.closed = False
         self.generated = 0
+        self.last_spoken = ""
+        self.tts_busy = False
+        self.tts_ended_at = 0.0
+
+    def remember_spoken(self, text: str) -> None:
+        self.last_spoken = text or ""
 
     async def call(self, fn, *args):
         return fn(*args)

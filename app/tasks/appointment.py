@@ -1,4 +1,4 @@
-"""Script independiente: agenda de consultas médicas (+ KB FAQ)."""
+"""Script independiente: agenda de consultas médicas o confirmación de turno (+ KB)."""
 from __future__ import annotations
 
 from typing import Any, Callable, Literal, Optional, Sequence
@@ -6,7 +6,7 @@ from typing import Any, Callable, Literal, Optional, Sequence
 from pipecat.frames.frames import FunctionCallResultProperties
 
 from app.tasks.base import BaseTask, TaskContext
-from app.tasks.graph import has_node
+from app.tasks.graph import edge_for, has_node
 from app.tasks.kb import KbMixin
 from app.tasks.registry import register_task
 from app.utils.dates import (
@@ -32,6 +32,10 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
         super().__init__(ctx)
         self.node_id = node_id
 
+    def _confirm_mode(self) -> bool:
+        mode = str(self.node_params(self.node_id).get("mode") or "").strip()
+        return mode == "confirm_attendance"
+
     def system_prompt(self) -> str:
         params = self.node_params(self.node_id)
         custom = params.get("custom_instructions") or ""
@@ -41,6 +45,35 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
         ]
         hoy = today_in_tz(self.session.timezone).isoformat()
         manana = resolve_relative_fecha("mañana", timezone=self.session.timezone)
+        if self._confirm_mode():
+            return (
+                f"Sos {self.session.nombre_agente}, asistente de {self.session.nombre_empresa}.\n"
+                "FASE: CONFIRMAR ASISTENCIA. Identidad YA confirmada.\n"
+                "PROHIBIDO llamar registrar_resultado_identidad o esperar_titular.\n"
+                "NO das diagnósticos, tratamientos ni recetas por teléfono.\n"
+                f"Paciente: {self.session.nombre_deudor}. "
+                f"Especialidad: {self.session.especialidad}. "
+                f"Médico: {self.session.nombre_medico}. "
+                f"Sucursal: {self.session.sucursal}.\n"
+                f"TURNO YA AGENDADO: {self.session.fecha_turno_spoken} "
+                f"a {self.session.hora_turno_spoken} "
+                f"(ISO {self.session.fecha_turno}).\n"
+                f"Hoy={hoy}. 'mañana'={manana}. Reprogramar hasta={self.session.fecha_limite} "
+                f"(máx {self.session.max_dias} días).\n"
+                "\n"
+                "CÓMO RESPONDER:\n"
+                "- Podés HABLAR en texto libre (empatía, repetir día y hora, repreguntar).\n"
+                "- Si confirma que VA / 'sí asisto' / 'ahí voy' / 'todo bien' → "
+                "confirmar_asistencia.\n"
+                "- Si no puede esa fecha y propone otra → reagendar_cita(fecha_iso).\n"
+                "- Si no quiere el turno / cancela → cancelar_cita.\n"
+                "- responder_kb SOLO ante FAQ (dirección, documentos, costo, hora, médico). "
+                "Después volvé a pedir la confirmación de asistencia.\n"
+                "- finalizar(reagendar_despues) si pide que lo llamen otro día.\n"
+                "No verbalices nombres de tools.\n"
+                f"{custom}\n"
+                f"KB (referencia):\n" + "\n".join(kb_lines)
+            )
         return (
             f"Sos {self.session.nombre_agente}, asistente de agenda de {self.session.nombre_empresa}.\n"
             "FASE: AGENDAR CONSULTA. Identidad YA confirmada.\n"
@@ -72,11 +105,27 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
         )
 
     def tools(self) -> Sequence[Callable[..., Any]]:
+        if self._confirm_mode():
+            return [
+                self.confirmar_asistencia,
+                self.reagendar_cita,
+                self.agendar_cita,
+                self.cancelar_cita,
+                self.finalizar,
+                self.responder_kb,
+            ]
         return [self.agendar_cita, self.finalizar, self.responder_kb]
 
-    @register_tool(type="normal")
-    async def agendar_cita(self, params, fecha_iso: str) -> None:
-        """Agenda la consulta. fecha_iso: AAAA-MM-DD o relativa (hoy/mañana)."""
+    async def _advance_first(self, labels: Sequence[str]) -> bool:
+        for label in labels:
+            if not edge_for(self.flow, self.node_id, label):
+                continue
+            landed = await self.advance(label)
+            if landed:
+                return True
+        return False
+
+    async def _guard_phase(self, params) -> bool:
         if self.session.phase == "identity":
             await params.result_callback(
                 {
@@ -85,12 +134,75 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
                 },
                 properties=_CONTINUE,
             )
-            return
+            return False
         if self.session.phase == "done":
             await params.result_callback(
                 {"ok": False, "error": "Llamada ya cerrada.", "status": self.session.final_status},
                 properties=_WAIT,
             )
+            return False
+        return True
+
+    @register_tool(type="normal")
+    async def confirmar_asistencia(self, params, evidencia: Optional[str] = None) -> None:
+        """El paciente confirma que va a asistir al turno ya agendado."""
+        if not await self._guard_phase(params):
+            return
+        fecha = self.session.fecha_turno or self.session.commitment_date
+        self.session.commitment_date = fecha
+        self.session.commitment_date_spoken = (
+            self.session.fecha_turno_spoken or spoken_date(fecha or "")
+        )
+        self.session.final_status = "Asistencia confirmada"
+        landed = await self._advance_first(
+            ("Asistencia confirmada", "Ya tenía cita", "Ya atendido")
+        )
+        if not landed:
+            if has_node(self.flow, "intent.confirm_attendance"):
+                await self.say_node("intent.confirm_attendance")
+            if has_node(self.flow, "final.end_confirmed"):
+                await self.say_node("final.end_confirmed")
+            await self.set_phase("done")
+        await params.result_callback(
+            {
+                "ok": True,
+                "outcome": "Asistencia confirmada",
+                "appointment_date": fecha,
+                "evidence": evidencia,
+            },
+            properties=_WAIT,
+        )
+
+    @register_tool(type="normal")
+    async def cancelar_cita(self, params, razon: Optional[str] = None) -> None:
+        """Cancela el turno ya agendado. No reprograma."""
+        if not await self._guard_phase(params):
+            return
+        self.session.final_status = "Cita cancelada"
+        landed = await self._advance_first(("Cita cancelada", "Sin cita"))
+        if not landed:
+            if has_node(self.flow, "intent.soft_close_cancelled"):
+                await self.say_node("intent.soft_close_cancelled")
+            if has_node(self.flow, "final.end_cancelled"):
+                await self.say_node("final.end_cancelled")
+            await self.set_phase("done")
+        await params.result_callback(
+            {"ok": True, "outcome": "Cita cancelada", "reason": razon},
+            properties=_WAIT,
+        )
+
+    @register_tool(type="normal")
+    async def reagendar_cita(self, params, fecha_iso: str) -> None:
+        """Reprograma el turno existente a otra fecha (AAAA-MM-DD o hoy/mañana)."""
+        await self._book_date(params, fecha_iso, confirm_mode=True)
+
+    @register_tool(type="normal")
+    async def agendar_cita(self, params, fecha_iso: str) -> None:
+        """Agenda o reprograma la consulta. fecha_iso: AAAA-MM-DD o relativa (hoy/mañana)."""
+        await self._book_date(params, fecha_iso, confirm_mode=self._confirm_mode())
+
+    async def _book_date(self, params, fecha_iso: str, *, confirm_mode: bool) -> None:
+        if not await self._guard_phase(params):
             return
 
         resolved = resolve_relative_fecha(fecha_iso, timezone=self.session.timezone)
@@ -103,18 +215,24 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
         if ok and normalized:
             self.session.commitment_date = normalized
             self.session.commitment_date_spoken = spoken_date(normalized)
-            self.session.final_status = "Cita agendada"
-            landed = await self.advance("Cita agendada")
+            if confirm_mode:
+                self.session.final_status = "Cita reagendada"
+                labels = ("Cita reagendada", "Cita agendada")
+                fallbacks = ("intent.confirm_reschedule", "final.end_rescheduled", "final.end_commitment")
+            else:
+                self.session.final_status = "Cita agendada"
+                labels = ("Cita agendada", "Cita reagendada")
+                fallbacks = ("intent.confirm_commitment", "final.end_commitment")
+            landed = await self._advance_first(labels)
             if not landed:
-                if has_node(self.flow, "intent.confirm_commitment"):
-                    await self.say_node("intent.confirm_commitment")
-                if has_node(self.flow, "final.end_commitment"):
-                    await self.say_node("final.end_commitment")
+                for node_id in fallbacks:
+                    if has_node(self.flow, node_id):
+                        await self.say_node(node_id)
                 await self.set_phase("done")
             await params.result_callback(
                 {
                     "ok": True,
-                    "outcome": "Cita agendada",
+                    "outcome": self.session.final_status,
                     "appointment_date": normalized,
                     "resolved_from": fecha_iso,
                 },
@@ -127,8 +245,13 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
         max_attempts = int(node_params.get("max_attempts") or 3)
         if self.session.negotiation_attempts >= max_attempts:
             self.session.final_status = "Reagendar después"
-            await self.say_node("final.end_intencion_de_pago")
-            await self.set_phase("done")
+            landed = await self._advance_first(("Reagendar después",))
+            if not landed:
+                if has_node(self.flow, "final.end_callback"):
+                    await self.say_node("final.end_callback")
+                elif has_node(self.flow, "final.end_intencion_de_pago"):
+                    await self.say_node("final.end_intencion_de_pago")
+                await self.set_phase("done")
             await params.result_callback(
                 {"ok": True, "outcome": "Reagendar después"}, properties=_WAIT
             )
@@ -188,25 +311,29 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
                 properties=_WAIT,
             )
             return
+        if resultado == "ya_agendada" and self._confirm_mode():
+            await self.confirmar_asistencia(params, evidencia=razon)
+            return
+        if resultado == "sin_cita" and self._confirm_mode():
+            await self.cancelar_cita(params, razon=razon)
+            return
         mapping = {
-            "sin_cita": ("Sin cita", "Sin cita"),
-            "ya_agendada": ("Ya tenía cita", "Ya atendido"),
-            "reagendar_despues": ("Reagendar después", "Intención de agendar"),
+            "sin_cita": ("Sin cita", ("Sin cita", "Cita cancelada")),
+            "ya_agendada": ("Ya tenía cita", ("Ya tenía cita", "Ya atendido", "Asistencia confirmada")),
+            "reagendar_despues": ("Reagendar después", ("Reagendar después",)),
         }
-        status, label = mapping[resultado]
+        status, labels = mapping[resultado]
         self.session.final_status = status
-        landed = await self.advance(label)
+        landed = await self._advance_first(labels)
         if not landed:
             fallbacks = {
-                "sin_cita": ("intent.soft_close_no_commitment", "final.end_no_commitment"),
-                "ya_agendada": (None, "final.end_paid"),
-                "reagendar_despues": (None, "final.end_intencion_de_pago"),
+                "sin_cita": ("intent.soft_close_no_commitment", "intent.soft_close_cancelled", "final.end_cancelled", "final.end_no_commitment"),
+                "ya_agendada": ("intent.confirm_attendance", "final.end_confirmed", "final.end_paid"),
+                "reagendar_despues": ("final.end_callback", "final.end_intencion_de_pago"),
             }
-            soft, final_id = fallbacks[resultado]
-            if soft and has_node(self.flow, soft):
-                await self.say_node(soft)
-            if final_id and has_node(self.flow, final_id):
-                await self.say_node(final_id)
+            for node_id in fallbacks[resultado]:
+                if has_node(self.flow, node_id):
+                    await self.say_node(node_id)
             await self.set_phase("done")
         await params.result_callback(
             {"ok": True, "outcome": status, "reason": razon}, properties=_WAIT

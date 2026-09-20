@@ -10,10 +10,8 @@ Arranque:
 """
 from __future__ import annotations
 
-import json
 import os
 import sys
-from pathlib import Path
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -40,14 +38,14 @@ from pipecat.workers.runner import WorkerRunner
 
 from app.orchestrator import FlowController, build_session
 from app.pipecat_runtime.deepseek_llm import BitbitDeepSeekLLMService
-from app.utils.templates import render_template
+from app.pipecat_runtime.hud import attach_hud, wire_text_input
+from app.pipecat_runtime.studio import install_studio_frontend, merge_call_metadata
+from app.utils.call_metadata import load_call_metadata
+from app.utils.templates import render_template, split_tts_utterances
 
 _THINKING_OFF = DeepSeekLLMService.ThinkingConfig(type="disabled")
 
 load_dotenv(override=True)
-
-ROOT = Path(__file__).resolve().parents[2]
-PRESET = ROOT / "presets" / "demo_call.json"
 
 
 class ClosedSessionGate(FrameProcessor):
@@ -133,15 +131,7 @@ def _build_tts():
 
 
 def _load_metadata() -> dict:
-    raw = os.getenv("BITBIT_METADATA_JSON", "").strip()
-    if raw:
-        return json.loads(raw)
-    path = os.getenv("BITBIT_METADATA_FILE", "").strip()
-    if path and Path(path).exists():
-        return json.loads(Path(path).read_text(encoding="utf-8"))
-    if PRESET.exists():
-        return json.loads(PRESET.read_text(encoding="utf-8"))
-    return {}
+    return load_call_metadata()
 
 
 transport_params = {
@@ -164,7 +154,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     require_config()
     logger.info("Starting clinica-vida agent on Pipecat")
 
-    metadata = _load_metadata()
+    metadata = merge_call_metadata(_load_metadata(), runner_args)
     session, flow = build_session(metadata)
 
     whisper_model = os.getenv("WHISPER_MODEL", "base")
@@ -179,13 +169,16 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     deepseek_model = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
 
     async def speak(text: str) -> None:
-        await tts.queue_frame(TTSSpeakFrame(text))
+        for chunk in split_tts_utterances(text):
+            await tts.queue_frame(TTSSpeakFrame(chunk))
 
     llm_holder: dict = {}
     worker_holder: dict = {}
+    hud = attach_hud(session, transport)
 
     async def on_phase(phase: str) -> None:
         """Swap system prompt + tools. Never call llm.set_settings (missing on DeepSeek)."""
+        await hud.emit_phase(phase)
         llm = llm_holder.get("llm")
         ctx = llm_holder.get("context")
         ctrl = llm_holder.get("controller")
@@ -231,6 +224,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         context,
         user_params=LLMUserAggregatorParams(vad_analyzer=SileroVADAnalyzer()),
     )
+    wire_text_input(transport, user_aggregator)
 
     pipeline = Pipeline(
         [
@@ -251,6 +245,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             enable_metrics=True,
             enable_usage_metrics=True,
         ),
+        observers=[hud],
         idle_timeout_secs=runner_args.pipeline_idle_timeout_secs,
         # One DeepSeek 400 must not tear down the whole WebRTC call.
         processor_unusable_policy=ProcessorUnusablePolicy.CONTINUE,
@@ -261,6 +256,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 
     @transport.event_handler("on_client_connected")
     async def on_client_connected(transport, client):
+        await hud.emit_session()
         logger.info(
             "Client connected call_id={} paciente={}",
             session.call_id,
@@ -296,6 +292,7 @@ def main() -> None:
     require_config()
     from pipecat.runner.run import main as pipecat_main
 
+    install_studio_frontend()
     pipecat_main()
 
 

@@ -4,7 +4,7 @@
     "visible_name": "clinica_vida",
     "flow_type": "test",
     "enabled": true,
-    "description": "Flujo de consultas médicas: confirmar paciente y agendar cita (stack OSS).",
+    "description": "Recordatorio de turno: confirmar asistencia, reagendar, cancelar y FAQ.",
     "fields": [
       {
         "label": "Nombre del paciente",
@@ -35,12 +35,24 @@
         "field": "sucursal",
         "type": "text",
         "required": false
+      },
+      {
+        "label": "Fecha del turno",
+        "field": "fecha_turno",
+        "type": "date",
+        "required": true
+      },
+      {
+        "label": "Hora del turno",
+        "field": "hora_turno",
+        "type": "text",
+        "required": false
       }
     ],
     "knowledge_base": {
       "file": "clinica_vida.json",
       "company_id": "clinica-vida-demo",
-      "description": "FAQ de consultas médicas."
+      "description": "FAQ de consultas médicas y recordatorio de turno."
     },
     "company_id": "clinica-vida-demo"
   },
@@ -57,7 +69,7 @@
         "task_type": "IdentityVerificationTask",
         "params": {
           "max_retries": 2,
-          "identity_identificacion_breve": "Hola, buen día. Mi nombre es {nombre_agente}, le hablo de {nombre_empresa} para coordinar su consulta médica."
+          "identity_identificacion_breve": "Hola, buen día. Mi nombre es {nombre_agente}, le hablo de {nombre_empresa} para confirmar su asistencia a un turno."
         },
         "on": {
           "Entregado": {
@@ -86,10 +98,10 @@
       },
       "intent.opening": {
         "type": "intention",
-        "label": "Apertura y motivo de llamada",
+        "label": "Apertura: turno ya agendado",
         "delivery": "say",
         "interruptible": false,
-        "prompt": "Hola {nombre_deudor}, soy {nombre_agente} de {nombre_empresa}. Lo contacto para agendar su consulta de {especialidad} con {nombre_medico} en {sucursal}. ¿Le vendría bien una cita esta semana, por ejemplo hoy o mañana?",
+        "prompt": "Hola {nombre_deudor}, soy {nombre_agente} de {nombre_empresa}. Tiene un turno de {especialidad} con {nombre_medico} el {fecha_turno_spoken} a {hora_turno_spoken} en {sucursal}. ¿Me confirma que va a asistir?",
         "on": {
           "always": {
             "goto": "task.negotiation"
@@ -98,79 +110,119 @@
       },
       "task.negotiation": {
         "type": "task",
-        "label": "Agendar consulta",
+        "label": "Confirmar asistencia al turno",
         "task_type": "AppointmentSchedulingTask",
         "params": {
-          "invalid_date_message": "Entiendo. Esa fecha queda fuera de la agenda disponible. Podemos ofrecerle turnos hasta el {fecha_limite}. ¿Prefiere otro día dentro de ese plazo?",
+          "mode": "confirm_attendance",
+          "invalid_date_message": "Entiendo. Esa fecha queda fuera de la agenda disponible. Podemos reprogramar hasta el {fecha_limite}. ¿Prefiere otro día dentro de ese plazo?",
           "invalid_date_retry_message": "Comprendo. Para {especialidad} tenemos disponibilidad hasta el {fecha_limite}. ¿Le funciona alguna fecha dentro de ese rango?",
           "max_dias": "{max_dias}",
           "max_attempts": 3,
-          "custom_instructions": "Mantén un tono cordial, profesional y empático. Sos asistente de agenda médica, NO das diagnósticos ni recetas. Si el paciente describe síntomas, escuchá con empatía y ofrecé agendar cuanto antes con el especialista. Si no puede esa semana, ofrecé la fecha más cercana disponible. Confirmá siempre día y, si lo menciona, franja (mañana/tarde). Nunca inventes horarios exactos que no estén en la KB."
+          "custom_instructions": "El turno YA EXISTE: {fecha_turno_spoken} a {hora_turno_spoken} con {nombre_medico} en {sucursal}. Objetivo: confirmar asistencia. Tono cordial y breve. NO des diagnósticos ni recetas. Si pregunta dirección, documentos, costo u horarios: responder_kb y volvé a confirmar. Si no puede ir: ofrecé reagendar. Si no quiere el turno: cancelar_cita. Nunca inventes otra hora que no sea {hora_turno_spoken} salvo que reagende."
         },
         "on": {
-          "Cita agendada": {
+          "Asistencia confirmada": {
             "action": "set_status",
-            "status": "Cita agendada",
-            "commitment_date": "result.commitment_date",
-            "goto": "intent.confirm_commitment"
-          },
-          "Sin cita": {
-            "action": "set_status",
-            "status": "Sin cita",
-            "goto": "intent.soft_close_no_commitment"
+            "status": "Asistencia confirmada",
+            "goto": "intent.confirm_attendance"
           },
           "Ya tenía cita": {
             "action": "set_status",
-            "status": "Ya tenía cita",
-            "goto": "final.end_paid"
+            "status": "Asistencia confirmada",
+            "goto": "intent.confirm_attendance"
+          },
+          "Ya atendido": {
+            "action": "set_status",
+            "status": "Asistencia confirmada",
+            "goto": "intent.confirm_attendance"
+          },
+          "Cita reagendada": {
+            "action": "set_status",
+            "status": "Cita reagendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_reschedule"
+          },
+          "Cita agendada": {
+            "action": "set_status",
+            "status": "Cita reagendada",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_reschedule"
+          },
+          "Cita cancelada": {
+            "action": "set_status",
+            "status": "Cita cancelada",
+            "goto": "intent.soft_close_cancelled"
+          },
+          "Sin cita": {
+            "action": "set_status",
+            "status": "Cita cancelada",
+            "goto": "intent.soft_close_cancelled"
           },
           "Reagendar después": {
             "action": "set_status",
             "status": "Reagendar después",
-            "goto": "final.end_intencion_de_pago"
+            "goto": "final.end_callback"
           }
         }
       },
-      "intent.confirm_commitment": {
+      "intent.confirm_attendance": {
         "type": "intention",
-        "label": "Confirmar cita",
+        "label": "Asistencia confirmada",
         "delivery": "say",
         "interruptible": false,
-        "prompt": "Perfecto. Queda agendada su consulta de {especialidad} con {nombre_medico} el día {commitment_date_spoken} en {sucursal}. Le pedimos llegar diez minutos antes con documento de identidad. ¿Tiene alguna otra consulta?",
+        "prompt": "Queda confirmada su asistencia el {fecha_turno_spoken} a {hora_turno_spoken} con {nombre_medico} en {sucursal}. Le pedimos llegar diez minutos antes con documento de identidad. ¿Tiene alguna otra consulta?",
         "on": {
           "always": {
-            "goto": "final.end_commitment"
+            "goto": "final.end_confirmed"
           }
         }
       },
-      "intent.soft_close_no_commitment": {
+      "intent.confirm_reschedule": {
         "type": "intention",
-        "label": "Cierre sin cita",
+        "label": "Turno reprogramado",
         "delivery": "say",
         "interruptible": false,
-        "prompt": "Entiendo. Gracias por su tiempo. Cuando desee agendar, puede llamar a {nombre_empresa} o contactarnos por WhatsApp.",
+        "prompt": "Listo. Reprogramamos su consulta de {especialidad} con {nombre_medico} para el {commitment_date_spoken} en {sucursal}. Llegue diez minutos antes con documento. ¿Algo más?",
         "on": {
           "always": {
-            "goto": "final.end_no_commitment"
+            "goto": "final.end_rescheduled"
           }
         }
       },
-      "final.end_commitment": {
+      "intent.soft_close_cancelled": {
+        "type": "intention",
+        "label": "Cierre por cancelación",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entendido, cancelamos el turno del {fecha_turno_spoken}. Cuando quiera uno nuevo puede llamar a {nombre_empresa}.",
+        "on": {
+          "always": {
+            "goto": "final.end_cancelled"
+          }
+        }
+      },
+      "final.end_confirmed": {
         "type": "final",
-        "label": "Despedida (cita agendada)",
-        "prompt": "Muchas gracias {nombre_deudor}. Lo esperamos el {commitment_date_spoken} en {sucursal}. Que tenga un excelente día.",
+        "label": "Despedida (asistencia confirmada)",
+        "prompt": "Muchas gracias {nombre_deudor}. Lo esperamos el {fecha_turno_spoken} a {hora_turno_spoken} en {sucursal}. Que tenga un excelente día.",
         "delivery": "say"
       },
-      "final.end_no_commitment": {
+      "final.end_rescheduled": {
         "type": "final",
-        "label": "Despedida (sin cita)",
-        "prompt": "Gracias por su tiempo. Que tenga buen día.",
+        "label": "Despedida (reagendado)",
+        "prompt": "Gracias {nombre_deudor}. Lo esperamos el {commitment_date_spoken} en {sucursal}. Que tenga buen día.",
         "delivery": "say"
       },
-      "final.end_paid": {
+      "final.end_cancelled": {
         "type": "final",
-        "label": "Despedida (ya tenía cita)",
-        "prompt": "Perfecto, entonces ya cuenta con su turno registrado. Gracias por confirmar. Que tenga buen día.",
+        "label": "Despedida (turno cancelado)",
+        "prompt": "Gracias por avisar. Queda cancelado el turno. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_callback": {
+        "type": "final",
+        "label": "Despedida (llamar después)",
+        "prompt": "Gracias. Dejamos registro para volver a contactarlo y reprogramar el turno. Que tenga buen día.",
         "delivery": "say"
       },
       "final.end_wrong": {
@@ -182,7 +234,7 @@
       "final.end_recado": {
         "type": "final",
         "label": "Despedida (recado)",
-        "prompt": "Gracias. Por favor comuníquele que desde {nombre_empresa} llamamos para agendar su consulta médica.",
+        "prompt": "Gracias. Por favor comuníquele que desde {nombre_empresa} llamamos para confirmar su asistencia al turno del {fecha_turno_spoken} a {hora_turno_spoken}.",
         "delivery": "say"
       },
       "final.end_mailbox": {
@@ -193,8 +245,8 @@
       },
       "final.end_intencion_de_pago": {
         "type": "final",
-        "label": "Despedida (reagendar después)",
-        "prompt": "Gracias por su tiempo. Dejamos registro para volver a contactarlo y agendar su consulta más adelante.",
+        "label": "Despedida (reagendar después, alias)",
+        "prompt": "Gracias por su tiempo. Dejamos registro para volver a contactarlo y reprogramar su consulta.",
         "delivery": "say"
       }
     }

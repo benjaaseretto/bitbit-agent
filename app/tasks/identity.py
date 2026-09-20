@@ -15,6 +15,109 @@ from app.utils.tools_registry import register_tool
 _WAIT = FunctionCallResultProperties(run_llm=False)
 _CONTINUE = FunctionCallResultProperties(run_llm=True)
 
+_RESULTADO_ALIASES = {
+    "tercero": "recado",
+    "tercero_conocido": "recado",
+    "third_party": "recado",
+    "wrong_person": "persona_equivocada",
+    "equivocado": "persona_equivocada",
+    "mailbox": "buzon",
+    "voicemail": "buzon",
+    "fallecido": "titular_fallecido",
+}
+
+_CONFIRM_MARKERS = (
+    "sí",
+    "si ",
+    "si,",
+    "soy yo",
+    "correcto",
+    "así es",
+    "asi es",
+    "claro",
+    "dígame",
+    "digame",
+    "habla con él",
+    "habla con el",
+    "habla con ella",
+    "con él",
+    "con ella",
+)
+_DENY_MARKERS = (
+    "no soy",
+    "no es",
+    "equivocad",
+    "número equivocado",
+    "numero equivocado",
+    "se equivocó",
+    "se equivoco",
+    "no me llamo",
+    "persona equivocada",
+    "no es ella",
+    "no es él",
+    "no es el",
+)
+
+
+def _fold_name(raw: str) -> str:
+    import unicodedata
+
+    norm = unicodedata.normalize("NFD", (raw or "").lower())
+    return "".join(ch for ch in norm if unicodedata.category(ch) != "Mn")
+
+
+def _first_name(raw: str) -> str:
+    parts = _fold_name(raw).replace(",", " ").split()
+    return parts[0] if parts else ""
+
+
+def _names_close(heard: str, expected: str) -> bool:
+    a, b = _fold_name(heard), _fold_name(expected)
+    if not a or not b:
+        return False
+    if a == b or a in b or b in a:
+        return True
+    return len(a) >= 4 and len(b) >= 4 and a[:4] == b[:4]
+
+
+def _looks_like_denial(evidencia: str) -> bool:
+    low = (evidencia or "").strip().lower()
+    return any(marker in low for marker in _DENY_MARKERS)
+
+
+def _looks_like_confirmation(evidencia: str, nombre: str) -> bool:
+    raw = (evidencia or "").strip()
+    if not raw:
+        return False
+    if _looks_like_denial(raw):
+        return False
+    low = raw.lower()
+    if any(marker in low for marker in _CONFIRM_MARKERS):
+        return True
+    expected = _first_name(nombre)
+    for token in _fold_name(raw).split():
+        if expected and _names_close(token, expected):
+            return True
+    return False
+
+
+def coerce_identity_resultado(resultado: str, evidencia: str, nombre: str) -> str:
+    """STT confunde nombres (Carla→Carlos). No colgar sin negativa clara."""
+    if resultado != "persona_equivocada":
+        return resultado
+    if _looks_like_confirmation(evidencia, nombre):
+        logger.warning(
+            "identity: equivocado anulado (confirmación/STT) evidencia={!r}", evidencia
+        )
+        return "titular_confirmado"
+    if not _looks_like_denial(evidencia):
+        logger.warning(
+            "identity: equivocado anulado (sin negativa) evidencia={!r}", evidencia
+        )
+        return "repregunta"
+    return resultado
+
+
 _HANDOFF_MARKERS = (
     "paso",
     "pasar",
@@ -49,20 +152,26 @@ class IdentityVerificationTask(BaseTask):
         )
         return (
             f"Sos {self.session.nombre_agente}, asistente de voz de {self.session.nombre_empresa}. "
-            "Estás en VERIFICACIÓN DE IDENTIDAD del paciente.\n"
+            "Estás en VERIFICACIÓN DE IDENTIDAD del contacto.\n"
             f"Apertura: {apertura}\n"
             f"Pregunta clave: ¿Hablo con {self.session.nombre_deudor}?\n"
             "Usá SOLO tools. No des diagnósticos ni recetas. No digas nombres de tools.\n"
             "\n"
             "REGLAS ESTRICTAS:\n"
-            f"- Si dice que SÍ es {self.session.nombre_deudor} / 'sí soy yo' / 'habla con él' → "
+            f"- Si dice SÍ / 'sí soy yo' / 'correcto' / un nombre parecido a "
+            f"{self.session.nombre_deudor} (el STT confunde Carla/Carlos) → "
             "registrar_resultado_identidad(titular_confirmado) con evidencia literal.\n"
-            "- Si no es y no lo conoce → persona_equivocada.\n"
+            "- persona_equivocada SOLO con negativa clara ('no soy', 'número equivocado'). "
+            "Audio raro → repregunta_identidad. NUNCA cuelgues por un nombre mal transcrito.\n"
             "- Si es tercero que lo conoce y deja recado → recado.\n"
             "- Si es buzón → buzon.\n"
-            "- esperar_titular SOLO si dice explícitamente que VA A PASAR al paciente "
+            "- esperar_titular SOLO si dice explícitamente que VA A PASAR al contacto "
             "('se lo paso', 'un momento', 'espere'). NO la uses con audio confuso.\n"
+            "- Si pregunta de parte de quién / quién habla / me repite → "
+            "aclarar_quien_habla. NO uses recado ni repregunta sola.\n"
             "- Si no entendiste / ruido / no responde claro → repregunta_identidad.\n"
+            "- resultado SOLO: titular_confirmado | persona_equivocada | recado | "
+            "buzon | titular_fallecido. NUNCA 'tercero'.\n"
             "- NUNCA llames esperar_titular dos veces seguidas ni con frases sin sentido."
         )
 
@@ -70,6 +179,7 @@ class IdentityVerificationTask(BaseTask):
         return [
             self.esperar_titular,
             self.repregunta_identidad,
+            self.aclarar_quien_habla,
             self.registrar_resultado_identidad,
         ]
 
@@ -86,6 +196,21 @@ class IdentityVerificationTask(BaseTask):
             f"Disculpe, ¿me confirma si hablo con {self.session.nombre_deudor}?"
         )
         await params.result_callback({"ok": True, "action": "reprompt"}, properties=_WAIT)
+
+    @register_tool(type="normal")
+    async def aclarar_quien_habla(self, params) -> None:
+        """Si pregunta de parte de quién, quién habla, o pide que le repitas."""
+        if self.session.phase != "identity":
+            await params.result_callback(
+                {"ok": False, "error": "Ya no estás en identidad.", "phase": self.session.phase},
+                properties=_CONTINUE,
+            )
+            return
+        await self.speak(
+            f"Soy {self.session.nombre_agente}, de {self.session.nombre_empresa}. "
+            f"¿Hablo con {self.session.nombre_deudor}?"
+        )
+        await params.result_callback({"ok": True, "action": "identify"}, properties=_WAIT)
 
     @register_tool(type="normal")
     async def esperar_titular(self, params, evidencia: Optional[str] = None) -> None:
@@ -159,6 +284,36 @@ class IdentityVerificationTask(BaseTask):
             "buzon": ("Buzon de Voz", "Buzon de Voz"),
             "titular_fallecido": ("Fallecido", "Fallecido"),
         }
+        resultado = _RESULTADO_ALIASES.get(str(resultado), resultado)
+        resultado = coerce_identity_resultado(
+            str(resultado), evidencia or "", self.session.nombre_deudor
+        )
+        if resultado == "repregunta":
+            await self.speak(
+                f"Disculpe, ¿me confirma si hablo con {self.session.nombre_deudor}?"
+            )
+            await params.result_callback(
+                {
+                    "ok": False,
+                    "reprompt": True,
+                    "note": "No cuelgues. Pedí confirmación otra vez.",
+                },
+                properties=_WAIT,
+            )
+            return
+        if resultado not in mapping:
+            await self.speak(
+                f"Disculpe, ¿me confirma si hablo con {self.session.nombre_deudor}?"
+            )
+            await params.result_callback(
+                {
+                    "ok": False,
+                    "error": f"resultado inválido: {resultado}",
+                    "allowed": list(mapping),
+                },
+                properties=_WAIT,
+            )
+            return
         if resultado == "titular_confirmado" and not (evidencia or "").strip():
             await params.result_callback(
                 {"error": "Falta evidencia literal del turno que confirma identidad."},

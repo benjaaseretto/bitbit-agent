@@ -30,7 +30,8 @@ def test_clinica_spec_shape():
     graph = data["flow_graph"]
     assert graph["start"] == "task.identity_verification"
     assert graph["nodes"]["task.negotiation"]["task_type"] == "AppointmentSchedulingTask"
-    assert "consulta" in graph["nodes"]["intent.opening"]["prompt"].lower()
+    assert "consulta" in graph["nodes"]["intent.opening"]["prompt"].lower() or "turno" in graph["nodes"]["intent.opening"]["prompt"].lower()
+    assert graph["nodes"]["task.negotiation"]["params"]["mode"] == "confirm_attendance"
 
 
 def test_clinica_kb_exists():
@@ -47,6 +48,8 @@ def test_build_session_from_preset():
     assert session.nombre_empresa == "Clínica Vida"
     assert session.especialidad == "medicina general"
     assert flow["flow_graph"]["start"] == "task.identity_verification"
+    assert session.fecha_turno
+    assert session.hora_turno_spoken
     assert len(session.knowledge_base) >= 5
 
 
@@ -101,14 +104,117 @@ async def test_script_titular_ok():
 
 
 @pytest.mark.asyncio
-async def test_script_persona_equivocada():
+async def test_identity_stt_carlos_does_not_hang_up():
+    ctrl, session, spoken = _controller()
+    params, cb = _params()
+    await ctrl.registrar_resultado_identidad(
+        params, resultado="persona_equivocada", evidencia="Sí, soy Carlos."
+    )
+    assert session.final_status == "Entregado"
+    assert session.phase == "negotiation"
+    cb.assert_awaited()
+    ctrl, session, spoken = _controller()
+    params, cb = _params()
+    await ctrl.registrar_resultado_identidad(
+        params, resultado="tercero", evidencia="acá está el hermano"
+    )
+    assert session.final_status == "Recado conocido"
+    assert session.phase == "done"
+    assert spoken
+    cb.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_aclarar_quien_habla_stays_in_identity():
+    ctrl, session, spoken = _controller()
+    params, cb = _params()
+    await ctrl.aclarar_quien_habla(params)
+    assert session.phase == "identity"
+    assert any("clínica vida" in s.lower() or "clinica vida" in s.lower() for s in spoken)
+    assert any("juan" in s.lower() for s in spoken)
+    cb.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_script_persona_equivocada_repregunta_sin_negativa():
     ctrl, session, spoken = _controller()
     params, cb = _params()
     await ctrl.registrar_resultado_identidad(params, resultado="persona_equivocada")
+    assert session.phase == "identity"
+    assert session.final_status != "Equivocado"
+    assert any("hablo con" in s.lower() for s in spoken)
+    cb.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_script_persona_equivocada_cuelga_con_negativa():
+    ctrl, session, spoken = _controller()
+    params, cb = _params()
+    await ctrl.registrar_resultado_identidad(
+        params,
+        resultado="persona_equivocada",
+        evidencia="no soy ella, número equivocado",
+    )
     assert session.final_status == "Equivocado"
     assert session.phase == "done"
     assert spoken
     cb.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_script_confirma_asistencia():
+    ctrl, session, spoken = _controller()
+    params, _ = _params()
+    await ctrl.registrar_resultado_identidad(
+        params, resultado="titular_confirmado", evidencia="soy yo"
+    )
+    spoken.clear()
+    params2, cb2 = _params()
+    await ctrl.confirmar_asistencia(params2, evidencia="sí, voy")
+    assert session.final_status == "Asistencia confirmada"
+    assert session.phase == "done"
+    assert session.commitment_date == session.fecha_turno
+    assert any("confirm" in s.lower() or "esperamos" in s.lower() for s in spoken)
+    cb2.assert_awaited()
+
+
+@pytest.mark.asyncio
+async def test_script_cancela_turno():
+    ctrl, session, spoken = _controller()
+    params, _ = _params()
+    await ctrl.registrar_resultado_identidad(
+        params, resultado="titular_confirmado", evidencia="soy yo"
+    )
+    spoken.clear()
+    params2, cb2 = _params()
+    await ctrl.cancelar_cita(params2, razon="no puedo ir")
+    assert session.final_status == "Cita cancelada"
+    assert session.phase == "done"
+    assert spoken
+    cb2.assert_awaited()
+
+
+def test_spoken_clock():
+    from app.utils.dates import spoken_clock, spoken_greeting
+
+    assert spoken_clock("10:00") == "las diez de la mañana"
+    assert "una" in spoken_clock("13:15")
+    assert spoken_greeting("America/Mexico_City") in {
+        "Buenos días",
+        "Buenas tardes",
+        "Buenas noches",
+    }
+
+
+def test_render_template_strips_unresolved_placeholders():
+    from app.utils.templates import render_template
+
+    text = render_template(
+        "{saludo_por_horario}, mi nombre es {nombre_agente}. Debe {total_balance_palabras}.",
+        {"saludo_por_horario": "Buenos días", "nombre_agente": "Ana"},
+    )
+    assert text == "Buenos días, mi nombre es Ana. Debe."
+    assert "{" not in text
 
 
 @pytest.mark.asyncio
@@ -121,7 +227,7 @@ async def test_script_cita_fecha_valida():
     params2, cb2 = _params()
     fecha = (today_in_tz(session.timezone) + timedelta(days=2)).isoformat()
     await ctrl.agendar_cita(params2, fecha_iso=fecha)
-    assert session.final_status == "Cita agendada"
+    assert session.final_status == "Cita reagendada"
     assert session.commitment_date == fecha
     assert session.phase == "done"
     cb2.assert_awaited()
@@ -193,7 +299,7 @@ async def test_cita_fecha_relativa():
     params2, cb2 = _params()
     await ctrl.agendar_cita(params2, fecha_iso="mañana")
     expected = (today_in_tz(session.timezone) + timedelta(days=1)).isoformat()
-    assert session.final_status == "Cita agendada"
+    assert session.final_status == "Cita reagendada"
     assert session.commitment_date == expected
     assert session.phase == "done"
     cb2.assert_awaited()
@@ -259,12 +365,12 @@ async def test_finalizar_no_sobrescribe_cita_cerrada():
     fecha = (today_in_tz(session.timezone) + timedelta(days=1)).isoformat()
     params2, _ = _params()
     await ctrl.agendar_cita(params2, fecha_iso=fecha)
-    assert session.final_status == "Cita agendada"
+    assert session.final_status == "Cita reagendada"
     assert session.phase == "done"
     spoken.clear()
     params3, cb3 = _params()
     await ctrl.finalizar(params3, resultado="sin_cita")
-    assert session.final_status == "Cita agendada"
+    assert session.final_status == "Cita reagendada"
     assert session.commitment_date == fecha
     assert not spoken
     assert cb3.await_args.args[0].get("already") is True

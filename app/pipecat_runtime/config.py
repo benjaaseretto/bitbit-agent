@@ -22,7 +22,8 @@ DEEPSEEK_MODEL = "deepseek-flash"
 
 
 def load_config_env() -> None:
-    # .env.mac primero (perfil Mac); .env general puede aportar DEEPSEEK_API_KEY
+    # .env.local gana (TEST_* de prueba, como colly). Luego perfil Mac y .env general.
+    load_dotenv(ROOT / ".env.local", override=False)
     load_dotenv(ROOT / ".env.mac", override=False)
     load_dotenv(ROOT / ".env", override=False)
 

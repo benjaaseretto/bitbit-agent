@@ -25,10 +25,101 @@ def edge_for(flow: dict[str, Any], node_id: str, label: str) -> dict[str, Any]:
     return {}
 
 
-def goto_for(flow: dict[str, Any], node_id: str, label: str) -> Optional[str]:
-    edge = edge_for(flow, node_id, label)
+def _session_field(session: Any, field: str) -> Any:
+    extra = getattr(session, "variables", None) or {}
+    if field in extra and extra[field] not in (None, ""):
+        return extra[field]
+    vars_ = session.as_template_vars() if hasattr(session, "as_template_vars") else {}
+    return vars_.get(field)
+
+
+def _as_number(raw: Any) -> Optional[float]:
+    try:
+        return float(str(raw).strip().replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
+def _rule_matches(rule: dict[str, Any], raw: Any) -> bool:
+    op = str(rule.get("op") or "==").strip()
+    if op in (">=", "<=", ">", "<", "between"):
+        left = _as_number(raw)
+        if left is None:
+            return False
+        if op == "between":
+            lo = _as_number(rule.get("min"))
+            hi = _as_number(rule.get("max"))
+            return lo is not None and hi is not None and lo <= left <= hi
+        right = _as_number(rule.get("value"))
+        if right is None:
+            return False
+        if op == ">=":
+            return left >= right
+        if op == "<=":
+            return left <= right
+        if op == ">":
+            return left > right
+        return left < right
+    left_s = str(raw).strip()
+    right_s = str(rule.get("value") if "value" in rule else "").strip()
+    if op in ("==", "eq"):
+        return left_s.lower() == right_s.lower()
+    if op in ("!=", "ne"):
+        return left_s.lower() != right_s.lower()
+    return False
+
+
+def goto_from_edge(edge: dict[str, Any], session: Any = None) -> Optional[str]:
+    """Resuelve `goto` o `goto_by` (cases, rules numéricas, default)."""
+    if not isinstance(edge, dict) or not edge:
+        return None
     goto = edge.get("goto")
-    return str(goto) if goto else None
+    if goto:
+        return str(goto)
+    by = edge.get("goto_by")
+    if not isinstance(by, dict):
+        return None
+    field = str(by.get("field") or "")
+    raw = _session_field(session, field) if session is not None and field else None
+    if raw is not None:
+        for rule in by.get("rules") or []:
+            if isinstance(rule, dict) and rule.get("goto") and _rule_matches(rule, raw):
+                return str(rule["goto"])
+        cases = by.get("cases") or {}
+        key = str(raw)
+        if key in cases:
+            return str(cases[key])
+        low = key.lower()
+        for case_key, dest in cases.items():
+            if str(case_key).lower() == low:
+                return str(dest)
+    default = by.get("default")
+    return str(default) if default else None
+
+
+def prompt_from_by(by: dict[str, Any], session: Any = None) -> str:
+    """Elige template de `prompt_by` (rules / cases / default)."""
+    if not isinstance(by, dict):
+        return ""
+    field = str(by.get("field") or "")
+    raw = _session_field(session, field) if session is not None and field else None
+    if raw is not None:
+        for rule in by.get("rules") or []:
+            if isinstance(rule, dict) and _rule_matches(rule, raw):
+                return str(rule.get("template") or rule.get("prompt") or "")
+        cases = by.get("cases") or {}
+        key = str(raw)
+        if key in cases:
+            return str(cases[key])
+        low = key.lower()
+        for case_key, dest in cases.items():
+            if str(case_key).lower() == low:
+                return str(dest)
+    return str(by.get("default") or "")
+
+
+def goto_for(flow: dict[str, Any], node_id: str, label: str, session: Any = None) -> Optional[str]:
+    return goto_from_edge(edge_for(flow, node_id, label), session)
 
 
 def first_existing(flow: dict[str, Any], candidates: list[str]) -> Optional[str]:
@@ -38,8 +129,8 @@ def first_existing(flow: dict[str, Any], candidates: list[str]) -> Optional[str]
     return None
 
 
-def identity_success_goto(flow: dict[str, Any]) -> str:
-    goto = goto_for(flow, "task.identity_verification", "Entregado")
+def identity_success_goto(flow: dict[str, Any], session: Any = None) -> str:
+    goto = goto_for(flow, "task.identity_verification", "Entregado", session)
     if goto and has_node(flow, goto):
         return goto
     found = first_existing(
@@ -55,13 +146,11 @@ def identity_success_goto(flow: dict[str, Any]) -> str:
     return found or "intent.opening"
 
 
-def follow_always(flow: dict[str, Any], node_id: str) -> Optional[str]:
-    edge = edge_for(flow, node_id, "always")
-    goto = edge.get("goto")
-    return str(goto) if goto else None
+def follow_always(flow: dict[str, Any], node_id: str, session: Any = None) -> Optional[str]:
+    return goto_from_edge(edge_for(flow, node_id, "always"), session)
 
 
-def negotiation_task_node(flow: dict[str, Any], current: str = "") -> str:
+def negotiation_task_node(flow: dict[str, Any], current: str = "", session: Any = None) -> str:
     ns = nodes_of(flow)
     cur = ns.get(current) or {}
     if cur.get("type") == "task" and cur.get("task_type") not in {
@@ -76,7 +165,7 @@ def negotiation_task_node(flow: dict[str, Any], current: str = "") -> str:
     if isinstance(express, str) and has_node(flow, express):
         return express
 
-    opening = identity_success_goto(flow)
+    opening = identity_success_goto(flow, session)
     nxt = opening
     for _ in range(_MAX_HOPS):
         if not nxt or not has_node(flow, nxt):
@@ -84,7 +173,7 @@ def negotiation_task_node(flow: dict[str, Any], current: str = "") -> str:
         node = ns[nxt]
         if node.get("type") == "task" and node.get("task_type") != "IdentityVerificationTask":
             return nxt
-        nxt = follow_always(flow, nxt)
+        nxt = follow_always(flow, nxt, session)
 
     if has_node(flow, "task.negotiation"):
         return "task.negotiation"
@@ -126,7 +215,7 @@ async def advance_graph(
     elif status:
         session.final_status = str(status)
 
-    goto = edge.get("goto")
+    goto = goto_from_edge(edge, session)
     hops = 0
     last: Optional[str] = None
     while goto and hops < _MAX_HOPS:
@@ -154,7 +243,7 @@ async def advance_graph(
         if ntype == "intention":
             if node.get("prompt") or node.get("prompt_by"):
                 await say_node(node_id)
-            always = follow_always(flow, node_id)
+            always = follow_always(flow, node_id, session)
             if always:
                 goto = always
                 continue

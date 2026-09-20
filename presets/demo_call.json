@@ -4,6 +4,9 @@
   "especialidad": "medicina general",
   "nombre_medico": "la doctora López",
   "sucursal": "sucursal Centro",
+  "fecha_turno": "mañana",
+  "hora_turno": "10:00",
+  "franja_turno": "mañana",
   "max_dias": 7,
   "nombre_agente": "Ana",
   "timezone": "America/Mexico_City"

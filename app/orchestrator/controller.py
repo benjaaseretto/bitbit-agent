@@ -77,7 +77,7 @@ class FlowController:
         if phase == "identity":
             return self._identity_node_id()
         current = self.session.current_node_id
-        return negotiation_task_node(self.flow, current)
+        return negotiation_task_node(self.flow, current, self.session)
 
     def _task_type_for_node(self, node_id: str, phase: str) -> str:
         nodes = self.flow.get("flow_graph", {}).get("nodes") or {}
@@ -152,12 +152,32 @@ class FlowController:
         return self._identity().esperar_titular
 
     @property
+    def repregunta_identidad(self):
+        return self._identity().repregunta_identidad
+
+    @property
+    def aclarar_quien_habla(self):
+        return self._identity().aclarar_quien_habla
+
+    @property
     def registrar_resultado_identidad(self):
         return self._identity().registrar_resultado_identidad
 
     @property
     def agendar_cita(self):
         return self._appointment().agendar_cita
+
+    @property
+    def confirmar_asistencia(self):
+        return self._appointment().confirmar_asistencia
+
+    @property
+    def cancelar_cita(self):
+        return self._appointment().cancelar_cita
+
+    @property
+    def reagendar_cita(self):
+        return self._appointment().reagendar_cita
 
     @property
     def cliente_dispuesto(self):

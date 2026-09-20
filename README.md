@@ -41,7 +41,7 @@ cp .env.mac.example .env.mac
 pip install -e ".[dev,mac]"
 python scripts/prepare_models.py
 python scripts/run_local.py
-# WebRTC: http://localhost:7860/client/
+# Studio: http://localhost:7860/
 ```
 
 Voz Mac: `TTS_SPEED` (0.5–2.0) y `TTS_VOLUME` (0.1–2.0) en `.env` / `.env.mac`.
@@ -54,9 +54,9 @@ Flujo: `BITBIT_FLOW_KEY=clinica_vida_flow` (default).
 ## Flujo
 
 1. Identidad del paciente (`IdentityVerificationTask`)
-2. Apertura (especialidad / médico / sucursal)
-3. Agenda (`AppointmentSchedulingTask`: `agendar_cita`, `finalizar`, `responder_kb`)
-4. Cierres (cita agendada, sin cita, ya tenía cita, reagendar)
+2. Apertura: turno ya cargado (día, hora, médico, sucursal) y pedido de confirmación
+3. Confirmación (`AppointmentSchedulingTask` modo `confirm_attendance`: `confirmar_asistencia`, `reagendar_cita`, `cancelar_cita`, `responder_kb`)
+4. Cierres (asistencia confirmada, reagendado, cancelado, recado, equivocado)
 
 ## Extender (como colly)
 

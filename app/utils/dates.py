@@ -43,6 +43,55 @@ def spoken_date(iso: str) -> str:
     return f"{d.day} de {months[d.month - 1]}"
 
 
+def spoken_greeting(tz_name: str) -> str:
+    """Saludo según hora local: Buenos días / Buenas tardes / Buenas noches."""
+    try:
+        hour = datetime.now(ZoneInfo(tz_name)).hour
+    except Exception:
+        hour = datetime.now(ZoneInfo("UTC")).hour
+    if hour < 12:
+        return "Buenos días"
+    if hour < 20:
+        return "Buenas tardes"
+    return "Buenas noches"
+
+
+def spoken_clock(hhmm: str) -> str:
+    """'10:00' → 'las diez de la mañana'."""
+    raw = str(hhmm or "").strip()
+    if not raw:
+        return ""
+    parts = raw.replace(".", ":").split(":")
+    try:
+        hour = int(parts[0])
+        minute = int(parts[1]) if len(parts) > 1 else 0
+    except (TypeError, ValueError):
+        return raw
+    if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+        return raw
+    h12 = hour % 12 or 12
+    if hour < 12:
+        period = "de la mañana"
+    elif hour == 12 and minute == 0:
+        period = "del mediodía"
+    elif hour < 20:
+        period = "de la tarde"
+    else:
+        period = "de la noche"
+    if h12 == 1:
+        article = "la"
+        hour_words = "una"
+    else:
+        article = "las"
+        hour_words = num2words(h12, lang="es")
+    if minute == 0:
+        if hour == 12:
+            return "las doce del mediodía"
+        return f"{article} {hour_words} {period}"
+    minute_words = num2words(minute, lang="es")
+    return f"{article} {hour_words} y {minute_words} {period}"
+
+
 def resolve_relative_fecha(raw: str, *, timezone: str) -> str:
     """Map spoken Spanish relatives to ISO AAAA-MM-DD; pass through ISO/other."""
     s = " ".join(str(raw or "").strip().lower().split())
