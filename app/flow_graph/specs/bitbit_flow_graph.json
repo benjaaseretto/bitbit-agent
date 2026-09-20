@@ -1,0 +1,222 @@
+{
+  "flow_catalog": {
+    "platform_flow_key": "bitbit_flow",
+    "visible_name": "bitbit",
+    "flow_type": "test",
+    "enabled": true,
+    "description": "Flujo único de cobranza Bitbit (financiamiento celular, stack OSS).",
+    "fields": [
+      {
+        "label": "Nombre del cliente",
+        "field": "name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "Nombre de la empresa",
+        "field": "company_name",
+        "type": "text",
+        "required": true
+      },
+      {
+        "label": "País",
+        "field": "country_id",
+        "type": "select",
+        "required": true,
+        "options": [
+          {
+            "value": 146,
+            "name": "Mexico"
+          }
+        ]
+      },
+      {
+        "label": "Monto total",
+        "field": "amount",
+        "type": "number",
+        "required": true
+      },
+      {
+        "label": "Saldo vencido",
+        "field": "due_balance",
+        "type": "number",
+        "required": true
+      },
+      {
+        "label": "Fecha de vencimiento",
+        "field": "due_date",
+        "type": "date",
+        "required": true
+      }
+    ],
+    "knowledge_base": {
+      "file": "bitbit.json",
+      "company_id": "bitbit-demo",
+      "description": "Base de conocimiento bitbit.json."
+    },
+    "company_id": "bitbit-demo"
+  },
+  "flow_config": {
+    "company_pronunciation": "Bitbit"
+  },
+  "flow_graph": {
+    "version": "1.0",
+    "start": "task.identity_verification",
+    "nodes": {
+      "task.identity_verification": {
+        "type": "task",
+        "label": "Verificar identidad",
+        "task_type": "IdentityVerificationTask",
+        "params": {
+          "max_retries": 2,
+          "identity_identificacion_breve": "Hola, buen día. Mi nombre es {nombre_agente}, le hablo de Bitbit respecto al financiamiento de su teléfono móvil."
+        },
+        "on": {
+          "Entregado": {
+            "action": "set_status",
+            "status": "Entregado",
+            "goto": "intent.opening",
+            "pay_confirmation": true,
+            "pay_confirmation_next": "final.end_paid",
+            "express_route": true,
+            "express_route_next": "task.negotiation"
+          },
+          "Equivocado": {
+            "action": "set_status",
+            "status": "Equivocado",
+            "goto": "final.end_wrong"
+          },
+          "Recado conocido": {
+            "action": "set_status",
+            "status": "Recado conocido",
+            "goto": "final.end_recado"
+          },
+          "Buzon de Voz": {
+            "action": "set_status",
+            "status": "Buzon de Voz",
+            "goto": "final.end_mailbox"
+          }
+        }
+      },
+      "intent.opening": {
+        "type": "intention",
+        "label": "Apertura y motivo de llamada",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Hola {nombre_deudor}, soy {nombre_agente} de Bitbit. El motivo de mi llamada es recordarle que su cuota del financiamiento de su teléfono presenta un atraso de {dias_mora} días. Queremos ayudarle a mantener el equipo desbloqueado y cuidar su historial. ¿Hubo algún inconveniente que le impidiera pagar en la fecha acordada?",
+        "on": {
+          "always": {
+            "goto": "task.negotiation"
+          }
+        }
+      },
+      "task.negotiation": {
+        "type": "task",
+        "label": "Negociación",
+        "task_type": "NegotiationTaskV2",
+        "params": {
+          "invalid_date_message": "Entiendo. Esa fecha supera el plazo disponible. Pagar a más tardar {fecha_limite} le ayuda a mantener el teléfono activo y su historial positivo con Bitbit. ¿Podría realizar el pago dentro de ese plazo?",
+          "invalid_date_retry_message": "Comprendo. Si esperamos hasta esa fecha, el servicio del teléfono podría restringirse. La fecha disponible es hasta {fecha_limite}. ¿Le sería posible pagar ese día?",
+          "max_dias": "{max_dias}",
+          "allow_partial_payments": false,
+          "max_attempts": 3,
+          "ask_nonpayment_reason": false,
+          "collect_payment_method": false,
+          "benefit_hints": [
+            "mantener su teléfono activo y su historial con Bitbit positivo para futuros créditos"
+          ],
+          "custom_instructions": "Mantén un tono cordial, profesional, cercano y empático en todo momento. Si el cliente indica que fue olvido, ofrece pagar hoy mismo. Si hay problema económico, ofrece una fecha compromiso cercana. Refuerza los beneficios de mantener el teléfono activo y el historial positivo, y menciona las consecuencias si el atraso continúa (restricción del teléfono) pero sin sonar amenazante.\n\nOBJECIÓN DEVOLUCIÓN/CANCELACIÓN: Si el cliente menciona querer devolver, entregar el equipo, cancelar el servicio o que no lo quiere, NO cierres la llamada ni uses sin_compromiso de inmediato. Primero responde con empatía enfocándote en que para iniciar ese proceso debe poner al día su saldo pendiente. Si insiste, responde de forma conciliadora indicando que solo puedes gestionar el pago del saldo vigente para evitar que la deuda crezca. Solo si tras ambas respuestas sigue sin aceptar ningún acuerdo de pago, recién entonces usa sin_compromiso según la política general de negociación. Al proponer o cerrar el acuerdo de pago, decir 'dejamos registrado', 'confirmamos' o 'establecemos' el compromiso, en lugar de 'tomar' la fecha o el acuerdo. Esto aplica solo a la redacción propia: las respuestas de preguntas frecuentes y de objeciones se dicen tal como están escritas."
+        },
+        "on": {
+          "Compromiso": {
+            "action": "set_status",
+            "status": "Compromiso",
+            "commitment_date": "result.commitment_date",
+            "goto": "intent.confirm_commitment"
+          },
+          "Sin compromiso": {
+            "action": "set_status",
+            "status": "Sin compromiso",
+            "goto": "intent.soft_close_no_commitment"
+          },
+          "Pagado": {
+            "action": "set_status",
+            "status": "Pagado",
+            "goto": "final.end_paid"
+          },
+          "Intención de pago": {
+            "action": "set_status",
+            "status": "Intención de pago",
+            "goto": "final.end_intencion_de_pago"
+          }
+        }
+      },
+      "intent.confirm_commitment": {
+        "type": "intention",
+        "label": "Confirmar compromiso y reforzar beneficios",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entonces quedamos en que realizará su pago el día {commitment_date_spoken}, ¿correcto? Al estar al corriente, mantiene su teléfono activo y su historial con Bitbit positivo para futuros créditos. Si el atraso continúa, el sistema puede restringir el funcionamiento del teléfono. ¿Tiene alguna duda?",
+        "on": {
+          "always": {
+            "goto": "final.end_commitment"
+          }
+        }
+      },
+      "intent.soft_close_no_commitment": {
+        "type": "intention",
+        "label": "Cierre suave (sin compromiso)",
+        "delivery": "say",
+        "interruptible": false,
+        "prompt": "Entiendo. Gracias por su tiempo. Desde Bitbit lo contactaremos en otra ocasión.",
+        "on": {
+          "always": {
+            "goto": "final.end_no_commitment"
+          }
+        }
+      },
+      "final.end_commitment": {
+        "type": "final",
+        "label": "Despedida (compromiso)",
+        "prompt": "Muchas gracias {nombre_deudor}. Con su pago, su equipo seguirá funcionando sin interrupciones. Puede pagar por la app Bitbit, transferencia bancaria o tiendas autorizadas. Que tenga un excelente día.",
+        "delivery": "say"
+      },
+      "final.end_no_commitment": {
+        "type": "final",
+        "label": "Despedida (sin compromiso)",
+        "prompt": "Gracias por su tiempo. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_paid": {
+        "type": "final",
+        "label": "Despedida (pagado)",
+        "prompt": "Perfecto, gracias por su tiempo. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_wrong": {
+        "type": "final",
+        "label": "Despedida (equivocado)",
+        "prompt": "Entiendo, disculpe la molestia. Que tenga buen día.",
+        "delivery": "say"
+      },
+      "final.end_recado": {
+        "type": "final",
+        "label": "Despedida (recado)",
+        "prompt": "Gracias. Por favor comuníquele que desde Bitbit intentamos contactar al titular.",
+        "delivery": "say"
+      },
+      "final.end_mailbox": {
+        "type": "final",
+        "label": "Despedida (buzón)",
+        "prompt": "Gracias. Hasta luego.",
+        "delivery": "say"
+      },
+      "final.end_intencion_de_pago": {
+        "type": "final",
+        "label": "Despedida (intención de pago)",
+        "prompt": "Gracias por su tiempo. Desde Bitbit dejamos registro de su intención de pago para contactarlo después.",
+        "delivery": "say"
+      }
+    }
+  }
+}

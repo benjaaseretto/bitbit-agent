@@ -1,0 +1,38 @@
+services:
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    ports:
+      - "8000:8000"
+    environment:
+      WHISPER__MODEL: small
+      WHISPER__INFERENCE_DEVICE: cpu
+    volumes:
+      - whisper_cache:/root/.cache
+
+  # Chatterbox Multilingual (ResembleAI) — OpenAI-compatible TTS on :4123
+  # Spanish: after first start, run: python scripts/register_chatterbox_voice.py
+  chatterbox:
+    image: travisvn/chatterbox-tts-api:latest-cpu
+    ports:
+      - "4123:4123"
+    environment:
+      PORT: "4123"
+      USE_MULTILINGUAL_MODEL: "true"
+      DEVICE: cpu
+    volumes:
+      - chatterbox_models:/cache
+      - chatterbox_voices:/voices
+    restart: unless-stopped
+
+  # Optional remote Kokoro HTTP (bot uses in-process Kokoro only if TTS_ENGINE=kokoro)
+  kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    ports:
+      - "8880:8880"
+    profiles:
+      - remote-tts
+
+volumes:
+  whisper_cache:
+  chatterbox_models:
+  chatterbox_voices:
