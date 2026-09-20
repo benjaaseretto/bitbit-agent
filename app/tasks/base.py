@@ -11,6 +11,9 @@ SpeakFn = Callable[[str], Awaitable[None]]
 PhaseFn = Callable[[str], Awaitable[None]]
 
 
+AdvanceFn = Callable[[str, str], Awaitable[Optional[str]]]
+
+
 @dataclass
 class TaskContext:
     """Contexto compartido entre tasks de un mismo flujo."""
@@ -20,6 +23,7 @@ class TaskContext:
     speak: SpeakFn
     set_phase: PhaseFn
     say_node: Callable[[str], Awaitable[None]]
+    advance: Optional[AdvanceFn] = None
 
 
 class BaseTask(ABC):
@@ -29,8 +33,9 @@ class BaseTask(ABC):
     phase: str = "identity"
     tool_choice: str = "required"
 
-    def __init__(self, ctx: TaskContext) -> None:
+    def __init__(self, ctx: TaskContext, *, node_id: Optional[str] = None) -> None:
         self.ctx = ctx
+        self.node_id = node_id or ""
 
     @property
     def session(self) -> CallSession:
@@ -49,8 +54,15 @@ class BaseTask(ABC):
     async def set_phase(self, phase: str) -> None:
         await self.ctx.set_phase(phase)
 
-    def node_params(self, node_id: str) -> dict[str, Any]:
-        return dict(self.flow["flow_graph"]["nodes"][node_id].get("params") or {})
+    async def advance(self, label: str) -> Optional[str]:
+        if not self.ctx.advance:
+            return None
+        return await self.ctx.advance(self.node_id or "", label)
+
+    def node_params(self, node_id: Optional[str] = None) -> dict[str, Any]:
+        nid = node_id or self.node_id
+        nodes = self.flow.get("flow_graph", {}).get("nodes") or {}
+        return dict((nodes.get(nid) or {}).get("params") or {})
 
     @abstractmethod
     def system_prompt(self) -> str:

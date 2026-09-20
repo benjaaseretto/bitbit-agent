@@ -34,4 +34,9 @@ def list_task_types() -> List[str]:
 def ensure_builtin_tasks_loaded() -> None:
     """Importa scripts built-in para que se auto-registren."""
     from app.tasks import appointment as _appointment  # noqa: F401
+    from app.tasks import extra_auth as _extra_auth  # noqa: F401
+    from app.tasks import form as _form  # noqa: F401
     from app.tasks import identity as _identity  # noqa: F401
+    from app.tasks import next_contact as _next_contact  # noqa: F401
+    from app.tasks import questionnaire as _questionnaire  # noqa: F401
+    from app.tasks import sales as _sales  # noqa: F401

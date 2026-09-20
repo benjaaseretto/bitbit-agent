@@ -6,6 +6,8 @@ from typing import Any, Callable, Literal, Optional, Sequence
 from pipecat.frames.frames import FunctionCallResultProperties
 
 from app.tasks.base import BaseTask, TaskContext
+from app.tasks.graph import has_node
+from app.tasks.kb import KbMixin
 from app.tasks.registry import register_task
 from app.utils.dates import (
     resolve_relative_fecha,
@@ -21,7 +23,7 @@ _CONTINUE = FunctionCallResultProperties(run_llm=True)
 
 
 @register_task
-class AppointmentSchedulingTask(BaseTask):
+class AppointmentSchedulingTask(KbMixin, BaseTask):
     task_type = "AppointmentSchedulingTask"
     phase = "negotiation"
     tool_choice = "auto"
@@ -102,9 +104,13 @@ class AppointmentSchedulingTask(BaseTask):
             self.session.commitment_date = normalized
             self.session.commitment_date_spoken = spoken_date(normalized)
             self.session.final_status = "Cita agendada"
-            await self.say_node("intent.confirm_commitment")
-            await self.say_node("final.end_commitment")
-            await self.set_phase("done")
+            landed = await self.advance("Cita agendada")
+            if not landed:
+                if has_node(self.flow, "intent.confirm_commitment"):
+                    await self.say_node("intent.confirm_commitment")
+                if has_node(self.flow, "final.end_commitment"):
+                    await self.say_node("final.end_commitment")
+                await self.set_phase("done")
             await params.result_callback(
                 {
                     "ok": True,
@@ -183,128 +189,25 @@ class AppointmentSchedulingTask(BaseTask):
             )
             return
         mapping = {
-            "sin_cita": (
-                "Sin cita",
-                "intent.soft_close_no_commitment",
-                "final.end_no_commitment",
-            ),
-            "ya_agendada": ("Ya tenía cita", None, "final.end_paid"),
-            "reagendar_despues": ("Reagendar después", None, "final.end_intencion_de_pago"),
+            "sin_cita": ("Sin cita", "Sin cita"),
+            "ya_agendada": ("Ya tenía cita", "Ya atendido"),
+            "reagendar_despues": ("Reagendar después", "Intención de agendar"),
         }
-        status, soft, final_id = mapping[resultado]
+        status, label = mapping[resultado]
         self.session.final_status = status
-        if soft:
-            await self.say_node(soft)
-        await self.say_node(final_id)
-        await self.set_phase("done")
+        landed = await self.advance(label)
+        if not landed:
+            fallbacks = {
+                "sin_cita": ("intent.soft_close_no_commitment", "final.end_no_commitment"),
+                "ya_agendada": (None, "final.end_paid"),
+                "reagendar_despues": (None, "final.end_intencion_de_pago"),
+            }
+            soft, final_id = fallbacks[resultado]
+            if soft and has_node(self.flow, soft):
+                await self.say_node(soft)
+            if final_id and has_node(self.flow, final_id):
+                await self.say_node(final_id)
+            await self.set_phase("done")
         await params.result_callback(
             {"ok": True, "outcome": status, "reason": razon}, properties=_WAIT
-        )
-
-    @register_tool(type="normal")
-    async def responder_kb(self, params, pregunta: str) -> None:
-        """Responde con la KB solo ante FAQ real del usuario (no loops)."""
-        q_raw = (pregunta or "").strip()
-        q = q_raw.lower()
-
-        fillers = {
-            "ok",
-            "ok.",
-            "ok,",
-            "entiendo",
-            "ok entiendo",
-            "ok, entiendo",
-            "sí",
-            "si",
-            "ehm",
-            "ehm...",
-            "mmm",
-            "ajá",
-            "aja",
-        }
-        if q in fillers or len(q) < 8:
-            await params.result_callback(
-                {
-                    "ok": False,
-                    "skip_kb": True,
-                    "note": (
-                        "Eso no es una pregunta FAQ. Respondé en texto libre: "
-                        "empatizá y pedí una fecha de consulta (hoy/mañana). "
-                        "NO vuelvas a llamar responder_kb."
-                    ),
-                },
-                properties=_CONTINUE,
-            )
-            return
-
-        best = None
-        best_score = 0
-        for item in self.session.knowledge_base:
-            keys = [
-                k.strip()
-                for k in str(item.get("question", "")).lower().split("|")
-                if k.strip()
-            ]
-            for k in keys:
-                if len(k) >= 6 and (k in q or q in k):
-                    score = len(k)
-                    if score > best_score:
-                        best_score = score
-                        best = item.get("answer")
-                else:
-                    k_tokens = {
-                        t
-                        for t in k.replace("¿", "").replace("?", "").split()
-                        if len(t) > 3
-                    }
-                    q_tokens = {
-                        t
-                        for t in q.replace("¿", "").replace("?", "").split()
-                        if len(t) > 3
-                    }
-                    if k_tokens and len(k_tokens & q_tokens) >= 2:
-                        score = len(k_tokens & q_tokens)
-                        if score > best_score:
-                            best_score = score
-                            best = item.get("answer")
-
-        if not best:
-            await params.result_callback(
-                {
-                    "ok": False,
-                    "no_match": True,
-                    "note": (
-                        "No hay FAQ para eso. Respondé en texto: empatía + "
-                        "proponé fecha hoy/mañana. Luego agendar_cita si acepta."
-                    ),
-                },
-                properties=_CONTINUE,
-            )
-            return
-
-        answer = str(best)
-        if self.session.last_kb_answer == answer:
-            self.session.kb_repeats += 1
-            await params.result_callback(
-                {
-                    "ok": False,
-                    "repeat_blocked": True,
-                    "note": (
-                        "Ya dijiste esa FAQ. NO la repitas. "
-                        "Hablá en texto y pedí una fecha concreta de consulta."
-                    ),
-                },
-                properties=_CONTINUE,
-            )
-            return
-
-        self.session.last_kb_answer = answer
-        self.session.kb_repeats = 0
-        await self.speak(answer)
-        await params.result_callback(
-            {
-                "ok": True,
-                "note": "Tras la FAQ, en el próximo turno pedí fecha de consulta (texto libre).",
-            },
-            properties=_WAIT,
         )

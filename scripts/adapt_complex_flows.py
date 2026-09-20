@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 ROOT = Path(__file__).resolve().parents[1]
 COLY_SPECS = Path("/Users/benjaminaseretto/Documents/Agent/colly-agent/app/flow_graph/specs")
 COLY_KB = Path("/Users/benjaminaseretto/Documents/Agent/colly-agent/app/kb")
-OUT_SPECS = ROOT / "app" / "flow_graph" / "demo_specs" / "complex"
+OUT_SPECS = ROOT / "app" / "flow_graph" / "specs"
 OUT_KB = ROOT / "app" / "kb" / "complex"
 INDEX = OUT_SPECS / "INDEX.md"
 

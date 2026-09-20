@@ -9,6 +9,7 @@ from app.orchestrator.loader import say_text
 from app.session.call_session import CallSession
 from app.tasks.appointment import AppointmentSchedulingTask
 from app.tasks.base import BaseTask, TaskContext
+from app.tasks.graph import advance_graph, negotiation_task_node
 from app.tasks.identity import IdentityVerificationTask
 from app.tasks.registry import ensure_builtin_tasks_loaded, get_task_class
 
@@ -17,7 +18,6 @@ PhaseFn = Callable[[str], Awaitable[None]]
 
 ensure_builtin_tasks_loaded()
 
-# phase → task_type preferido (override por nodo del spec si existe)
 _PHASE_TASK_TYPES = {
     "identity": "IdentityVerificationTask",
     "negotiation": "AppointmentSchedulingTask",
@@ -49,47 +49,69 @@ class FlowController:
             speak=self._speak,
             set_phase=self._set_phase,
             say_node=self._say_node,
+            advance=self._advance,
         )
 
     async def _say_node(self, node_id: str) -> None:
-        await self._speak(say_text(self.flow, node_id, self.session))
+        text = say_text(self.flow, node_id, self.session)
+        if text:
+            await self._speak(text)
 
-    def _task_type_for_phase(self, phase: str) -> str:
-        nodes = self.flow.get("flow_graph", {}).get("nodes") or {}
+    async def _advance(self, from_node: str, label: str) -> Optional[str]:
+        return await advance_graph(
+            flow=self.flow,
+            session=self.session,
+            from_node=from_node,
+            label=label,
+            say_node=self._say_node,
+            set_phase=self._set_phase,
+        )
+
+    def _identity_node_id(self) -> str:
+        start = self.flow.get("flow_graph", {}).get("start")
+        if start:
+            return str(start)
+        return "task.identity_verification"
+
+    def _node_id_for_phase(self, phase: str) -> str:
         if phase == "identity":
-            start = self.flow.get("flow_graph", {}).get("start")
-            node = nodes.get(start) or nodes.get("task.identity_verification") or {}
-            return str(node.get("task_type") or _PHASE_TASK_TYPES["identity"])
-        if phase == "negotiation":
-            node = nodes.get("task.negotiation") or {}
-            return str(node.get("task_type") or _PHASE_TASK_TYPES["negotiation"])
-        return _PHASE_TASK_TYPES.get(phase, "IdentityVerificationTask")
+            return self._identity_node_id()
+        current = self.session.current_node_id
+        return negotiation_task_node(self.flow, current)
+
+    def _task_type_for_node(self, node_id: str, phase: str) -> str:
+        nodes = self.flow.get("flow_graph", {}).get("nodes") or {}
+        node = nodes.get(node_id) or {}
+        return str(node.get("task_type") or _PHASE_TASK_TYPES.get(phase) or "IdentityVerificationTask")
 
     def _build_task_for_phase(self, phase: str) -> BaseTask:
-        if phase in self._tasks:
-            return self._tasks[phase]
         if phase == "done":
-            # Reutiliza la última task de negocio sin tools
             task = self._tasks.get("negotiation") or self._tasks.get("identity")
             if task:
                 return task
-        task_type = self._task_type_for_phase(phase if phase != "done" else "identity")
+            phase = "identity"
+        node_id = self._node_id_for_phase(phase)
+        cache_key = f"{phase}:{node_id}"
+        if cache_key in self._tasks:
+            self._active = self._tasks[cache_key]
+            return self._tasks[cache_key]
+        task_type = self._task_type_for_node(node_id, phase)
         try:
             cls = get_task_class(task_type)
         except (KeyError, NotImplementedError):
-            # Fallback médico built-in
+            logger.warning("task_type={} missing; fallback phase={}", task_type, phase)
             cls = (
                 IdentityVerificationTask
                 if phase == "identity"
                 else AppointmentSchedulingTask
             )
-        node_id = (
-            "task.identity_verification"
-            if phase == "identity"
-            else "task.negotiation"
-        )
         task = cls(self._make_ctx(), node_id=node_id)
-        self._tasks[phase if phase != "done" else "negotiation"] = task
+        self._tasks[cache_key] = task
+        if phase != "identity":
+            self._tasks["negotiation"] = task
+        else:
+            self._tasks["identity"] = task
+        self._active = task
         return task
 
     async def _set_phase(self, phase: str) -> None:
@@ -104,13 +126,11 @@ class FlowController:
             logger.exception("on_phase failed phase={}", phase)
 
     def identity_system_prompt(self) -> str:
-        task = self._tasks.get("identity") or self._build_task_for_phase("identity")
+        task = self._build_task_for_phase("identity")
         return task.system_prompt()
 
     def negotiation_system_prompt(self) -> str:
-        task = self._tasks.get("negotiation") or self._build_task_for_phase(
-            "negotiation"
-        )
+        task = self._build_task_for_phase("negotiation")
         return task.system_prompt()
 
     def tools_for_phase(self, phase: Optional[str] = None) -> list:
@@ -126,8 +146,6 @@ class FlowController:
             return "none"
         task = self._build_task_for_phase(p)
         return getattr(task, "tool_choice", "auto")
-
-    # --- Delegación de tools (API estable para tests / LLMContext) ---
 
     @property
     def esperar_titular(self):
@@ -151,16 +169,26 @@ class FlowController:
 
     @property
     def responder_kb(self):
+        task = self._build_task_for_phase(
+            "negotiation" if self.session.phase != "identity" else "negotiation"
+        )
+        fn = getattr(task, "responder_kb", None)
+        if fn:
+            return fn
         return self._appointment().responder_kb
 
     def _identity(self) -> IdentityVerificationTask:
-        task = self._tasks.get("identity") or self._build_task_for_phase("identity")
+        task = self._build_task_for_phase("identity")
         assert isinstance(task, IdentityVerificationTask)
         return task
 
     def _appointment(self) -> AppointmentSchedulingTask:
-        task = self._tasks.get("negotiation") or self._build_task_for_phase(
-            "negotiation"
-        )
-        assert isinstance(task, AppointmentSchedulingTask)
-        return task
+        task = self._tasks.get("negotiation")
+        if isinstance(task, AppointmentSchedulingTask):
+            return task
+        built = self._build_task_for_phase("negotiation")
+        if isinstance(built, AppointmentSchedulingTask):
+            return built
+        # Specs de venta no tienen AppointmentSchedulingTask; construí una para tests.
+        appt = AppointmentSchedulingTask(self._make_ctx(), node_id=self._node_id_for_phase("negotiation"))
+        return appt

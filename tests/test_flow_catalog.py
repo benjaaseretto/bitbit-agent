@@ -18,7 +18,12 @@ def test_builtin_tasks_registered():
     types = list_task_types()
     assert "IdentityVerificationTask" in types
     assert "AppointmentSchedulingTask" in types
+    assert "NegotiationTaskV2" in types
+    assert "FormTask" in types
+    assert "NextContactTask" in types
+    assert "QuestionnaireTask" in types
     assert get_task_class("IdentityVerificationTask").task_type == "IdentityVerificationTask"
+    assert get_task_class("NegotiationTaskV2").task_type == "NegotiationTaskV2"
 
 
 def test_colly_stub_raises():

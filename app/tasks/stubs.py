@@ -16,13 +16,13 @@ COLLY_TASK_STUBS: Dict[str, Dict[str, Any]] = {
         "notes": "AMD / screening pre-identidad.",
     },
     "FieldVerificationTask": {
-        "module": "agents/tasks/field_verification.py",
-        "status": "stub",
+        "module": "app/tasks/extra_auth.py",
+        "status": "ported",
         "notes": "Verificación por campos (RUT, DOB, etc.).",
     },
     "KBATask": {
-        "module": "agents/tasks/kba.py",
-        "status": "stub",
+        "module": "app/tasks/extra_auth.py",
+        "status": "ported",
         "notes": "Knowledge-based authentication.",
     },
     "NegotiationTask": {
@@ -31,8 +31,8 @@ COLLY_TASK_STUBS: Dict[str, Dict[str, Any]] = {
         "notes": "Negociación de cobranza clásica; ver AppointmentSchedulingTask para agenda médica.",
     },
     "NegotiationTaskV2": {
-        "module": "agents/tasks/negotiation_v2.py",
-        "status": "stub",
+        "module": "app/tasks/sales.py",
+        "status": "ported",
     },
     "NegotiationOptionsTask": {
         "module": "agents/tasks/negotiation_options.py",
@@ -43,24 +43,24 @@ COLLY_TASK_STUBS: Dict[str, Dict[str, Any]] = {
         "status": "stub",
     },
     "MultiProductNegotiationTask": {
-        "module": "agents/tasks/multi_product_negotiation.py",
-        "status": "stub",
+        "module": "app/tasks/sales.py",
+        "status": "ported",
     },
     "PaymentIntentionDateTask": {
-        "module": "agents/tasks/payment_intention_date.py",
-        "status": "stub",
+        "module": "app/tasks/next_contact.py",
+        "status": "ported",
     },
     "PaymentCommitmentTask": {
         "module": "agents/tasks/payment_commitment.py",
         "status": "stub",
     },
     "NextContactTask": {
-        "module": "agents/tasks/next_contact.py",
-        "status": "stub",
+        "module": "app/tasks/next_contact.py",
+        "status": "ported",
     },
     "OfferSelectionTask": {
-        "module": "agents/tasks/offer_selection.py",
-        "status": "stub",
+        "module": "app/tasks/sales.py",
+        "status": "ported",
     },
     "OfferAcceptanceTask": {
         "module": "agents/tasks/offer_acceptance.py",
@@ -87,12 +87,12 @@ COLLY_TASK_STUBS: Dict[str, Dict[str, Any]] = {
         "status": "stub",
     },
     "FormTask": {
-        "module": "agents/tasks/form.py",
-        "status": "stub",
+        "module": "app/tasks/form.py",
+        "status": "ported",
     },
     "QuestionnaireTask": {
-        "module": "agents/tasks/questionnaire.py",
-        "status": "stub",
+        "module": "app/tasks/questionnaire.py",
+        "status": "ported",
     },
     "SalesTask": {
         "module": "agents/tasks/sales.py",

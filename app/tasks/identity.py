@@ -7,6 +7,7 @@ from loguru import logger
 from pipecat.frames.frames import FunctionCallResultProperties
 
 from app.tasks.base import BaseTask, TaskContext
+from app.tasks.graph import edge_for, has_node
 from app.tasks.registry import register_task
 from app.utils.templates import render_template
 from app.utils.tools_registry import register_tool
@@ -130,6 +131,7 @@ class IdentityVerificationTask(BaseTask):
             "persona_equivocada",
             "recado",
             "buzon",
+            "titular_fallecido",
         ],
         evidencia: Optional[str] = None,
     ) -> None:
@@ -151,10 +153,11 @@ class IdentityVerificationTask(BaseTask):
             return
 
         mapping = {
-            "titular_confirmado": ("Entregado", "intent.opening"),
-            "persona_equivocada": ("Equivocado", "final.end_wrong"),
-            "recado": ("Recado conocido", "final.end_recado"),
-            "buzon": ("Buzon de Voz", "final.end_mailbox"),
+            "titular_confirmado": ("Entregado", "Entregado"),
+            "persona_equivocada": ("Equivocado", "Equivocado"),
+            "recado": ("Recado conocido", "Recado conocido"),
+            "buzon": ("Buzon de Voz", "Buzon de Voz"),
+            "titular_fallecido": ("Fallecido", "Fallecido"),
         }
         if resultado == "titular_confirmado" and not (evidencia or "").strip():
             await params.result_callback(
@@ -163,31 +166,40 @@ class IdentityVerificationTask(BaseTask):
             )
             return
 
-        status, next_id = mapping[resultado]
+        status, label = mapping[resultado]
+        if not edge_for(self.flow, self.node_id, label):
+            # Specs sin Fallecido: no inventar el outcome.
+            if resultado == "titular_fallecido":
+                status, label = "Recado conocido", "Recado conocido"
         self.session.final_status = status
-        logger.info("identity outcome={} next={}", status, next_id)
+        logger.info("identity outcome={} label={}", status, label)
 
         if resultado == "titular_confirmado":
-            self.session.current_node_id = "task.negotiation"
-            await self.say_node("intent.opening")
-            await self.set_phase("negotiation")
+            await self.advance("Entregado")
+            if self.session.phase == "identity":
+                await self.set_phase("negotiation")
             await params.result_callback(
                 {
                     "ok": True,
                     "status": status,
                     "next_phase": "negotiation",
-                    "note": (
-                        "Agenda activa. Esperá la respuesta; después agendar_cita(fecha_iso) "
-                        "o finalizar."
-                    ),
+                    "note": "Identidad OK. Esperá respuesta y usá las tools de la fase de negocio.",
                 },
                 properties=_WAIT,
             )
             return
 
-        await self.say_node(next_id)
-        self.session.current_node_id = next_id
-        await self.set_phase("done")
+        landed = await self.advance(label)
+        if not landed:
+            fallback = {
+                "Equivocado": "final.end_wrong",
+                "Recado conocido": "final.end_recado",
+                "Buzon de Voz": "final.end_mailbox",
+                "Fallecido": "final.end_wrong",
+            }.get(label)
+            if fallback and has_node(self.flow, fallback):
+                await self.say_node(fallback)
+            await self.set_phase("done")
         await params.result_callback(
             {"ok": True, "status": status, "end": True}, properties=_WAIT
         )

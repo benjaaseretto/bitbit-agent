@@ -64,8 +64,15 @@ def node(flow: dict[str, Any], node_id: str) -> dict[str, Any]:
 
 
 def say_text(flow: dict[str, Any], node_id: str, session: CallSession) -> str:
-    n = node(flow, node_id)
-    return render_template(str(n.get("prompt") or ""), session.as_template_vars())
+    nodes = flow.get("flow_graph", {}).get("nodes") or {}
+    n = nodes.get(node_id)
+    if not isinstance(n, dict):
+        return ""
+    prompt = n.get("prompt")
+    if not prompt and isinstance(n.get("prompt_by"), dict):
+        prompt_by = n["prompt_by"]
+        prompt = prompt_by.get("default") or next(iter(prompt_by.values()), "")
+    return render_template(str(prompt or ""), session.as_template_vars())
 
 
 def build_session(

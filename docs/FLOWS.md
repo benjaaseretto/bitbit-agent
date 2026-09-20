@@ -6,8 +6,7 @@ pero el runtime es **Pipecat** (no LiveKit AgentTasks).
 ## Layout
 
 ```
-app/flow_graph/specs/*.json              # flujos activos
-app/flow_graph/demo_specs/complex/       # 45 flujos complejos (sanatorio / equipos)
+app/flow_graph/specs/*.json              # todos los flujos (clínica, consultas, venta equipos)
 app/kb/*.json                            # FAQ por flujo
 app/kb/complex/*.json                    # KB de los flujos complejos
 app/tasks/*.py                           # scripts de tools + prompt por dominio
@@ -15,7 +14,7 @@ app/orchestrator/                        # carga spec + swap de fase/tools
 app/pipecat_runtime/bot.py               # pipeline de voz (no conoce el dominio)
 ```
 
-Índice de los 45: `app/flow_graph/demo_specs/complex/INDEX.md`.
+Índice: `app/flow_graph/specs/INDEX.md` (25 consultas/sanatorio + 20 venta de equipos).
 Regenerar: `python scripts/adapt_complex_flows.py --limit 45`.
 
 ## Flujo activo
@@ -53,11 +52,18 @@ Cableá `task_type` del nodo del JSON al nombre de la clase registrada.
 | `task_type` | Módulo | Fase |
 |-------------|--------|------|
 | `IdentityVerificationTask` | `app/tasks/identity.py` | identity |
-| `AppointmentSchedulingTask` | `app/tasks/appointment.py` | negotiation (agenda) |
+| `AppointmentSchedulingTask` | `app/tasks/appointment.py` | agenda / consultas |
+| `NegotiationTaskV2` | `app/tasks/sales.py` | venta / pedido |
+| `MultiProductNegotiationTask` | `app/tasks/sales.py` | venta multiproducto |
+| `OfferSelectionTask` | `app/tasks/sales.py` | elección de plan |
+| `NextContactTask` | `app/tasks/next_contact.py` | recontacto |
+| `PaymentIntentionDateTask` | `app/tasks/next_contact.py` | fecha tentativa |
+| `FormTask` | `app/tasks/form.py` | captura de campos |
+| `QuestionnaireTask` | `app/tasks/questionnaire.py` | cuestionario |
+| `FieldVerificationTask` | `app/tasks/extra_auth.py` | campo extra |
+| `KBATask` | `app/tasks/extra_auth.py` | KBA |
 
-El resto de tasks de colly están indexadas como stubs en `app/tasks/stubs.py`
-(origen en `legacy-agent-voice`). Portá una a la vez: nuevo archivo +
-`@register_task` + `ensure_builtin_tasks_loaded`.
+El orquestador recorre `on`/`goto` del spec (say → task → final). Lo que quede en `app/tasks/stubs.py` con `status: stub` aún no está portado.
 
 ## Contrato de una task
 

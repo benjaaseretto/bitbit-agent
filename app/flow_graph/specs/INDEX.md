@@ -57,7 +57,7 @@ BITBIT_FLOW_KEY=aurora_salud_flow python -m app.pipecat_runtime.bot --transport 
 
 ## Archivos
 
-- Specs: `app/flow_graph/demo_specs/complex/`
+- Specs: `app/flow_graph/specs/`
 - KB: `app/kb/complex/`
 
 ## Runtime
