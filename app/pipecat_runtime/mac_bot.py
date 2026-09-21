@@ -1,4 +1,4 @@
-"""Pipecat Mac: Parakeet/Qwen-TTS (MLX) + DeepSeek Flash (default LLM)."""
+"""Pipecat Mac: Whisper-MLX STT + Kokoro TTS (default) o Qwen-TTS MLX + DeepSeek."""
 from __future__ import annotations
 
 import asyncio
@@ -22,15 +22,19 @@ from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
 from pipecat.services.deepseek.llm import DeepSeekLLMService
 from pipecat.services.openai.llm import OpenAILLMService
+from pipecat.transcriptions.language import Language
 from pipecat.transports.base_transport import TransportParams
 from pipecat.turns.user_turn_strategies import UserTurnStrategies
 from pipecat.workers.runner import WorkerRunner
 
 from app.orchestrator import FlowController, build_session
-from app.pipecat_runtime.config import RuntimeConfig
+from app.pipecat_runtime.config import ROOT, RuntimeConfig
+from app.pipecat_runtime.performance import monitor_runtime
+from app.pipecat_runtime.runtime_lock import single_mac_runtime
 from app.pipecat_runtime.deepseek_llm import BitbitDeepSeekLLMService
 from app.pipecat_runtime.hud import attach_hud, wire_text_input
 from app.pipecat_runtime.mlx_services import MLXAudioEngine, MLXSTTService, QwenMLXTTSService
+from app.pipecat_runtime.playout_hold import PlayoutHoldTTSStopped
 from app.pipecat_runtime.studio import install_studio_frontend, merge_call_metadata
 from app.pipecat_runtime.turn_start import MacMinWordsUserTurnStartStrategy
 from app.utils.call_metadata import load_call_metadata
@@ -40,6 +44,37 @@ _THINKING_OFF = DeepSeekLLMService.ThinkingConfig(type="disabled")
 
 _engine = None
 _active_call = False
+
+
+def _tts_engine_name() -> str:
+    # Kokoro is the stable default on Mac after Qwen streaming cutoffs.
+    return (os.getenv("TTS_ENGINE") or "kokoro").strip().lower()
+
+
+def _build_tts(engine: MLXAudioEngine, config: RuntimeConfig):
+    name = _tts_engine_name()
+    if name in ("qwen", "qwen-mlx", "mlx"):
+        tts = QwenMLXTTSService(engine)
+        logger.info(
+            "TTS ready engine=qwen-mlx voice={} speed={} volume={}",
+            config.voice,
+            config.tts_speed,
+            config.tts_volume,
+        )
+        return tts
+    from pipecat.services.kokoro.tts import KokoroTTSService
+
+    voice = os.getenv("KOKORO_VOICE", "ef_dora")
+    # Long BioAnalyze scripts take >3s to synthesize; default stop timeout
+    # closes the context with "completed with no audio" (log 21:38:06).
+    tts = KokoroTTSService(
+        stop_frame_timeout_s=float(os.getenv("TTS_STOP_TIMEOUT_SECS", "30")),
+        settings=KokoroTTSService.Settings(
+            voice=voice, language=Language.ES, speed=float(config.tts_speed)
+        ),
+    )
+    logger.info("TTS ready engine=kokoro voice={} language=ES speed={}", voice, config.tts_speed)
+    return tts
 
 
 class ClosedSessionGate(FrameProcessor):
@@ -113,25 +148,41 @@ async def run_bot(transport, runner_args: RunnerArguments):
     engine = _engine or MLXAudioEngine(config)
     owned = _engine is None
     worker_holder: dict = {}
+    use_qwen_tts = _tts_engine_name() in ("qwen", "qwen-mlx", "mlx")
     try:
         if owned:
-            await engine.load()
-            await engine.warmup()
+            await engine.load(with_tts=use_qwen_tts)
+            await engine.warmup(with_tts=use_qwen_tts)
         stt = MLXSTTService(engine)
-        tts = QwenMLXTTSService(engine)
-        logger.info(
-            "TTS ready engine=qwen-mlx voice={} speed={} volume={}",
-            config.voice,
-            config.tts_speed,
-            config.tts_volume,
-        )
-        if config.voice_mode == "preset":
+        tts = _build_tts(engine, config)
+        playout_hold = PlayoutHoldTTSStopped(engine)
+        if use_qwen_tts and config.voice_mode == "preset":
             logger.warning(
                 "VOICE mode=preset: voz de prueba; pendiente referencia humana en español"
             )
 
         async def speak(text):
-            for chunk in split_tts_utterances(text):
+            # Un solo TTSSpeakFrame por turno. Partir en ~280 (log 21:39:50,
+            # chunks 177+252) cerraba el contexto entre frases: el transporte
+            # emitía BotStoppedSpeaking a los 4.3s y la frase siguiente quedaba
+            # atrás del hold. El timeout de Kokoro ya es 30s, no hace falta
+            # trocear un guion de ~400 caracteres.
+            max_chars = int(os.getenv("TTS_MAX_CHARS", "720"))
+            chunks = split_tts_utterances(text, max_chars=max_chars)
+            logger.info(
+                "SPEAK queue chunks={} chars={} lens={}",
+                len(chunks),
+                len(text or ""),
+                [len(c) for c in chunks],
+            )
+            for index, chunk in enumerate(chunks, start=1):
+                logger.info(
+                    "SPEAK chunk {}/{} chars={} preview={!r}",
+                    index,
+                    len(chunks),
+                    len(chunk),
+                    chunk[:72] + ("…" if len(chunk) > 72 else ""),
+                )
                 await tts.queue_frame(TTSSpeakFrame(chunk))
 
         hud = attach_hud(session, transport)
@@ -168,8 +219,8 @@ async def run_bot(transport, runner_args: RunnerArguments):
             user_params=LLMUserAggregatorParams(
                 vad_analyzer=SileroVADAnalyzer(
                     params=VADParams(
-                        start_secs=float(os.getenv("VAD_START_SECS", "0.35")),
-                        stop_secs=float(os.getenv("VAD_STOP_SECS", "0.45")),
+                        start_secs=float(os.getenv("VAD_START_SECS", "0.25")),
+                        stop_secs=float(os.getenv("VAD_STOP_SECS", "0.25")),
                     )
                 ),
                 user_turn_strategies=UserTurnStrategies(
@@ -177,6 +228,7 @@ async def run_bot(transport, runner_args: RunnerArguments):
                         MacMinWordsUserTurnStartStrategy(
                             min_words=int(os.getenv("INTERRUPTION_MIN_WORDS", "0")),
                             use_interim=False,
+                            playback_active=engine.stt_is_blocked,
                         )
                     ]
                 ),
@@ -197,6 +249,7 @@ async def run_bot(transport, runner_args: RunnerArguments):
                 user,
                 llm,
                 tts,
+                playout_hold,
                 transport.output(),
                 assistant,
             ]
@@ -233,7 +286,8 @@ async def run_bot(transport, runner_args: RunnerArguments):
             logger.info("Session finished status={}", session.final_status)
             await runner.cancel()
 
-        await runner.run()
+        async with monitor_runtime(engine):
+            await runner.run()
     finally:
         _active_call = False
         if owned:
@@ -252,15 +306,16 @@ async def bot(runner_args: RunnerArguments):
     await run_bot(transport, runner_args)
 
 
-def main():
+def _main():
     global _engine
     config = RuntimeConfig.from_env()
     _engine = MLXAudioEngine(config)
 
     async def prepare():
         await check_llm(config)
-        await _engine.load()
-        await _engine.warmup()
+        use_qwen = _tts_engine_name() in ("qwen", "qwen-mlx", "mlx")
+        await _engine.load(with_tts=use_qwen)
+        await _engine.warmup(with_tts=use_qwen)
 
     from pipecat.runner.run import main as run
 
@@ -270,6 +325,11 @@ def main():
         run()
     finally:
         asyncio.run(_engine.close())
+
+
+def main():
+    with single_mac_runtime(ROOT):
+        _main()
 
 
 if __name__ == "__main__":

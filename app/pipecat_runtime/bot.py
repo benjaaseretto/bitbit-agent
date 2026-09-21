@@ -32,7 +32,6 @@ from pipecat.services.deepseek.llm import DeepSeekLLMService
 from pipecat.services.openai.stt import OpenAISTTService
 from pipecat.transcriptions.language import Language
 from pipecat.transports.base_transport import BaseTransport, TransportParams
-from pipecat.transports.daily.transport import DailyParams
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams
 from pipecat.workers.runner import WorkerRunner
 
@@ -44,9 +43,6 @@ from app.utils.call_metadata import load_call_metadata
 from app.utils.templates import render_template, split_tts_utterances
 
 _THINKING_OFF = DeepSeekLLMService.ThinkingConfig(type="disabled")
-
-load_dotenv(override=True)
-
 
 class ClosedSessionGate(FrameProcessor):
     """Descarta micrófono cuando la sesión ya cerró (fase done)."""
@@ -134,11 +130,18 @@ def _load_metadata() -> dict:
     return load_call_metadata()
 
 
-transport_params = {
-    "daily": lambda: DailyParams(
+def _daily_params():
+    # Daily is optional; WebRTC must not import/load its native dependency.
+    from pipecat.transports.daily.transport import DailyParams
+
+    return DailyParams(
         audio_in_enabled=True,
         audio_out_enabled=True,
-    ),
+    )
+
+
+transport_params = {
+    "daily": _daily_params,
     "twilio": lambda: FastAPIWebsocketParams(
         audio_in_enabled=True,
         audio_out_enabled=True,
@@ -284,11 +287,13 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 
 
 async def bot(runner_args: RunnerArguments):
+    load_dotenv(override=True)
     transport = await create_transport(runner_args, transport_params)
     await run_bot(transport, runner_args)
 
 
 def main() -> None:
+    load_dotenv(override=True)
     require_config()
     from pipecat.runner.run import main as pipecat_main
 

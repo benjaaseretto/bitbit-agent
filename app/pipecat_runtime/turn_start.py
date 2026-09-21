@@ -35,36 +35,55 @@ class MacMinWordsUserTurnStartStrategy(MinWordsUserTurnStartStrategy):
 
     Con parlantes, el eco y 'Ehh...' disparan InterruptionFrame a mitad de frase.
     Default Mac: no barge-in mientras el bot habla (INTERRUPTION_MIN_WORDS=0).
+
+    ``playback_active`` cubre el tramo en que la GPU ya terminó pero WebRTC
+    sigue reproduciendo (sin drenar el contexto TTS ~1s extra).
     """
+
+    def __init__(self, *args, playback_active=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._playback_active = playback_active
+
+    def _bot_or_playback(self) -> bool:
+        if self._bot_speaking:
+            return True
+        if self._playback_active is not None:
+            try:
+                return bool(self._playback_active())
+            except Exception:
+                return False
+        return False
 
     async def _handle_transcription(
         self, frame: TranscriptionFrame | InterimTranscriptionFrame
     ) -> ProcessFrameResult:
         raw = (getattr(frame, "text", None) or "").strip()
         if is_turn_filler(raw):
-            logger.debug("{} ignore filler={!r}", self, raw)
+            logger.info("{} ignore filler={!r}", self, raw)
             return ProcessFrameResult.CONTINUE
 
+        speaking = self._bot_or_playback()
         word_count = len(raw.split())
         min_words = interruption_word_threshold(
-            bot_speaking=self._bot_speaking, min_words=self._min_words
+            bot_speaking=speaking, min_words=self._min_words
         )
         # 0 mientras habla = no interrumpir (el STT a menudo transcribe el propio TTS).
-        if self._bot_speaking and min_words <= 0:
-            logger.debug("{} skip barge-in while bot speaking text={!r}", self, raw)
+        if speaking and min_words <= 0:
+            logger.info("{} skip barge-in while bot/playback text={!r}", self, raw)
             return ProcessFrameResult.CONTINUE
 
         should_trigger = word_count >= max(min_words, 1)
         is_interim = isinstance(frame, InterimTranscriptionFrame)
-        logger.debug(
+        logger.info(
             f"{self} should_trigger={should_trigger} num_spoken_words={word_count} "
             f"min_words={min_words} bot_speaking={self._bot_speaking} "
-            f"interim_transcription={is_interim}"
+            f"playback={speaking and not self._bot_speaking} "
+            f"interim_transcription={is_interim} text={raw!r}"
         )
         if should_trigger:
             await self.trigger_user_turn_started()
             return ProcessFrameResult.STOP
-        if self._bot_speaking:
+        if speaking:
             return ProcessFrameResult.CONTINUE
         await self.trigger_reset_aggregation()
         return ProcessFrameResult.CONTINUE

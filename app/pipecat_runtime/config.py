@@ -44,7 +44,8 @@ class RuntimeConfig:
     voice: str = "Serena"
     reference_audio: str = ""
     reference_text: str = ""
-    tts_interval: float = 0.32
+    tts_interval: float = 0.4
+    tts_prebuffer: float = 0.45  # menor = responde antes; 1.2 sumaba ~1.5s de TTFB
     tts_speed: float = 1.0  # >1 más rápido, <1 más lento
     tts_volume: float = 1.0  # ganancia lineal (1.0 = normal)
 
@@ -73,7 +74,8 @@ class RuntimeConfig:
             voice=os.getenv("QWEN_TTS_VOICE", "Serena"),
             reference_audio=os.getenv("QWEN_TTS_REFERENCE_AUDIO", ""),
             reference_text=os.getenv("QWEN_TTS_REFERENCE_TEXT", ""),
-            tts_interval=float(os.getenv("TTS_STREAMING_INTERVAL", "0.32")),
+            tts_interval=float(os.getenv("TTS_STREAMING_INTERVAL", "0.4")),
+            tts_prebuffer=float(os.getenv("TTS_PREBUFFER_SECONDS", "0.45")),
             tts_speed=float(os.getenv("TTS_SPEED", "1.0")),
             tts_volume=float(os.getenv("TTS_VOLUME", "1.0")),
         )
@@ -104,6 +106,8 @@ class RuntimeConfig:
             raise ValueError("TTS_VOICE_MODE debe ser preset o clone.")
         if not 0.16 <= self.tts_interval <= 2.0:
             raise ValueError("TTS_STREAMING_INTERVAL debe estar entre 0.16 y 2 segundos.")
+        if not 0.0 <= self.tts_prebuffer <= 5.0:
+            raise ValueError("TTS_PREBUFFER_SECONDS debe estar entre 0 y 5 segundos.")
         if not 0.5 <= self.tts_speed <= 2.0:
             raise ValueError("TTS_SPEED debe estar entre 0.5 y 2.0.")
         if not 0.1 <= self.tts_volume <= 2.0:

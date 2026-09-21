@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 import pytest
 from pipecat.frames.frames import TranscriptionFrame
@@ -7,6 +8,7 @@ from pipecat.processors.frame_processor import FrameDirection
 
 from app.pipecat_runtime.hud import HudObserver
 from app.pipecat_runtime.studio import list_studio_flows, merge_call_metadata
+from app.pipecat_runtime.supervisor import BotManager
 from app.session.call_session import CallSession
 
 
@@ -30,6 +32,24 @@ def test_merge_call_metadata_ignores_empty_body():
     runner = SimpleNamespace(body=None)
     merged = merge_call_metadata({"flow_key": "clinica_vida_flow"}, runner)
     assert merged["flow_key"] == "clinica_vida_flow"
+
+
+def test_bot_manager_stop_without_process():
+    manager = BotManager()
+    status = manager.stop()
+    assert status["running"] is False
+    assert status["pid"] is None
+
+
+def test_bot_manager_start_reuses_running_child(monkeypatch):
+    manager = BotManager()
+    fake = MagicMock()
+    fake.poll.return_value = None
+    fake.pid = 99
+    manager._proc = fake
+    status = manager.start()
+    assert status["running"] is True
+    assert status["pid"] == 99
 
 
 @pytest.mark.asyncio

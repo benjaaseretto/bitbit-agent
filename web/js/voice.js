@@ -107,8 +107,14 @@ export function mountVoice(host) {
   ro.observe(host);
 
   let disposed = false;
-  const tick = () => {
+  let lastRender = 0;
+  const tick = (now) => {
     if (disposed) return;
+    requestAnimationFrame(tick);
+    // The visualizer shares the Mac GPU with speech inference. Render at
+    // 30 fps and stop drawing hidden tabs, without affecting audio playback.
+    if (document.hidden || now - lastRender < 1000 / 30) return;
+    lastRender = now;
     if (botAnalyser) {
       botAnalyser.getByteFrequencyData(freq);
       botEnergy += (average(freq, 0, 12) - botEnergy) * 0.28;
@@ -129,7 +135,6 @@ export function mountVoice(host) {
     particles.rotation.y -= 0.004;
     particles.material.size = 0.03 + energy * 0.06;
     renderer.render(scene, camera);
-    requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 

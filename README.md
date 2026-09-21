@@ -41,10 +41,26 @@ cp .env.mac.example .env.mac
 pip install -e ".[dev,mac]"
 python scripts/prepare_models.py
 python scripts/run_local.py
-# Studio: http://localhost:7860/
+# Studio (supervisor): http://localhost:7860/
+# Bot WebRTC interno: :7870 — Apagar / Encender desde el front
 ```
 
+El supervisor en `:7860` deja la UI viva. **Apagar bot** mata el proceso MLX;
+**Encender bot** lo vuelve a levantar sin reiniciar la terminal.
+
 Voz Mac: `TTS_SPEED` (0.5–2.0) y `TTS_VOLUME` (0.1–2.0) en `.env` / `.env.mac`.
+
+Para suavizar pausas entre fragmentos, `TTS_PREBUFFER_SECONDS` acumula audio antes
+de reproducir (1.2 s por defecto; 0 desactiva la reserva). Añade espera inicial;
+no elimina pausas que ya estén dentro del audio generado ni compensa una síntesis
+sostenidamente más lenta que tiempo real. El registro `TTS continuity` informa
+`estimated_starvation_ms`: estima cuánto tiempo faltó audio durante la síntesis,
+sin incluir problemas de red o del navegador. Reiniciar el servidor tras cambiarlo.
+
+El fragmento por defecto es de 0.64 s (`TTS_STREAMING_INTERVAL`). Cada llamada
+guarda métricas sin texto ni audio en `reports/runtime-performance.jsonl`.
+La [revisión de rendimiento](docs/audio-review-2026-09-20.md) documenta mediciones,
+límites y comandos para repetir las pruebas locales.
 
 LLM local MLX queda solo como A/B (`LLM_PROVIDER=mlx`); no es el default.
 

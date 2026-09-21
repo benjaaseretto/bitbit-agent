@@ -1,4 +1,4 @@
-"""Arranque Mac: audio MLX + bot WebRTC. LLM = DeepSeek (no levanta mlx_lm)."""
+"""Arranque Mac: supervisor en :7860 + bot MLX en :7870 (apagable desde el front)."""
 from __future__ import annotations
 
 import os
@@ -10,10 +10,12 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import httpx
+import uvicorn
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from app.pipecat_runtime.config import RuntimeConfig
+from app.pipecat_runtime.supervisor import BOT_PORT, STUDIO_PORT, BotManager, create_supervisor_app
 
 
 def _ensure_mlx_llm(config: RuntimeConfig, children: list) -> None:
@@ -63,11 +65,11 @@ def _ensure_mlx_llm(config: RuntimeConfig, children: list) -> None:
 
 def main() -> int:
     config = RuntimeConfig.from_env()
-    # Solo offline si el usuario lo pidió; prepare_models puede dejar gaps.
-    # os.environ.setdefault("HF_HUB_OFFLINE", "1")
     children: list = []
+    manager = BotManager()
 
     def stop(signum=None, frame=None):
+        manager.stop()
         for child in reversed(children):
             if child.poll() is None:
                 child.terminate()
@@ -96,23 +98,18 @@ def main() -> int:
             flush=True,
         )
         print(
-            "Preparando audio MLX. Studio: http://localhost:7860/",
+            f"Studio supervisor: http://127.0.0.1:{STUDIO_PORT}/  (bot WebRTC :{BOT_PORT})",
             flush=True,
         )
-        child = subprocess.Popen(
-            [
-                sys.executable,
-                "-m",
-                "app.pipecat_runtime.mac_bot",
-                "--transport",
-                "webrtc",
-                *sys.argv[1:],
-            ],
-            cwd=ROOT,
-            env=os.environ.copy(),
+        print("Encendiendo bot MLX…", flush=True)
+        manager.start()
+        print(
+            f"Bot listo. Apagá/encendé desde el front. Studio: http://localhost:{STUDIO_PORT}/",
+            flush=True,
         )
-        children.append(child)
-        return child.wait()
+        app = create_supervisor_app(manager)
+        uvicorn.run(app, host="127.0.0.1", port=STUDIO_PORT, log_level="info")
+        return 0
     finally:
         stop()
 

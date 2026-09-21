@@ -208,6 +208,7 @@ class IdentityVerificationTask(BaseTask):
             return
         await self.speak(
             f"Soy {self.session.nombre_agente}, de {self.session.nombre_empresa}. "
+            "Le llamo por el seguimiento de su cuenta. "
             f"¿Hablo con {self.session.nombre_deudor}?"
         )
         await params.result_callback({"ok": True, "action": "identify"}, properties=_WAIT)

@@ -79,7 +79,7 @@ def test_stt_skips_while_tts_busy_and_cooldown():
     engine.tts_busy = True
     assert engine.transcribe(b"not-a-wav") == ""
     engine.tts_busy = False
-    engine.tts_ended_at = time.monotonic()
+    engine.playback_ended_at = time.monotonic()
     assert engine.transcribe(b"not-a-wav") == ""
 
 
@@ -100,6 +100,35 @@ def test_stt_sanitize_drops_hallucinations():
         opening,
     ) == ""
     assert MLXAudioEngine._sanitize_transcript("no me alcanza el total", opening)
+    # Identidad: no tirar negaciones / terceros (regresión log 19:07)
+    assert (
+        MLXAudioEngine._sanitize_transcript("No, no, ella no se encuentra en este momento.")
+        == "No, no, ella no se encuentra en este momento."
+    )
+    assert MLXAudioEngine._sanitize_transcript("No, he equivocado.") == "No, he equivocado."
+    assert (
+        MLXAudioEngine._sanitize_transcript(
+            "me repetís para qué me estás llamando."
+        )
+        == "me repetís para qué me estás llamando."
+    )
+    assert (
+        MLXAudioEngine._sanitize_transcript(
+            "Me he repetido, ¿dónde le estás llamando?"
+        )
+        == "Me he repetido, ¿dónde le estás llamando?"
+    )
+    assert (
+        MLXAudioEngine._sanitize_transcript("¿De dónde me está llamando?")
+        == "¿De dónde me está llamando?"
+    )
+    assert MLXAudioEngine._sanitize_transcript("¿Qué pasó?") == "¿Qué pasó?"
+    assert MLXAudioEngine._sanitize_transcript("no te escucho") == "no te escucho"
+    assert (
+        MLXAudioEngine._sanitize_transcript("No, no, he equivocado.")
+        == "No, no, he equivocado."
+    )
+    assert MLXAudioEngine._sanitize_transcript("sí, correcto") == "sí, correcto"
 
 
 def test_split_tts_utterances_breaks_long_script():
@@ -169,6 +198,9 @@ class FakeEngine:
     def remember_spoken(self, text: str) -> None:
         self.last_spoken = text or ""
 
+    def stt_is_blocked(self):
+        return self.tts_busy
+
     async def call(self, fn, *args):
         return fn(*args)
 
@@ -209,6 +241,7 @@ def test_pcm_applies_speed_and_volume():
 @pytest.mark.asyncio
 async def test_tts_yields_before_whole_utterance_and_closes_on_interrupt():
     engine = FakeEngine()
+    engine.config = replace(engine.config, tts_prebuffer=0)
     service = QwenMLXTTSService(engine)
     service._sample_rate = 24000
     stream = service.run_tts("Hola", "test-context")

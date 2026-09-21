@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Voice agent for medical appointment scheduling on Pipecat"
 requires-python = ">=3.11,<3.14"
 dependencies = [
-    "pipecat-ai[whisper,silero,runner,webrtc]==1.11.0",
+    "pipecat-ai[whisper,silero,runner,webrtc,kokoro]==1.11.0",
     "python-dotenv>=1.0.0",
     "num2words>=0.5.14",
     "pydantic>=2.11.0",

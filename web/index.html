@@ -48,6 +48,12 @@
           <button id="connect-btn" class="btn-primary" type="button">
             Iniciar enlace
           </button>
+          <button id="start-btn" class="btn-secondary" type="button">
+            Encender bot
+          </button>
+          <button id="shutdown-btn" class="btn-danger" type="button">
+            Apagar bot
+          </button>
         </aside>
       </main>
 
@@ -139,7 +145,10 @@
           </div>
 
           <footer class="hud-foot">
-            <button id="hangup-btn" type="button">Cortar enlace</button>
+            <div class="hud-foot-actions">
+              <button id="hangup-btn" type="button">Cortar enlace</button>
+              <button id="shutdown-hud-btn" type="button">Apagar bot</button>
+            </div>
             <p id="hud-live" role="status">ESCUCHANDO…</p>
           </footer>
         </div>

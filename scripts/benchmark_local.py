@@ -62,10 +62,14 @@ async def main():
                 started = time.perf_counter()
                 chunks = []
                 first = None
+                arrivals = []
+                durations = []
                 try:
                     while (item := await engine.call(engine.next_pcm, generator)) is not None:
                         pcm, rate = item
                         if pcm:
+                            arrivals.append(time.perf_counter() - started)
+                            durations.append(len(pcm) / (rate * 2))
                             if first is None:
                                 first = time.perf_counter() - started
                             chunks.append(pcm)
@@ -75,8 +79,15 @@ async def main():
                 if not chunks:
                     raise RuntimeError("TTS returned no audio")
                 duration = sum(len(c) for c in chunks) / (rate * 2)
+                prior_audio = 0.0
+                required_reserve = 0.0
+                for arrival, chunk_duration in zip(arrivals, durations):
+                    required_reserve = max(required_reserve, arrival - first - prior_audio)
+                    prior_audio += chunk_duration
                 row.update(tts_first_audio_ms=round(first*1000), tts_total_ms=round(elapsed*1000),
-                           audio_seconds=round(duration, 2), rtf=round(elapsed/duration, 3))
+                           audio_seconds=round(duration, 2), rtf=round(elapsed/duration, 3),
+                           reserve_needed_ms=round(required_reserve*1000),
+                           max_chunk_wait_ms=round(max(b-a for a,b in zip([0]+arrivals,arrivals))*1000))
                 with wave.open(str(folder / f"qwen_sample_{run}.wav"), "wb") as wav:
                     wav.setnchannels(1)
                     wav.setsampwidth(2)

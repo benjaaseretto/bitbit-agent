@@ -23,7 +23,11 @@ _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 
 
 def split_tts_utterances(text: str, *, max_chars: int = 720) -> list[str]:
-    """Parte solo scripts extremos. Cortar a ~180 chars deja huecos de Bot stopped speaking."""
+    """Parte solo scripts extremos.
+
+    En Mac no bajes de ~720: cada TTSSpeakFrame nuevo paga TTFB/prebuffer
+    (~1.3s) y suena a corte entre frases.
+    """
     raw = " ".join(str(text or "").split())
     if not raw:
         return []

@@ -200,6 +200,57 @@ body {
   cursor: not-allowed;
 }
 
+.btn-danger {
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0.75rem 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--magenta);
+  background: transparent;
+  color: var(--magenta);
+}
+
+.btn-secondary {
+  width: 100%;
+  margin-top: 0.65rem;
+  padding: 0.75rem 1rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--cyan);
+  background: rgba(57, 231, 255, 0.1);
+  color: var(--cyan);
+}
+
+.btn-secondary:disabled,
+.btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.hud-foot-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#shutdown-hud-btn {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--magenta);
+  background: rgba(255, 78, 200, 0.12);
+  color: var(--magenta);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .hud {
   position: relative;
   z-index: 5;

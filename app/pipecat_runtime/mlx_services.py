@@ -7,15 +7,20 @@ from __future__ import annotations
 
 import asyncio
 import io
+import os
 import re
 import time
 import wave
 from concurrent.futures import ThreadPoolExecutor
-from functools import partial
+from collections import deque
+from contextlib import suppress
 
 import numpy as np
 from loguru import logger
-from pipecat.frames.frames import ErrorFrame, TranscriptionFrame, TTSAudioRawFrame
+from pipecat.frames.frames import (
+    BotStartedSpeakingFrame, BotStoppedSpeakingFrame, ErrorFrame,
+    TranscriptionFrame, TTSAudioRawFrame,
+)
 from pipecat.services.settings import STTSettings, TTSSettings
 from pipecat.services.stt_service import SegmentedSTTService
 from pipecat.services.tts_service import TTSService
@@ -92,9 +97,12 @@ _DOMAIN = {
     "fecha",
     "llam",
     "ocupado",
+    "ocupada",
     "despues",
     "después",
     "repetir",
+    "repetite",
+    "repiteme",
     "perdon",
     "perdón",
     "entiendo",
@@ -112,6 +120,9 @@ _DOMAIN = {
     "hola",
     "espera",
     "paso",
+    "pasar",
+    "pasalo",
+    "pásalo",
     "juan",
     "carla",
     "ana",
@@ -119,7 +130,108 @@ _DOMAIN = {
     "turno",
     "cita",
     "bioanalyze",
+    # Identidad / terceros / número equivocado
+    "equivocado",
+    "equivocada",
+    "equivoco",
+    "número",
+    "numero",
+    "encuentra",
+    "disponible",
+    "momento",
+    "recado",
+    "buzon",
+    "buzón",
+    "titular",
+    "persona",
+    "ella",
+    "aqui",
+    "aquí",
+    "ahora",
+    "fallecio",
+    "falleció",
+    "incorrecto",
+    # Origen/motivo de llamada — tokens completos (∩ de sets, no prefijos)
+    "donde",
+    "dónde",
+    "llamando",
+    "llamada",
+    "llamas",
+    "llamás",
+    "llama",
+    "repetido",
+    "porfa",
+    "favor",
+    "compañía",
+    "compania",
+    "desde",
+    "pasó",
+    "paso",
+    "escucho",
+    "oigo",
+    "cortó",
+    "corto",
+    "disculpe",
+    "perdón",
+    "perdon",
 }
+
+
+# Frases de identidad: el filtro off-domain no debe tirarlas (STT imperfecto OK).
+_IDENTITY_KEEP = (
+    "equivoc",
+    "no soy",
+    "no es",
+    "no se encuentra",
+    "no está",
+    "no esta",
+    "número equivocado",
+    "numero equivocado",
+    "me equivoqué",
+    "me equivoque",
+    "he equivocado",
+    "ha equivocado",
+    "deja recado",
+    "un momento",
+    "se lo paso",
+    "no está disponible",
+    "no esta disponible",
+    # Pedidos de aclaración / motivo de llamada (log 21:21:15)
+    "me repeti",
+    "me repetí",
+    "me repite",
+    "para qué me",
+    "para que me",
+    "por qué me llama",
+    "por que me llama",
+    "de parte de quién",
+    "de parte de quien",
+    "quién habla",
+    "quien habla",
+    "me estás llamando",
+    "me estas llamando",
+    "de dónde",
+    "de donde",
+    "dónde me",
+    "donde me",
+    "dónde le",
+    "donde le",
+    "me está llamando",
+    "me esta llamando",
+    "me he repetido",
+    "me repetido",
+    "qué pasó",
+    "que paso",
+    "qué pasa",
+    "que pasa",
+    "no te escucho",
+    "no escucho",
+    "se cortó",
+    "se corto",
+    "me cortaste",
+    "otra vez",
+)
+
 
 
 class MLXAudioEngine:
@@ -133,39 +245,86 @@ class MLXAudioEngine:
         self.last_spoken = ""
         self.tts_busy = False
         self.tts_ended_at = 0.0
+        self.playback_active = False
+        self.playback_ended_at = 0.0
+        # Monotonic deadline while estimated WebRTC playout still has audio,
+        # even if Pipecat already emitted BotStoppedSpeakingFrame.
+        self.playback_until = 0.0
+        self.work_stats = {}
+        self.tts_stats = deque(maxlen=64)
 
-    async def call(self, fn, *args, **kwargs):
-        return await asyncio.get_running_loop().run_in_executor(
-            self.executor, partial(fn, *args, **kwargs)
+    def stt_is_blocked(self):
+        # Follow estimated speaker playout, not GPU completion. Qwen can finish
+        # faster than realtime; TTSStoppedFrame then unmutes STT while audio is
+        # still queued and echo barge-in wipes the remainder.
+        now = time.monotonic()
+        if self.tts_busy or self.playback_active:
+            return True
+        if self.playback_until > now:
+            return True
+        return (
+            self.playback_ended_at > 0
+            and now - self.playback_ended_at < 0.2
         )
 
-    async def load(self):
-        await self.call(self._load)
+    async def call(self, fn, *args, **kwargs):
+        queued_at = time.perf_counter()
 
-    async def warmup(self):
+        def measured():
+            started = time.perf_counter()
+            try:
+                return fn(*args, **kwargs)
+            finally:
+                elapsed = time.perf_counter() - started
+                wait = started - queued_at
+                name = getattr(fn, "__name__", type(fn).__name__)
+                stats = self.work_stats.setdefault(name, {"calls": 0, "max_queue_ms": 0.0, "max_work_ms": 0.0})
+                stats["calls"] += 1
+                stats["max_queue_ms"] = max(stats["max_queue_ms"], wait * 1000)
+                stats["max_work_ms"] = max(stats["max_work_ms"], elapsed * 1000)
+                if wait > 0.1:
+                    logger.warning("MLX queue operation={} wait_ms={:.0f}", name, wait * 1000)
+
+        return await asyncio.get_running_loop().run_in_executor(
+            self.executor, measured
+        )
+
+    async def load(self, *, with_tts: bool = True):
+        await self.call(self._load, with_tts)
+
+    async def warmup(self, *, with_tts: bool = True):
         """Compile the actual audio paths before accepting microphone input."""
-        generator = self.speech("Hola, buen día.")
-        chunks = []
-        try:
-            while (item := await self.call(self.next_pcm, generator)) is not None:
-                chunks.append(item[0])
-                rate = item[1]
-        finally:
-            await self.call(generator.close)
-        if chunks:
-            from scipy.signal import resample_poly
-            import math
-            samples = np.frombuffer(b"".join(chunks), dtype="<i2").astype(np.float32) / 32768
-            divisor = math.gcd(rate, 16000)
-            samples = resample_poly(samples, 16000 // divisor, rate // divisor)
+        if with_tts and self.tts is not None:
+            generator = self.speech("Hola, buen día.")
+            chunks = []
+            try:
+                while (item := await self.call(self.next_pcm, generator)) is not None:
+                    chunks.append(item[0])
+                    rate = item[1]
+            finally:
+                await self.call(generator.close)
+            if chunks:
+                from scipy.signal import resample_poly
+                import math
+                samples = np.frombuffer(b"".join(chunks), dtype="<i2").astype(np.float32) / 32768
+                divisor = math.gcd(rate, 16000)
+                samples = resample_poly(samples, 16000 // divisor, rate // divisor)
+                audio = io.BytesIO()
+                with wave.open(audio, "wb") as wav:
+                    wav.setnchannels(1)
+                    wav.setsampwidth(2)
+                    wav.setframerate(16000)
+                    wav.writeframes((np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes())
+                await self.call(self.transcribe, audio.getvalue())
+        else:
             audio = io.BytesIO()
             with wave.open(audio, "wb") as wav:
                 wav.setnchannels(1)
                 wav.setsampwidth(2)
                 wav.setframerate(16000)
-                wav.writeframes((np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes())
+                wav.writeframes(b"\x00\x00" * 16000)
             await self.call(self.transcribe, audio.getvalue())
-        logger.info("MLX audio warmed up")
+        logger.info("MLX audio warmed up with_tts={}", with_tts)
 
     def _snapshot(self, repo_id: str) -> str:
         """Usa cache local; si está incompleto, completa por red."""
@@ -178,9 +337,8 @@ class MLXAudioEngine:
             logger.warning("Cache incompleto para {}; descargando: {}", repo_id, exc)
             return snapshot_download(repo_id, local_files_only=False)
 
-    def _load(self):
+    def _load(self, with_tts: bool = True):
         import mlx.core as mx
-        from mlx_audio.tts.utils import load_model
 
         # Bound reclaimable Metal allocations on the shared 16 GB machine.
         mx.set_cache_limit(256 * 1024 * 1024)
@@ -194,18 +352,27 @@ class MLXAudioEngine:
 
             self.whisper_path = self._snapshot(self.config.whisper_model)
             ModelHolder.get_model(self.whisper_path, mx.float16)
-        self.tts = load_model(self._snapshot(self.config.tts_model))
-        logger.info("MLX audio loaded stt={} tts={}", self.config.stt_engine, self.config.tts_model)
+        if with_tts:
+            from mlx_audio.tts.utils import load_model
+
+            self.tts = load_model(self._snapshot(self.config.tts_model))
+            logger.info(
+                "MLX audio loaded stt={} tts={}",
+                self.config.stt_engine,
+                self.config.tts_model,
+            )
+        else:
+            self.tts = None
+            logger.info(
+                "MLX STT loaded engine={} (TTS external/Kokoro)",
+                self.config.stt_engine,
+            )
 
     def transcribe(self, audio: bytes) -> str:
-        import mlx.core as mx
+        if self.stt_is_blocked():
+            return ""
 
-        # Eco del parlante: no transcribir mientras Qwen habla ni 2 s después.
-        if self.tts_busy:
-            return ""
-        if self.tts_ended_at and (time.monotonic() - self.tts_ended_at) < 2.0:
-            logger.debug("STT skip post-TTS cooldown")
-            return ""
+        import mlx.core as mx
 
         with wave.open(io.BytesIO(audio), "rb") as wav:
             if wav.getframerate() != 16000 or wav.getnchannels() != 1 or wav.getsampwidth() != 2:
@@ -301,6 +468,9 @@ class MLXAudioEngine:
             return t
         if len(tokens) <= 2 and tokens & {"si", "no", "sí"}:
             return t
+        # Identidad: "número equivocado", "no se encuentra", etc. (log 19:07:22 / 19:07:41)
+        if any(marker in lower for marker in _IDENTITY_KEEP):
+            return t
         content = tokens - _STOP
         if not content:
             logger.warning("STT dropped empty-content: {}", t)
@@ -315,7 +485,20 @@ class MLXAudioEngine:
             logger.warning("STT dropped off-domain: {}", t)
             return ""
         # Muy inglés sin señales de confirmación/identidad ES
-        es_hits = ("sí", "si", "hola", "soy", "habla", "espera", "paso", "no", "juan", "doctora")
+        es_hits = (
+            "sí",
+            "si",
+            "hola",
+            "soy",
+            "habla",
+            "espera",
+            "paso",
+            "no",
+            "juan",
+            "doctora",
+            "equivoc",
+            "carla",
+        )
         en_tokens = set(lower.replace(",", " ").replace(".", " ").split())
         en_common = {"the", "yeah", "yes", "service", "obvious", "from", "news", "and", "so"}
         if en_tokens & en_common and not any(h in lower for h in es_hits):
@@ -330,7 +513,7 @@ class MLXAudioEngine:
             stream=True,
             streaming_interval=self.config.tts_interval,
             verbose=False,
-            max_tokens=600,
+            max_tokens=4096,
             speed=self.config.tts_speed,
         )
         if self.config.voice_mode == "clone":
@@ -375,7 +558,25 @@ class MLXSTTService(SegmentedSTTService):
     def can_generate_metrics(self):
         return True
 
+    async def process_frame(self, frame, direction):
+        if isinstance(frame, BotStartedSpeakingFrame):
+            self.engine.playback_active = True
+            logger.info("AUDIO bot_started_speaking")
+        elif isinstance(frame, BotStoppedSpeakingFrame):
+            self.engine.playback_active = False
+            self.engine.playback_ended_at = time.monotonic()
+            logger.info("AUDIO bot_stopped_speaking (posible hueco si sigue TTS)")
+        await super().process_frame(frame, direction)
+
+    async def cancel(self, frame):
+        await super().cancel(frame)
+        self.engine.playback_active = False
+        self.engine.playback_ended_at = 0.0
+
     async def run_stt(self, audio: bytes):
+        # Don't enqueue echo behind synthesis on the shared GPU worker.
+        if self.engine.stt_is_blocked():
+            return
         started = time.perf_counter()
         try:
             text = await self.engine.call(self.engine.transcribe, audio)
@@ -396,42 +597,207 @@ class MLXSTTService(SegmentedSTTService):
 class QwenMLXTTSService(TTSService):
     def __init__(self, engine: MLXAudioEngine):
         self.engine = engine
-        super().__init__(sample_rate=24000, push_start_frame=True, push_stop_frames=True,
-                         settings=TTSSettings(model=engine.config.tts_model,
-                                              voice=engine.config.voice, language=Language.ES))
+        # GPU local puede pausar >3s entre chunks; el default de Pipecat corta con
+        # TTSStoppedFrame y el parlante oye un hueco ("se pierde el audio").
+        stop_timeout = float(os.getenv("TTS_STOP_TIMEOUT_SECS", "12"))
+        super().__init__(
+            sample_rate=24000,
+            push_start_frame=True,
+            push_stop_frames=True,
+            stop_frame_timeout_s=stop_timeout,
+            settings=TTSSettings(
+                model=engine.config.tts_model,
+                voice=engine.config.voice,
+                language=Language.ES,
+            ),
+        )
+        logger.info(
+            "TTS service ready stop_timeout_s={} prebuffer_s={}",
+            stop_timeout,
+            engine.config.tts_prebuffer,
+        )
 
     def can_generate_metrics(self):
         return True
 
+    async def _keep_synthesis_context_alive(self, context_id: str):
+        # A local GPU can pause longer than Pipecat's idle timeout between
+        # chunks. Keep the queue alive until synthesis actually finishes;
+        # on_turn_context_completed still closes it in normal frame order.
+        ticks = 0
+        while True:
+            self._refresh_audio_context(context_id)
+            ticks += 1
+            if ticks % 5 == 0:
+                logger.debug(
+                    "TTS keepalive context={} tick={} timeout_s={}",
+                    context_id,
+                    ticks,
+                    self._stop_frame_timeout_s,
+                )
+            await asyncio.sleep(self._stop_frame_timeout_s / 3)
+
     async def run_tts(self, text: str, context_id: str):
+        preview = " ".join((text or "").split())
+        if len(preview) > 80:
+            preview = preview[:77] + "…"
+        logger.info(
+            "TTS begin context={} chars={} text={!r}",
+            context_id,
+            len(text or ""),
+            preview,
+        )
         self.engine.remember_spoken(text)
         self.engine.tts_busy = True
         generator = self.engine.speech(text)
         started = time.perf_counter()
         first = True
+        pending = []
+        buffered_seconds = 0.0
+        playback_until = 0.0
+        starvation_seconds = 0.0
+        starvation_events = 0
+        total_audio_seconds = 0.0
+        pcm_chunks = 0
+        first_audio_ms = None
+        completed = False
         await self.start_ttfb_metrics()
         await self.start_tts_usage_metrics(text)
+        keepalive = asyncio.create_task(self._keep_synthesis_context_alive(context_id))
         try:
             while True:
                 item = await self.engine.call(self.engine.next_pcm, generator)
                 if item is None:
+                    # Short answers must still play even below the threshold.
+                    if pending:
+                        first_audio_ms = (time.perf_counter() - started) * 1000
+                        await self.stop_ttfb_metrics()
+                        logger.info(
+                            "LATENCY tts_first_audio_ms={:.0f} (flush short buffer={:.2f}s)",
+                            first_audio_ms,
+                            buffered_seconds,
+                        )
+                        playback_until = time.perf_counter() + buffered_seconds
+                        self.engine.playback_until = (
+                            time.monotonic() + buffered_seconds
+                        )
+                    for frame in pending:
+                        yield frame
+                    completed = True
                     break
                 pcm, rate = item
                 if not pcm:
                     continue
                 if rate != self.sample_rate:
                     raise ValueError(f"Unexpected Qwen sample rate: {rate}")
+                frame = TTSAudioRawFrame(pcm, rate, 1, context_id=context_id)
+                seconds = len(pcm) / (rate * 2)
+                total_audio_seconds += seconds
+                pcm_chunks += 1
                 if first:
+                    pending.append(frame)
+                    buffered_seconds += seconds
+                    if buffered_seconds < self.engine.config.tts_prebuffer:
+                        continue
                     first = False
+                    first_audio_ms = (time.perf_counter() - started) * 1000
                     await self.stop_ttfb_metrics()
-                    logger.info("LATENCY tts_first_audio_ms={:.0f}", (time.perf_counter() - started) * 1000)
-                yield TTSAudioRawFrame(pcm, rate, 1, context_id=context_id)
+                    logger.info(
+                        "LATENCY tts_first_audio_ms={:.0f} prebuffer_filled_s={:.2f}",
+                        first_audio_ms,
+                        buffered_seconds,
+                    )
+                    playback_until = time.perf_counter() + buffered_seconds
+                    self.engine.playback_until = time.monotonic() + buffered_seconds
+                    for queued in pending:
+                        yield queued
+                    pending.clear()
+                else:
+                    now = time.perf_counter()
+                    gap = max(0.0, now - playback_until)
+                    if gap > 0.08:
+                        starvation_events += 1
+                        logger.warning(
+                            "AUDIO underrun context={} gap_ms={:.0f} chunk={} "
+                            "audio_s={:.2f} gen_s={:.2f}",
+                            context_id,
+                            gap * 1000,
+                            pcm_chunks,
+                            total_audio_seconds,
+                            now - started,
+                        )
+                    starvation_seconds += gap
+                    # Yield ASAP when ahead so the transport/WebRTC can buffer.
+                    # Mid-stream sleeps starved the playout queue on Mac (GPU
+                    # ≈ realtime) and made small stalls audible. Drain wait in
+                    # finally still delays TTSStopped until estimated playout ends.
+                    playback_until = max(now, playback_until) + seconds
+                    self.engine.playback_until = time.monotonic() + max(
+                        0.0, playback_until - time.perf_counter()
+                    )
+                    yield frame
         except Exception as exc:
             logger.exception("Qwen TTS failed")
             yield ErrorFrame(error=f"MLX TTS: {type(exc).__name__}")
         finally:
+            gen_s = time.perf_counter() - started
+            drain_s = 0.0
             self.engine.tts_busy = False
+            # Sleep until estimated playout ends so TTSStopped/BotStopped don't
+            # land ~tail_s early (log 21:30:35: Bot stopped with playout_tail_s=0.82
+            # → eco + STT + sensación de corte). Barge-in also uses playback_until.
+            if completed and playback_until > 0:
+                drain_s = max(0.0, playback_until - time.perf_counter())
+                if drain_s > 0.05:
+                    self.engine.playback_until = time.monotonic() + drain_s
+                    logger.info(
+                        "AUDIO drain_wait_s={:.2f} context={} audio_s={:.2f} gen_s={:.2f}",
+                        drain_s,
+                        context_id,
+                        total_audio_seconds,
+                        gen_s,
+                    )
+                    with suppress(asyncio.CancelledError):
+                        await asyncio.sleep(drain_s + 0.05)
+            stats = {
+                "first_audio_ms": round(first_audio_ms, 1) if first_audio_ms is not None else None,
+                "audio_seconds": round(total_audio_seconds, 3),
+                "generation_seconds": round(gen_s, 3),
+                "drain_wait_seconds": round(drain_s, 3),
+                "estimated_starvation_ms": round(starvation_seconds * 1000, 1),
+                "starvation_events": starvation_events,
+                "pcm_chunks": pcm_chunks,
+                "completed": completed,
+            }
+            if hasattr(self.engine, "tts_stats"):
+                self.engine.tts_stats.append(stats)
+            realtime_ratio = (
+                (total_audio_seconds / gen_s) if gen_s > 0.05 else 0.0
+            )
+            logger.info(
+                "TTS end context={} completed={} chars={} audio_s={:.2f} gen_s={:.2f} "
+                "drain_s={:.2f} realtime_ratio={:.2f} underrun_ms={:.0f} "
+                "underrun_events={} chunks={}",
+                context_id,
+                completed,
+                len(text or ""),
+                total_audio_seconds,
+                gen_s,
+                drain_s,
+                realtime_ratio,
+                starvation_seconds * 1000,
+                starvation_events,
+                pcm_chunks,
+            )
+            if realtime_ratio < 0.85 and total_audio_seconds > 1.0:
+                logger.warning(
+                    "AUDIO slow_synthesis context={} realtime_ratio={:.2f} "
+                    "(GPU más lento que el parlante → huecos)",
+                    context_id,
+                    realtime_ratio,
+                )
+            keepalive.cancel()
+            with suppress(asyncio.CancelledError):
+                await keepalive
             self.engine.tts_ended_at = time.monotonic()
-            # Runs after any in-flight next() in the same executor, including
-            # cancellation; never call generator.close() while it is executing.
             await self.engine.call(generator.close)

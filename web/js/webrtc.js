@@ -63,7 +63,19 @@ export async function startCall({ flowKey, onMessage, onTrack, onState }) {
   if (!response.ok) {
     local.getTracks().forEach((track) => track.stop());
     pc.close();
-    throw new Error(`Offer failed (${response.status})`);
+    let detail = "";
+    try {
+      const err = await response.json();
+      detail = err.detail || err.error || "";
+      if (typeof detail !== "string") detail = JSON.stringify(detail);
+    } catch {
+      /* ignore */
+    }
+    throw new Error(
+      detail
+        ? `Offer failed (${response.status}): ${detail}`
+        : `Offer failed (${response.status})`
+    );
   }
   const answer = await response.json();
   await pc.setRemoteDescription(answer);

@@ -7,7 +7,10 @@ const lobby = document.getElementById("lobby");
 const hudEl = document.getElementById("hud");
 const flowSelect = document.getElementById("flow-select");
 const connectBtn = document.getElementById("connect-btn");
+const startBtn = document.getElementById("start-btn");
 const hangupBtn = document.getElementById("hangup-btn");
+const shutdownBtn = document.getElementById("shutdown-btn");
+const shutdownHudBtn = document.getElementById("shutdown-hud-btn");
 const lobbyStatus = document.getElementById("lobby-status");
 const remoteAudio = document.getElementById("remote-audio");
 const globeHost = document.getElementById("globe-host");
@@ -37,11 +40,43 @@ let globe;
 let voice;
 let call;
 let statsTimer = 0;
+let botRunning = false;
 
 try {
   globe = mountGlobe(globeHost, { ambient: false });
 } catch (error) {
   lobbyStatus.textContent = "El globo 3D no pudo cargar; el enlace de voz sigue disponible.";
+}
+
+function setBotUi(running) {
+  botRunning = Boolean(running);
+  if (startBtn) startBtn.disabled = botRunning;
+  if (shutdownBtn) shutdownBtn.disabled = !botRunning;
+  if (shutdownHudBtn) shutdownHudBtn.disabled = !botRunning;
+  connectBtn.disabled = !botRunning;
+}
+
+async function fetchStatus() {
+  const response = await fetch("/api/studio/status");
+  if (!response.ok) throw new Error("status");
+  return response.json();
+}
+
+async function refreshBotStatus() {
+  try {
+    const status = await fetchStatus();
+    setBotUi(status.running);
+    if (!status.running) {
+      lobbyStatus.textContent = "Bot apagado. Tocá Encender bot.";
+    } else if (!call) {
+      lobbyStatus.textContent = "Bot encendido. Listo para conectar.";
+    }
+    return status;
+  } catch {
+    setBotUi(false);
+    lobbyStatus.textContent = "No hay supervisor. Corré scripts/run_local.py.";
+    return { running: false };
+  }
 }
 
 async function loadFlows() {
@@ -65,11 +100,13 @@ async function loadFlows() {
         flowSelect.value = saved;
       }
     }
+    setBotUi(data.running);
   } catch {
     const option = document.createElement("option");
     option.value = "clinica_vida_flow";
     option.textContent = "clinica_vida_flow";
     flowSelect.appendChild(option);
+    setBotUi(false);
   }
 }
 
@@ -92,6 +129,10 @@ function leaveHud() {
 }
 
 async function connect() {
+  if (!botRunning) {
+    lobbyStatus.textContent = "Encendé el bot antes de iniciar el enlace.";
+    return;
+  }
   connectBtn.disabled = true;
   lobbyStatus.textContent = "Pidiendo micrófono y negociando WebRTC…";
   try {
@@ -129,7 +170,7 @@ async function connect() {
   } catch (error) {
     leaveHud();
     lobbyStatus.textContent = error.message || "No se pudo abrir el enlace.";
-    connectBtn.disabled = false;
+    setBotUi(botRunning);
   }
 }
 
@@ -138,12 +179,51 @@ function hangup() {
   call?.hangup();
   call = null;
   leaveHud();
-  connectBtn.disabled = false;
-  lobbyStatus.textContent = "Enlace cortado.";
+  setBotUi(botRunning);
+  lobbyStatus.textContent = botRunning
+    ? "Enlace cortado. Bot sigue encendido."
+    : "Enlace cortado.";
+}
+
+async function startBot() {
+  if (startBtn) startBtn.disabled = true;
+  lobbyStatus.textContent = "Encendiendo bot (MLX puede tardar un minuto)…";
+  try {
+    const response = await fetch("/api/studio/start", { method: "POST" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) {
+      throw new Error(data.error || `No se pudo encender (${response.status})`);
+    }
+    setBotUi(true);
+    lobbyStatus.textContent = "Bot encendido. Listo para conectar.";
+  } catch (error) {
+    setBotUi(false);
+    lobbyStatus.textContent = error.message || "Fallo al encender el bot.";
+  }
+}
+
+async function stopBot() {
+  window.clearInterval(statsTimer);
+  call?.hangup();
+  call = null;
+  leaveHud();
+  if (shutdownBtn) shutdownBtn.disabled = true;
+  if (shutdownHudBtn) shutdownHudBtn.disabled = true;
+  lobbyStatus.textContent = "Apagando bot…";
+  try {
+    await fetch("/api/studio/stop", { method: "POST" });
+  } catch {
+    /* ok */
+  }
+  setBotUi(false);
+  lobbyStatus.textContent = "Bot apagado. Tocá Encender bot para volver.";
 }
 
 connectBtn.addEventListener("click", connect);
 hangupBtn.addEventListener("click", hangup);
+startBtn?.addEventListener("click", startBot);
+shutdownBtn?.addEventListener("click", stopBot);
+shutdownHudBtn?.addEventListener("click", stopBot);
 flowSelect.addEventListener("change", () => {
   localStorage.setItem("bitbit.flow_key", flowSelect.value);
 });
@@ -168,4 +248,4 @@ if (preview) {
   }
 }
 
-loadFlows();
+loadFlows().then(() => refreshBotStatus());
