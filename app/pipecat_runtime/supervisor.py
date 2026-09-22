@@ -11,7 +11,7 @@ from typing import Any
 
 from loguru import logger
 
-from app.pipecat_runtime.studio import WEB_ROOT, list_studio_flows
+from app.pipecat_runtime.studio import WEB_ROOT, install_no_store_static, list_studio_flows
 
 ROOT = Path(__file__).resolve().parents[2]
 BOT_HOST = "127.0.0.1"
@@ -105,6 +105,7 @@ def create_supervisor_app(manager: BotManager):
 
     app = FastAPI(title="bitbit-studio-supervisor")
     bot_base = f"http://{BOT_HOST}:{BOT_PORT}"
+    install_no_store_static(app)
 
     @app.get("/api/studio/config", include_in_schema=False)
     async def studio_config():

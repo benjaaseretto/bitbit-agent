@@ -129,6 +129,24 @@ def test_stt_sanitize_drops_hallucinations():
         == "No, no, he equivocado."
     )
     assert MLXAudioEngine._sanitize_transcript("sí, correcto") == "sí, correcto"
+    # Log 10:09: micrófono descartado como off-domain/eco; el HUD tipado sí avanzaba.
+    assert MLXAudioEngine._sanitize_transcript("ok", opening) == "ok"
+    assert (
+        MLXAudioEngine._sanitize_transcript(
+            "Dale comentar como podemos hacer", opening
+        )
+        == "Dale comentar como podemos hacer"
+    )
+    assert (
+        MLXAudioEngine._sanitize_transcript("Hola, ¿me escuchás?", opening)
+        == "Hola, ¿me escuchás?"
+    )
+    assert (
+        MLXAudioEngine._sanitize_transcript("No, no, no, me des imposible.", opening)
+        == "No, no, no, me des imposible."
+    )
+    # Eco puro: solo palabras del TTS.
+    assert MLXAudioEngine._sanitize_transcript("adeudo dieciocho", opening) == ""
 
 
 def test_split_tts_utterances_breaks_long_script():
@@ -143,6 +161,11 @@ def test_split_tts_utterances_breaks_long_script():
     )
     chunks = split_tts_utterances(text)
     assert chunks == [text]
+    # Streaming Mac: paquetes cortos → primer audio sin esperar el guion entero.
+    packs = split_tts_utterances(text, max_chars=140)
+    assert len(packs) >= 3
+    assert all(len(p) <= 200 for p in packs)
+    assert "".join(packs).replace(" ", "") == text.replace(" ", "")
     huge = ". ".join([text] * 4)
     split = split_tts_utterances(huge)
     assert len(split) > 1
@@ -199,7 +222,10 @@ class FakeEngine:
         self.last_spoken = text or ""
 
     def stt_is_blocked(self):
-        return self.tts_busy
+        return self.stt_block_reason() != "open"
+
+    def stt_block_reason(self) -> str:
+        return "tts_busy" if self.tts_busy else "open"
 
     async def call(self, fn, *args):
         return fn(*args)

@@ -1,10 +1,9 @@
-"""PlayoutHoldTTSStopped delays TTSStopped until estimated audio duration elapses."""
+"""PlayoutHoldTTSStopped forwards TTSStopped so the transport can flush PCM."""
 
-import asyncio
 from types import SimpleNamespace
 
 import pytest
-from pipecat.frames.frames import TTSAudioRawFrame, TTSStoppedFrame
+from pipecat.frames.frames import TTSAudioRawFrame, TTSStartedFrame, TTSStoppedFrame
 from pipecat.processors.frame_processor import FrameDirection
 
 from app.pipecat_runtime.playout_hold import PlayoutHoldTTSStopped
@@ -15,36 +14,26 @@ def _pcm(seconds: float) -> bytes:
 
 
 @pytest.mark.asyncio
-async def test_hold_delays_tts_stopped_until_playout(monkeypatch):
-    engine = SimpleNamespace(playback_until=0.0)
+async def test_stop_is_forwarded_immediately_behind_audio():
+    engine = SimpleNamespace(playback_until=0.0, tts_busy=False)
     proc = PlayoutHoldTTSStopped(engine)
     pushed = []
 
     async def capture(frame, direction=FrameDirection.DOWNSTREAM):
-        pushed.append(frame)
+        pushed.append(type(frame))
 
     proc.push_frame = capture
-    sleeps = []
+    downstream = FrameDirection.DOWNSTREAM
+    await proc.process_frame(TTSAudioRawFrame(_pcm(0.2), 24000, 1), downstream)
+    await proc.process_frame(TTSStoppedFrame(), downstream)
 
-    async def fake_sleep(seconds):
-        sleeps.append(seconds)
-
-    monkeypatch.setattr(asyncio, "sleep", fake_sleep)
-
-    await proc.process_frame(
-        TTSAudioRawFrame(_pcm(0.2), 24000, 1), FrameDirection.DOWNSTREAM
-    )
-    await proc.process_frame(TTSStoppedFrame(), FrameDirection.DOWNSTREAM)
-    assert proc._stop_task is not None
-    await proc._stop_task
-
-    assert isinstance(pushed[0], TTSAudioRawFrame)
-    assert isinstance(pushed[1], TTSStoppedFrame)
-    assert sleeps and sleeps[0] >= 0.2
+    assert pushed == [TTSAudioRawFrame, TTSStoppedFrame]
+    assert engine.tts_busy is True
+    assert engine.playback_until > 0
 
 
 @pytest.mark.asyncio
-async def test_next_utterance_audio_is_not_blocked_by_hold(monkeypatch):
+async def test_second_utterance_is_not_blocked_by_first_stop():
     proc = PlayoutHoldTTSStopped()
     pushed = []
 
@@ -52,22 +41,30 @@ async def test_next_utterance_audio_is_not_blocked_by_hold(monkeypatch):
         pushed.append(type(frame))
 
     proc.push_frame = capture
-
-    async def fake_sleep(seconds):
-        return None
-
-    monkeypatch.setattr(asyncio, "sleep", fake_sleep)
-
     downstream = FrameDirection.DOWNSTREAM
     await proc.process_frame(TTSAudioRawFrame(_pcm(0.2), 24000, 1), downstream)
     await proc.process_frame(TTSStoppedFrame(), downstream)
     await proc.process_frame(TTSAudioRawFrame(_pcm(0.2), 24000, 1), downstream)
     await proc.process_frame(TTSStoppedFrame(), downstream)
-    assert proc._stop_task is not None
-    await proc._stop_task
 
     assert pushed == [
         TTSAudioRawFrame,
+        TTSStoppedFrame,
         TTSAudioRawFrame,
         TTSStoppedFrame,
     ]
+
+
+@pytest.mark.asyncio
+async def test_tts_started_marks_busy_before_pcm():
+    engine = SimpleNamespace(tts_busy=False, playback_until=0.0)
+    proc = PlayoutHoldTTSStopped(engine)
+    pushed = []
+
+    async def capture(frame, direction=FrameDirection.DOWNSTREAM):
+        pushed.append(type(frame))
+
+    proc.push_frame = capture
+    await proc.process_frame(TTSStartedFrame(), FrameDirection.DOWNSTREAM)
+    assert engine.tts_busy is True
+    assert pushed == [TTSStartedFrame]

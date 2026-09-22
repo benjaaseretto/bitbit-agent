@@ -4,6 +4,8 @@ from __future__ import annotations
 import re
 
 from loguru import logger
+
+from app.pipecat_runtime.audio_map import map_log
 from pipecat.frames.frames import InterimTranscriptionFrame, TranscriptionFrame
 from pipecat.turns.types import ProcessFrameResult
 from pipecat.turns.user_start.min_words_user_turn_start_strategy import (
@@ -59,6 +61,7 @@ class MacMinWordsUserTurnStartStrategy(MinWordsUserTurnStartStrategy):
     ) -> ProcessFrameResult:
         raw = (getattr(frame, "text", None) or "").strip()
         if is_turn_filler(raw):
+            map_log("turn.filler", text=repr(raw))
             logger.info("{} ignore filler={!r}", self, raw)
             return ProcessFrameResult.CONTINUE
 
@@ -69,11 +72,27 @@ class MacMinWordsUserTurnStartStrategy(MinWordsUserTurnStartStrategy):
         )
         # 0 mientras habla = no interrumpir (el STT a menudo transcribe el propio TTS).
         if speaking and min_words <= 0:
+            map_log(
+                "turn.skip_bargein",
+                text=repr(raw),
+                bot_speaking=self._bot_speaking,
+                playback=speaking,
+            )
             logger.info("{} skip barge-in while bot/playback text={!r}", self, raw)
             return ProcessFrameResult.CONTINUE
 
         should_trigger = word_count >= max(min_words, 1)
         is_interim = isinstance(frame, InterimTranscriptionFrame)
+        map_log(
+            "turn.decide",
+            trigger=should_trigger,
+            words=word_count,
+            min_words=min_words,
+            bot_speaking=self._bot_speaking,
+            playback=speaking,
+            interim=is_interim,
+            text=repr(raw),
+        )
         logger.info(
             f"{self} should_trigger={should_trigger} num_spoken_words={word_count} "
             f"min_words={min_words} bot_speaking={self._bot_speaking} "

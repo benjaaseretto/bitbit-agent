@@ -1,32 +1,39 @@
-"""Hold TTSStopped until estimated WebRTC playout catches up.
+"""Keep STT muted while Kokoro audio is in flight.
 
-Kokoro dumps PCM and then TTSStopped immediately. If this processor sleeps
-inside process_frame, the next utterance's audio sits behind that sleep.
-The output transport then sees an empty queue, fires BotStoppedSpeaking on
-its 3s fallback, and drops whatever is still buffered ("se corta").
-
-Audio is forwarded immediately. TTSStopped is released later, on a task, and
-a following utterance cancels that release so both clips stay in one playout.
+Do not delay TTSStoppedFrame. Pipecat's output transport flushes the last
+PCM chunk only when it sees TTSStopped; holding that frame leaves the tail
+in `_audio_buffer` and the WebRTC track fills the hole with auto-silence
+("se corta"). TTSStopped must sit behind the audio on the transport queue.
 """
 from __future__ import annotations
 
-import asyncio
 import time
 
-from loguru import logger
-from pipecat.frames.frames import Frame, InterruptionFrame, TTSAudioRawFrame, TTSStoppedFrame
+from pipecat.frames.frames import (
+    Frame,
+    InterruptionFrame,
+    TTSAudioRawFrame,
+    TTSStartedFrame,
+    TTSStoppedFrame,
+)
 from pipecat.processors.frame_processor import FrameDirection, FrameProcessor
+
+from app.pipecat_runtime.audio_map import map_log
 
 
 class PlayoutHoldTTSStopped(FrameProcessor):
-    """Delay TTSStoppedFrame until wall-clock matches queued audio duration."""
+    """Track estimated playout for STT mute; forward TTSStopped immediately."""
 
     def __init__(self, engine=None):
         super().__init__()
         self._engine = engine
         self._playout_until = 0.0
-        self._generation = 0
-        self._stop_task: asyncio.Task | None = None
+        self._pcm_frames = 0
+        self._pcm_seconds = 0.0
+        self._utterance_started = 0.0
+
+    def _remaining(self) -> float:
+        return max(0.0, self._playout_until - time.monotonic())
 
     def _note_audio(self, frame: TTSAudioRawFrame) -> None:
         channels = getattr(frame, "num_channels", None) or 1
@@ -36,69 +43,69 @@ class PlayoutHoldTTSStopped(FrameProcessor):
         if self._playout_until < now:
             self._playout_until = now
         self._playout_until += seconds
+        self._pcm_frames += 1
+        self._pcm_seconds += seconds
         if self._engine is not None:
             self._engine.playback_until = self._playout_until
+        map_log(
+            "hold.pcm",
+            frame=self._pcm_frames,
+            bytes=len(frame.audio),
+            rate=rate,
+            chunk_s=f"{seconds:.3f}",
+            total_s=f"{self._pcm_seconds:.3f}",
+            remain_s=f"{self._remaining():.3f}",
+            ctx=getattr(frame, "context_id", None),
+        )
 
-    def _invalidate_stop(self) -> None:
-        """Drop a pending TTSStopped so it cannot land in front of new audio."""
-        self._generation += 1
-        task = self._stop_task
-        self._stop_task = None
-        if task is not None and not task.done():
-            task.cancel()
-
-    async def _release_stop(
-        self, generation: int, frame: TTSStoppedFrame, direction: FrameDirection, delay: float
-    ) -> None:
-        try:
-            await asyncio.sleep(delay)
-        except asyncio.CancelledError:
+    def _set_busy(self, busy: bool) -> None:
+        if self._engine is None:
             return
-        if generation != self._generation:
+        self._engine.tts_busy = busy
+        if not busy:
             return
-        self._playout_until = 0.0
-        self._stop_task = None
-        await self.push_frame(frame, direction)
-
-    async def cleanup(self) -> None:
-        self._invalidate_stop()
-        self._playout_until = 0.0
-        await super().cleanup()
+        now = time.monotonic()
+        if self._engine.playback_until < now:
+            self._engine.playback_until = now + 0.5
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
-        # Cancel before the first await. Otherwise the pending release runs
-        # while this frame is still queued and pushes TTSStopped first.
         if isinstance(frame, InterruptionFrame):
-            self._invalidate_stop()
+            map_log(
+                "hold.interrupt",
+                remain_s=f"{self._remaining():.3f}",
+                pcm_s=f"{self._pcm_seconds:.3f}",
+                frames=self._pcm_frames,
+            )
             self._playout_until = 0.0
+            self._pcm_frames = 0
+            self._pcm_seconds = 0.0
+            self._set_busy(False)
             if self._engine is not None:
                 self._engine.playback_until = 0.0
+        elif isinstance(frame, TTSStartedFrame) and direction == FrameDirection.DOWNSTREAM:
+            self._pcm_frames = 0
+            self._pcm_seconds = 0.0
+            self._utterance_started = time.monotonic()
+            self._set_busy(True)
+            map_log("hold.started", ctx=getattr(frame, "context_id", None))
         elif isinstance(frame, TTSAudioRawFrame) and direction == FrameDirection.DOWNSTREAM:
-            self._invalidate_stop()
+            self._set_busy(True)
 
         await super().process_frame(frame, direction)
 
-        if isinstance(frame, InterruptionFrame):
-            await self.push_frame(frame, direction)
-            return
-
         if isinstance(frame, TTSAudioRawFrame) and direction == FrameDirection.DOWNSTREAM:
             self._note_audio(frame)
-            await self.push_frame(frame, direction)
-            return
-
-        if isinstance(frame, TTSStoppedFrame) and direction == FrameDirection.DOWNSTREAM:
-            delay = self._playout_until - time.monotonic()
-            if delay > 0.05:
-                logger.info("AUDIO hold_tts_stopped_s={:.2f}", delay)
-                self._generation += 1
-                generation = self._generation
-                self._stop_task = asyncio.create_task(
-                    self._release_stop(generation, frame, direction, delay + 0.05)
-                )
-                return
-            self._playout_until = 0.0
-            await self.push_frame(frame, direction)
-            return
+        elif isinstance(frame, TTSStoppedFrame) and direction == FrameDirection.DOWNSTREAM:
+            elapsed = (
+                time.monotonic() - self._utterance_started if self._utterance_started else 0.0
+            )
+            map_log(
+                "hold.stopped",
+                ctx=getattr(frame, "context_id", None),
+                pcm_s=f"{self._pcm_seconds:.3f}",
+                frames=self._pcm_frames,
+                remain_s=f"{self._remaining():.3f}",
+                since_start_s=f"{elapsed:.3f}",
+            )
 
         await self.push_frame(frame, direction)

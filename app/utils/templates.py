@@ -23,10 +23,10 @@ _SENTENCE_SPLIT = re.compile(r"(?<=[.!?])\s+")
 
 
 def split_tts_utterances(text: str, *, max_chars: int = 720) -> list[str]:
-    """Parte solo scripts extremos.
+    """Parte texto en paquetes ≤ max_chars respetando oraciones.
 
-    En Mac no bajes de ~720: cada TTSSpeakFrame nuevo paga TTFB/prebuffer
-    (~1.3s) y suena a corte entre frases.
+    En Mac, ``MacKokoroTTSService`` usa ~140 para empezar a sonar antes;
+    ``speak()`` sigue usando 720 para no abrir un TTSSpeakFrame por frase.
     """
     raw = " ".join(str(text or "").split())
     if not raw:

@@ -21,9 +21,12 @@ export async function startCall({ flowKey, onMessage, onTrack, onState }) {
   let pingTimer = 0;
 
   dc.addEventListener("open", () => {
+    // Pipecat SmallWebRTCConnection.is_connected() exige un ping < 3 s;
+    // con 4 s el transporte se creía desconectado y tiraba el audio.
+    dc.send("ping");
     pingTimer = window.setInterval(() => {
       if (dc.readyState === "open") dc.send("ping");
-    }, 4000);
+    }, 1000);
   });
   dc.addEventListener("message", (event) => {
     if (typeof event.data !== "string" || event.data.startsWith("ping")) return;

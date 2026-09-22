@@ -27,6 +27,7 @@ from pipecat.services.tts_service import TTSService
 from pipecat.transcriptions.language import Language
 from pipecat.utils.time import time_now_iso8601
 
+from app.pipecat_runtime.audio_map import map_log
 from app.pipecat_runtime.config import RuntimeConfig
 from app.pipecat_runtime.turn_start import is_turn_filler
 
@@ -168,12 +169,32 @@ _DOMAIN = {
     "pasó",
     "paso",
     "escucho",
+    "escuchas",
+    "escuchás",
     "oigo",
     "cortó",
     "corto",
     "disculpe",
     "perdón",
     "perdon",
+    # Conversación / rechazo / acuerdo (log 10:09: off-domain)
+    "ok",
+    "dale",
+    "bien",
+    "listo",
+    "perfecto",
+    "gracias",
+    "imposible",
+    "puedo",
+    "pueda",
+    "puede",
+    "podemos",
+    "hacer",
+    "comentar",
+    "trabajo",
+    "responsable",
+    "cubrir",
+    "pagarlo",
 }
 
 
@@ -226,10 +247,15 @@ _IDENTITY_KEEP = (
     "que pasa",
     "no te escucho",
     "no escucho",
+    "me escuch",
+    "me oyen",
     "se cortó",
     "se corto",
     "me cortaste",
     "otra vez",
+    "me es imposible",
+    "no puedo",
+    "no me alcanza",
 )
 
 
@@ -253,19 +279,23 @@ class MLXAudioEngine:
         self.work_stats = {}
         self.tts_stats = deque(maxlen=64)
 
+    def stt_block_reason(self) -> str:
+        now = time.monotonic()
+        if self.tts_busy:
+            return "tts_busy"
+        if self.playback_active:
+            return "playback_active"
+        if self.playback_until > now:
+            return f"playout+{self.playback_until - now:.2f}s"
+        if self.playback_ended_at > 0 and now - self.playback_ended_at < 0.2:
+            return f"cooldown+{now - self.playback_ended_at:.2f}s"
+        return "open"
+
     def stt_is_blocked(self):
         # Follow estimated speaker playout, not GPU completion. Qwen can finish
         # faster than realtime; TTSStoppedFrame then unmutes STT while audio is
         # still queued and echo barge-in wipes the remainder.
-        now = time.monotonic()
-        if self.tts_busy or self.playback_active:
-            return True
-        if self.playback_until > now:
-            return True
-        return (
-            self.playback_ended_at > 0
-            and now - self.playback_ended_at < 0.2
-        )
+        return self.stt_block_reason() != "open"
 
     async def call(self, fn, *args, **kwargs):
         queued_at = time.perf_counter()
@@ -370,6 +400,11 @@ class MLXAudioEngine:
 
     def transcribe(self, audio: bytes) -> str:
         if self.stt_is_blocked():
+            map_log(
+                "stt.transcribe_blocked",
+                reason=self.stt_block_reason(),
+                audio_bytes=len(audio or b""),
+            )
             return ""
 
         import mlx.core as mx
@@ -383,9 +418,11 @@ class MLXAudioEngine:
 
         # Eco/silencio: Parakeet y Whisper inventan "noticias" / inglés.
         if len(samples) < 1600:  # <100 ms
+            map_log("stt.too_short", samples=len(samples))
             return ""
         rms = float(np.sqrt(np.mean(np.square(samples))))
         if rms < 0.012:
+            map_log("stt.silence", rms=f"{rms:.4f}", samples=len(samples))
             logger.debug("STT skip silence rms={:.4f}", rms)
             return ""
 
@@ -439,6 +476,7 @@ class MLXAudioEngine:
         if is_turn_filler(t):
             return ""
         if cls._is_repetitive_hallucination(t):
+            map_log("stt.drop", reason="hallucination", text=repr(t[:80]))
             logger.warning("STT dropped repetitive hallucination: {}", t[:120])
             return ""
         lower = t.lower()
@@ -460,28 +498,58 @@ class MLXAudioEngine:
             "el corazón",
         )
         if any(m in lower for m in junk_markers):
+            map_log("stt.drop", reason="junk", text=repr(t[:80]))
             logger.warning("STT dropped hallucination: {}", t)
             return ""
         tokens = cls._words(t)
         # Confirmaciones cortas. No uses "si" suelto: "¿qué pasa si…?" no es un sí.
         if tokens & {"sí", "correcto", "claro", "soy", "yo"} and len(tokens) <= 8:
             return t
-        if len(tokens) <= 2 and tokens & {"si", "no", "sí"}:
+        # Muletillas de línea / acuerdo / rechazo de 1-2 palabras.
+        # El texto tipado del HUD no pasa por acá; el micrófono sí (log 10:09).
+        _SHORT_OK = {
+            "si",
+            "no",
+            "sí",
+            "hola",
+            "aló",
+            "alo",
+            "diga",
+            "ok",
+            "dale",
+            "bien",
+            "listo",
+            "perfecto",
+            "gracias",
+            "bueno",
+        }
+        if len(tokens) <= 2 and tokens & _SHORT_OK:
             return t
-        # Identidad: "número equivocado", "no se encuentra", etc. (log 19:07:22 / 19:07:41)
+        # Identidad / chequeo de línea: "número equivocado", "me escuchás", etc.
         if any(marker in lower for marker in _IDENTITY_KEEP):
             return t
         content = tokens - _STOP
         if not content:
+            map_log("stt.drop", reason="empty-content", text=repr(t[:80]))
             logger.warning("STT dropped empty-content: {}", t)
             return ""
         spoken_words = cls._words(last_spoken) - _STOP
-        if spoken_words:
-            overlap = len(content & spoken_words) / len(content)
-            if overlap >= 0.45:
-                logger.warning("STT dropped echo of TTS: {}", t)
-                return ""
-        if not (content & _DOMAIN) and not (content & spoken_words):
+        # Eco real = el usuario "dijo" solo palabras que el bot acabó de decir.
+        # Con last_spoken de 800 chars el umbral 0.45 tiraba frases nuevas
+        # (log 10:09:35 "Hola, ¿me escuchás?" overlap=0.50).
+        if spoken_words and content.issubset(spoken_words) and len(content) <= 5:
+            map_log(
+                "stt.drop",
+                reason="echo",
+                overlap="subset",
+                text=repr(t[:80]),
+            )
+            logger.warning("STT dropped echo of TTS: {}", t)
+            return ""
+        # ≥2 palabras de contenido en español: dejar pasar (junk/english ya filtraron).
+        # 1 token suelto sin dominio → tirar (alucinación corta).
+        if len(content) == 1 and not (content & _DOMAIN) and not (content & spoken_words):
+            map_log("stt.drop", reason="off-domain", text=repr(t[:80]))
             logger.warning("STT dropped off-domain: {}", t)
             return ""
         # Muy inglés sin señales de confirmación/identidad ES
@@ -502,6 +570,7 @@ class MLXAudioEngine:
         en_tokens = set(lower.replace(",", " ").replace(".", " ").split())
         en_common = {"the", "yeah", "yes", "service", "obvious", "from", "news", "and", "so"}
         if en_tokens & en_common and not any(h in lower for h in es_hits):
+            map_log("stt.drop", reason="english-like", text=repr(t[:80]))
             logger.warning("STT dropped english-like: {}", t)
             return ""
         return t
@@ -561,25 +630,49 @@ class MLXSTTService(SegmentedSTTService):
     async def process_frame(self, frame, direction):
         if isinstance(frame, BotStartedSpeakingFrame):
             self.engine.playback_active = True
+            map_log(
+                "stt.bot_started",
+                block=self.engine.stt_block_reason(),
+                tts_busy=self.engine.tts_busy,
+            )
             logger.info("AUDIO bot_started_speaking")
         elif isinstance(frame, BotStoppedSpeakingFrame):
+            remain = max(0.0, self.engine.playback_until - time.monotonic())
+            map_log(
+                "stt.bot_stopped",
+                remain_s=f"{remain:.3f}",
+                tts_busy=self.engine.tts_busy,
+                playback_active=self.engine.playback_active,
+            )
             self.engine.playback_active = False
+            self.engine.tts_busy = False
             self.engine.playback_ended_at = time.monotonic()
-            logger.info("AUDIO bot_stopped_speaking (posible hueco si sigue TTS)")
+            logger.info("AUDIO bot_stopped_speaking remain_s={:.3f}", remain)
         await super().process_frame(frame, direction)
 
     async def cancel(self, frame):
+        map_log("stt.cancel", block=self.engine.stt_block_reason())
         await super().cancel(frame)
         self.engine.playback_active = False
+        self.engine.tts_busy = False
         self.engine.playback_ended_at = 0.0
 
     async def run_stt(self, audio: bytes):
         # Don't enqueue echo behind synthesis on the shared GPU worker.
-        if self.engine.stt_is_blocked():
+        reason = self.engine.stt_block_reason()
+        if reason != "open":
+            map_log("stt.skip", reason=reason, audio_bytes=len(audio or b""))
             return
         started = time.perf_counter()
         try:
             text = await self.engine.call(self.engine.transcribe, audio)
+            map_log(
+                "stt.out",
+                ms=f"{(time.perf_counter() - started) * 1000:.0f}",
+                chars=len(text or ""),
+                text=repr(text)[:80],
+                block_now=self.engine.stt_block_reason(),
+            )
             logger.info(
                 "LATENCY stt_ms={:.0f} text={!r}",
                 (time.perf_counter() - started) * 1000,
@@ -590,6 +683,7 @@ class MLXSTTService(SegmentedSTTService):
                     text, self._user_id, time_now_iso8601(), language=Language.ES
                 )
         except Exception as exc:
+            map_log("stt.error", err=type(exc).__name__)
             logger.exception("MLX transcription failed")
             yield ErrorFrame(error=f"MLX STT: {type(exc).__name__}")
 
@@ -647,6 +741,7 @@ class QwenMLXTTSService(TTSService):
             len(text or ""),
             preview,
         )
+        map_log("qwen.begin", ctx=context_id, chars=len(text or ""), preview=repr(preview))
         self.engine.remember_spoken(text)
         self.engine.tts_busy = True
         generator = self.engine.speech(text)
@@ -702,6 +797,13 @@ class QwenMLXTTSService(TTSService):
                     first = False
                     first_audio_ms = (time.perf_counter() - started) * 1000
                     await self.stop_ttfb_metrics()
+                    map_log(
+                        "qwen.first",
+                        ctx=context_id,
+                        ms=f"{first_audio_ms:.0f}",
+                        prebuffer_s=f"{buffered_seconds:.2f}",
+                        chunks=pcm_chunks,
+                    )
                     logger.info(
                         "LATENCY tts_first_audio_ms={:.0f} prebuffer_filled_s={:.2f}",
                         first_audio_ms,
@@ -717,6 +819,13 @@ class QwenMLXTTSService(TTSService):
                     gap = max(0.0, now - playback_until)
                     if gap > 0.08:
                         starvation_events += 1
+                        map_log(
+                            "qwen.underrun",
+                            ctx=context_id,
+                            gap_ms=f"{gap * 1000:.0f}",
+                            chunk=pcm_chunks,
+                            audio_s=f"{total_audio_seconds:.2f}",
+                        )
                         logger.warning(
                             "AUDIO underrun context={} gap_ms={:.0f} chunk={} "
                             "audio_s={:.2f} gen_s={:.2f}",
@@ -788,6 +897,16 @@ class QwenMLXTTSService(TTSService):
                 starvation_seconds * 1000,
                 starvation_events,
                 pcm_chunks,
+            )
+            map_log(
+                "qwen.end",
+                ctx=context_id,
+                completed=completed,
+                audio_s=f"{total_audio_seconds:.2f}",
+                gen_s=f"{gen_s:.2f}",
+                drain_s=f"{drain_s:.2f}",
+                chunks=pcm_chunks,
+                underrun=starvation_events,
             )
             if realtime_ratio < 0.85 and total_audio_seconds > 1.0:
                 logger.warning(

@@ -65,11 +65,30 @@ def install_studio_frontend() -> None:
     run_mod._setup_frontend_routes = _setup_studio_routes
 
 
+def install_no_store_static(app) -> None:
+    """El Studio es local y cambia seguido: nada de cache en HTML/JS/CSS.
+
+    Un `webrtc.js` cacheado siguió mandando `ping` cada 4 s tras el fix a 1 s
+    y el transporte volvió a tirar audio (log 10:05:02 transport.drop).
+    """
+
+    @app.middleware("http")
+    async def _no_store(request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if path in ("/", "/studio", "/styles.css") or path.startswith("/js/"):
+            response.headers["Cache-Control"] = "no-store, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+        return response
+
+
 def _setup_studio_routes(app) -> None:
     from fastapi.responses import FileResponse
     from fastapi.staticfiles import StaticFiles
 
     from app.orchestrator.loader import default_flow_key
+
+    install_no_store_static(app)
 
     @app.get("/api/studio/config", include_in_schema=False)
     async def studio_config():

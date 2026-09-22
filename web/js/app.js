@@ -1,6 +1,6 @@
 import { mountGlobe } from "./globe.js";
 import { mountVoice } from "./voice.js";
-import { startCall } from "./webrtc.js";
+import { startCall } from "./webrtc.js?v=20260922b";
 import { createHud } from "./hud.js";
 
 const lobby = document.getElementById("lobby");
