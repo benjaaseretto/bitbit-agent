@@ -2,6 +2,7 @@ import { mountGlobe } from "./globe.js";
 import { mountVoice } from "./voice.js";
 import { startCall } from "./webrtc.js?v=20260922k4";
 import { createHud } from "./hud.js?v=20260922k4";
+import { createViz } from "./viz.js?v=20260922k4";
 import { mountVoiceLab } from "./voice-lab.js?v=20260922k4";
 
 const lobby = document.getElementById("lobby");
@@ -43,6 +44,14 @@ let voiceLab;
 let call;
 let statsTimer = 0;
 let botRunning = false;
+
+const viz = createViz(document.querySelector("[data-viz-panel]"), {
+  sendText: (text) => {
+    if (!call) return;
+    call.sendText(text);
+    hud.apply({ type: "transcript", role: "user", text, streaming: false });
+  },
+});
 
 try {
   globe = mountGlobe(globeHost, { ambient: false });
@@ -126,6 +135,7 @@ async function loadFlows() {
 function enterHud() {
   document.getElementById("user-log").replaceChildren();
   document.getElementById("bot-log").replaceChildren();
+  viz?.reset();
   lobby.classList.add("is-hidden");
   hudEl.classList.remove("is-hidden");
   document.body.classList.add("is-live");
@@ -164,7 +174,10 @@ async function connect() {
     voice = mountVoice(voiceHost);
     call = await startCall({
       flowKey: flowSelect.value,
-      onMessage: (payload) => hud.apply(payload),
+      onMessage: (payload) => {
+        hud.apply(payload);
+        viz?.apply(payload);
+      },
       onTrack(stream) {
         remoteAudio.srcObject = stream;
         remoteAudio.play().catch(() => {});

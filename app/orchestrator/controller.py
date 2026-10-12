@@ -1,6 +1,7 @@
 """Orquestador Pipecat: swap de fase + tools desde tasks independientes."""
 from __future__ import annotations
 
+import os
 from typing import Any, Awaitable, Callable, Optional
 
 from loguru import logger
@@ -15,6 +16,7 @@ from app.tasks.registry import ensure_builtin_tasks_loaded, get_task_class
 
 SpeakFn = Callable[[str], Awaitable[None]]
 PhaseFn = Callable[[str], Awaitable[None]]
+EmitFn = Callable[[dict[str, Any]], Awaitable[None]]
 
 ensure_builtin_tasks_loaded()
 
@@ -22,6 +24,15 @@ _PHASE_TASK_TYPES = {
     "identity": "IdentityVerificationTask",
     "negotiation": "AppointmentSchedulingTask",
 }
+
+
+def _insights_enabled() -> bool:
+    try:
+        from app.analytics.datasource import insights_enabled
+
+        return insights_enabled()
+    except Exception:
+        return False
 
 
 class FlowController:
@@ -34,12 +45,15 @@ class FlowController:
         *,
         speak: SpeakFn,
         on_phase: Optional[PhaseFn] = None,
+        emit: Optional[EmitFn] = None,
     ) -> None:
         self.session = session
         self.flow = flow
         self._speak = speak
         self._on_phase = on_phase
+        self._emit = emit
         self._tasks: dict[str, BaseTask] = {}
+        self._insights: Optional[BaseTask] = None
         self._active: BaseTask = self._build_task_for_phase(session.phase)
 
     def _make_ctx(self) -> TaskContext:
@@ -50,7 +64,34 @@ class FlowController:
             set_phase=self._set_phase,
             say_node=self._say_node,
             advance=self._advance,
+            emit=self._emit,
         )
+
+    def _insights_task(self) -> Optional[BaseTask]:
+        """Task de insights (solo con BITBIT_INSIGHTS=1). Lazy y cacheada."""
+        if not _insights_enabled():
+            return None
+        if self._insights is None:
+            try:
+                from app.tasks.insights import DataInsightsTask
+
+                self._insights = DataInsightsTask(self._make_ctx())
+            except Exception:
+                logger.exception("No se pudo construir DataInsightsTask")
+                return None
+        return self._insights
+
+    def _insights_tools(self) -> list:
+        task = self._insights_task()
+        return list(task.tools()) if task else []
+
+    _INSIGHTS_PROMPT_HINT = (
+        "\nCONSULTAS DE DATOS: si preguntan por recupero, deuda, pagos, "
+        "distribución o ranking de deudores, usá consultar_recupero, "
+        "comparar_periodos, distribucion_deuda o top_deudores con el período "
+        "pedido (este_mes, mes_anterior, ultima_semana, ultimos_3_meses). "
+        "NO inventes cifras: los valores salen de las tools.\n"
+    )
 
     async def _say_node(self, node_id: str) -> None:
         text = say_text(self.flow, node_id, self.session)
@@ -131,14 +172,20 @@ class FlowController:
 
     def negotiation_system_prompt(self) -> str:
         task = self._build_task_for_phase("negotiation")
-        return task.system_prompt()
+        prompt = task.system_prompt()
+        if self._insights_tools():
+            prompt += self._INSIGHTS_PROMPT_HINT
+        return prompt
 
     def tools_for_phase(self, phase: Optional[str] = None) -> list:
         p = phase or self.session.phase
         if p == "done":
             return []
         task = self._build_task_for_phase(p)
-        return list(task.tools())
+        tools = list(task.tools())
+        if p == "negotiation":
+            tools.extend(self._insights_tools())
+        return tools
 
     def tool_choice_for_phase(self, phase: Optional[str] = None) -> str:
         p = phase or self.session.phase

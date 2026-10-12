@@ -17,7 +17,12 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
-from pipecat.frames.frames import InputAudioRawFrame, LLMUpdateSettingsFrame, TTSSpeakFrame
+from pipecat.frames.frames import (
+    InputAudioRawFrame,
+    LLMUpdateSettingsFrame,
+    OutputTransportMessageFrame,
+    TTSSpeakFrame,
+)
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker, ProcessorUnusablePolicy
 from pipecat.processors.aggregators.llm_context import LLMContext
@@ -207,7 +212,11 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             if worker is not None:
                 await worker.stop_when_done()
 
-    controller = FlowController(session, flow, speak=speak, on_phase=on_phase)
+    async def emit_visual(payload: dict) -> None:
+        """Canal bot → frontend para visualizaciones (mismo canal que el HUD)."""
+        await transport.output().send_message(OutputTransportMessageFrame(message=payload))
+
+    controller = FlowController(session, flow, speak=speak, on_phase=on_phase, emit=emit_visual)
 
     llm = BitbitDeepSeekLLMService(
         api_key=os.environ["DEEPSEEK_API_KEY"],

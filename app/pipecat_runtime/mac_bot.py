@@ -9,7 +9,12 @@ import httpx
 from loguru import logger
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
-from pipecat.frames.frames import InputAudioRawFrame, LLMUpdateSettingsFrame, TTSSpeakFrame
+from pipecat.frames.frames import (
+    InputAudioRawFrame,
+    LLMUpdateSettingsFrame,
+    OutputTransportMessageFrame,
+    TTSSpeakFrame,
+)
 from pipecat.observers.user_bot_latency_observer import UserBotLatencyObserver
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker, ProcessorUnusablePolicy
@@ -439,7 +444,13 @@ async def run_bot(transport, runner_args: RunnerArguments):
                 delta = OpenAILLMService.Settings(system_instruction=prompt)
             await llm.queue_frame(LLMUpdateSettingsFrame(delta=delta))
 
-        controller = FlowController(session, flow, speak=speak, on_phase=on_phase)
+        async def emit_visual(payload: dict) -> None:
+            """Canal bot → frontend para visualizaciones (mismo canal que el HUD)."""
+            await transport.output().send_message(
+                OutputTransportMessageFrame(message=payload)
+            )
+
+        controller = FlowController(session, flow, speak=speak, on_phase=on_phase, emit=emit_visual)
         llm = build_llm(config, controller.identity_system_prompt())
         context = LLMContext(
             tools=controller.tools_for_phase("identity"),
