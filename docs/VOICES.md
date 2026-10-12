@@ -3,9 +3,19 @@
 No hay clonación de cantantes famosos: eso requiere derechos de imagen/voz.
 Acá están las voces **preset** que el stack ya soporta, más cómo usar **tu propia** grabación.
 
+## Laboratorio de voz (Studio)
+
+En http://localhost:7860/ el lobby tiene **Laboratorio de voz**:
+
+1. Elegí **Preset Qwen** (Serena, Vivian, …) o **Clonar la mía**.
+2. Para clonar: nombre + transcripción exacta → Grabar 8–20 s → Escuchar → Guardar y activar.
+3. Apagá y encendé el bot para aplicar la voz (el hijo lee `presets/voices/active.json`).
+
+Solo audio propio o con permiso escrito. No celebridades.
+
 ## Qwen3-TTS CustomVoice (perfil Mac / `run_local.py`)
 
-Variable: `QWEN_TTS_VOICE` en `.env` o `.env.mac`.
+Variable: `QWEN_TTS_VOICE` en `.env` o `.env.mac`. El Studio también la fija vía `active.json`.
 
 | ID | Notas |
 |----|--------|

@@ -22,10 +22,10 @@ DEEPSEEK_MODEL = "deepseek-flash"
 
 
 def load_config_env() -> None:
-    # .env.local gana (TEST_* de prueba, como colly). Luego perfil Mac y .env general.
-    load_dotenv(ROOT / ".env.local", override=False)
-    load_dotenv(ROOT / ".env.mac", override=False)
+    # .env general primero; .env.mac pisa (perfil Mac). .env.local gana del todo.
     load_dotenv(ROOT / ".env", override=False)
+    load_dotenv(ROOT / ".env.mac", override=True)
+    load_dotenv(ROOT / ".env.local", override=True)
 
 
 @dataclass(frozen=True)
@@ -56,6 +56,14 @@ class RuntimeConfig:
     @classmethod
     def from_env(cls, *, require_llm: bool = True) -> RuntimeConfig:
         load_config_env()
+        # Studio voice lab (active.json) gana sobre .env.mac (TTS_VOICE_MODE=preset).
+        try:
+            from app.pipecat_runtime.voice_lab import env_overrides_from_active
+
+            for key, value in env_overrides_from_active().items():
+                os.environ[key] = value
+        except Exception:
+            pass
         provider = (os.getenv("LLM_PROVIDER") or "deepseek").strip().lower()
         # .env del bot HTTP puede traer whisper-http; el perfil Mac solo acepta MLX.
         stt = (os.getenv("STT_ENGINE") or "whisper-mlx").strip().lower()

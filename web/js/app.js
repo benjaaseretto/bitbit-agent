@@ -1,7 +1,8 @@
 import { mountGlobe } from "./globe.js";
 import { mountVoice } from "./voice.js";
-import { startCall } from "./webrtc.js?v=20260922b";
-import { createHud } from "./hud.js";
+import { startCall } from "./webrtc.js?v=20260922k4";
+import { createHud } from "./hud.js?v=20260922k4";
+import { mountVoiceLab } from "./voice-lab.js?v=20260922k4";
 
 const lobby = document.getElementById("lobby");
 const hudEl = document.getElementById("hud");
@@ -38,6 +39,7 @@ const hud = createHud({
 
 let globe;
 let voice;
+let voiceLab;
 let call;
 let statsTimer = 0;
 let botRunning = false;
@@ -48,12 +50,21 @@ try {
   lobbyStatus.textContent = "El globo 3D no pudo cargar; el enlace de voz sigue disponible.";
 }
 
+function setCtaWeight(button, primary) {
+  if (!button) return;
+  button.classList.toggle("btn-pill-primary", primary);
+  button.classList.toggle("btn-pill-secondary", !primary);
+}
+
 function setBotUi(running) {
   botRunning = Boolean(running);
   if (startBtn) startBtn.disabled = botRunning;
   if (shutdownBtn) shutdownBtn.disabled = !botRunning;
   if (shutdownHudBtn) shutdownHudBtn.disabled = !botRunning;
-  connectBtn.disabled = !botRunning;
+  // Se puede conectar aunque el bot esté apagado: prepareForCall lo enciende.
+  connectBtn.disabled = false;
+  setCtaWeight(startBtn, !botRunning);
+  setCtaWeight(connectBtn, true);
 }
 
 async function fetchStatus() {
@@ -67,9 +78,11 @@ async function refreshBotStatus() {
     const status = await fetchStatus();
     setBotUi(status.running);
     if (!status.running) {
-      lobbyStatus.textContent = "Bot apagado. Tocá Encender bot.";
+      lobbyStatus.textContent = "Bot apagado. Elegí voz e iniciá el enlace (o Encender bot).";
     } else if (!call) {
-      lobbyStatus.textContent = "Bot encendido. Listo para conectar.";
+      lobbyStatus.textContent = status.ready
+        ? "Bot listo. Elegí voz e iniciá el enlace."
+        : "Bot arrancando…";
     }
     return status;
   } catch {
@@ -116,6 +129,7 @@ function enterHud() {
   lobby.classList.add("is-hidden");
   hudEl.classList.remove("is-hidden");
   document.body.classList.add("is-live");
+  voiceLab?.setCallLocked?.(true);
   globe?.setAmbient(true);
 }
 
@@ -123,19 +137,29 @@ function leaveHud() {
   lobby.classList.remove("is-hidden");
   hudEl.classList.add("is-hidden");
   document.body.classList.remove("is-live");
+  voiceLab?.setCallLocked?.(false);
   globe?.setAmbient(false);
   voice?.dispose();
   voice = null;
 }
 
 async function connect() {
-  if (!botRunning) {
-    lobbyStatus.textContent = "Encendé el bot antes de iniciar el enlace.";
-    return;
-  }
   connectBtn.disabled = true;
-  lobbyStatus.textContent = "Pidiendo micrófono y negociando WebRTC…";
+  lobbyStatus.textContent = "Preparando voz elegida…";
   try {
+    if (voiceLab?.prepareForCall) {
+      await voiceLab.prepareForCall({
+        onProgress(text) {
+          lobbyStatus.textContent = text;
+        },
+      });
+      setBotUi(true);
+    } else if (!botRunning) {
+      lobbyStatus.textContent = "Encendé el bot antes de iniciar el enlace.";
+      setBotUi(false);
+      return;
+    }
+    lobbyStatus.textContent = "Pidiendo micrófono y negociando WebRTC…";
     enterHud();
     voice = mountVoice(voiceHost);
     call = await startCall({
@@ -170,7 +194,7 @@ async function connect() {
   } catch (error) {
     leaveHud();
     lobbyStatus.textContent = error.message || "No se pudo abrir el enlace.";
-    setBotUi(botRunning);
+    await refreshBotStatus();
   }
 }
 
@@ -248,4 +272,19 @@ if (preview) {
   }
 }
 
-loadFlows().then(() => refreshBotStatus());
+loadFlows()
+  .then(() => refreshBotStatus())
+  .then(async () => {
+    const host = document.getElementById("voice-lab");
+    if (!host) return;
+    voiceLab = mountVoiceLab(host);
+    try {
+      await voiceLab.refresh();
+    } catch (error) {
+      const voiceStatus = host.querySelector("[data-voice-status]");
+      if (voiceStatus) {
+        voiceStatus.textContent =
+          error?.message || "Laboratorio de voz offline; el enlace sigue disponible.";
+      }
+    }
+  });

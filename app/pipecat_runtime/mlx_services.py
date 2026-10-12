@@ -281,14 +281,18 @@ class MLXAudioEngine:
 
     def stt_block_reason(self) -> str:
         now = time.monotonic()
-        if self.tts_busy:
+        # Con barge-in habilitado hay que transcribir mientras el bot habla;
+        # el eco se filtra en _sanitize_transcript(last_spoken=…).
+        barge_in = int(os.getenv("INTERRUPTION_MIN_WORDS", "0") or "0") > 0
+        if self.tts_busy and not barge_in:
             return "tts_busy"
-        if self.playback_active:
+        if self.playback_active and not barge_in:
             return "playback_active"
-        if self.playback_until > now:
+        if self.playback_until > now and not barge_in:
             return f"playout+{self.playback_until - now:.2f}s"
         if self.playback_ended_at > 0 and now - self.playback_ended_at < 0.2:
             return f"cooldown+{now - self.playback_ended_at:.2f}s"
+        return "open"
         return "open"
 
     def stt_is_blocked(self):
@@ -324,7 +328,14 @@ class MLXAudioEngine:
 
     async def warmup(self, *, with_tts: bool = True):
         """Compile the actual audio paths before accepting microphone input."""
-        if with_tts and self.tts is not None:
+        # Clone (Base + ref_audio) tarda minutos en la primera síntesis; si
+        # calentamos acá el supervisor mata el bot a los 180s sin abrir :7870.
+        warm_tts = (
+            with_tts
+            and self.tts is not None
+            and self.config.voice_mode != "clone"
+        )
+        if warm_tts:
             generator = self.speech("Hola, buen día.")
             chunks = []
             try:
@@ -347,6 +358,10 @@ class MLXAudioEngine:
                     wav.writeframes((np.clip(samples, -1, 1) * 32767).astype("<i2").tobytes())
                 await self.call(self.transcribe, audio.getvalue())
         else:
+            if with_tts and self.config.voice_mode == "clone":
+                logger.info(
+                    "MLX clone TTS: skip full warmup (primera frase de la llamada compila)"
+                )
             audio = io.BytesIO()
             with wave.open(audio, "wb") as wav:
                 wav.setnchannels(1)
@@ -354,7 +369,11 @@ class MLXAudioEngine:
                 wav.setframerate(16000)
                 wav.writeframes(b"\x00\x00" * 16000)
             await self.call(self.transcribe, audio.getvalue())
-        logger.info("MLX audio warmed up with_tts={}", with_tts)
+        logger.info(
+            "MLX audio warmed up with_tts={} voice_mode={}",
+            warm_tts,
+            self.config.voice_mode,
+        )
 
     def _snapshot(self, repo_id: str) -> str:
         """Usa cache local; si está incompleto, completa por red."""
@@ -394,8 +413,9 @@ class MLXAudioEngine:
         else:
             self.tts = None
             logger.info(
-                "MLX STT loaded engine={} (TTS external/Kokoro)",
+                "MLX STT loaded engine={} (TTS weights deferred; engine={})",
                 self.config.stt_engine,
+                os.getenv("TTS_ENGINE", "unset"),
             )
 
     def transcribe(self, audio: bytes) -> str:
@@ -736,8 +756,14 @@ class QwenMLXTTSService(TTSService):
         if len(preview) > 80:
             preview = preview[:77] + "…"
         logger.info(
-            "TTS begin context={} chars={} text={!r}",
+            "TTS begin context={} mode={} voice={} chars={} text={!r}",
             context_id,
+            self.engine.config.voice_mode,
+            (
+                self.engine.config.reference_audio
+                if self.engine.config.voice_mode == "clone"
+                else self.engine.config.voice
+            ),
             len(text or ""),
             preview,
         )
