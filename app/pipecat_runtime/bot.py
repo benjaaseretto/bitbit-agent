@@ -195,6 +195,8 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
                     delta=DeepSeekLLMService.Settings(
                         system_instruction=ctrl.negotiation_system_prompt(),
                         thinking=_THINKING_OFF,
+                        temperature=0.3,
+                        max_tokens=220,
                     )
                 )
             )
@@ -213,6 +215,8 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             model=deepseek_model,
             system_instruction=controller.identity_system_prompt(),
             thinking=_THINKING_OFF,
+            temperature=0.3,
+            max_tokens=220,
         ),
     )
     llm_holder["llm"] = llm

@@ -189,9 +189,7 @@ class FlowController:
 
     @property
     def responder_kb(self):
-        task = self._build_task_for_phase(
-            "negotiation" if self.session.phase != "identity" else "negotiation"
-        )
+        task = self._build_task_for_phase("negotiation")
         fn = getattr(task, "responder_kb", None)
         if fn:
             return fn

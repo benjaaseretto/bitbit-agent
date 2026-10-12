@@ -39,10 +39,14 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
     def system_prompt(self) -> str:
         params = self.node_params(self.node_id)
         custom = params.get("custom_instructions") or ""
-        kb_lines = [
-            f"- Q: {item.get('question')}\n  A: {item.get('answer')}"
+        # Índice compacto de temas: la respuesta determinista sale de
+        # responder_kb (matcheo en código, run_llm=False). Incrustar las
+        # respuestas completas costaba ~400-600 tokens en CADA request.
+        kb_topics = "; ".join(
+            topic.strip()
             for item in self.session.knowledge_base[:15]
-        ]
+            for topic in str(item.get("question", "")).split("|")[:1]
+        )
         hoy = today_in_tz(self.session.timezone).isoformat()
         manana = resolve_relative_fecha("mañana", timezone=self.session.timezone)
         if self._confirm_mode():
@@ -72,7 +76,9 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
                 "- finalizar(reagendar_despues) si pide que lo llamen otro día.\n"
                 "No verbalices nombres de tools.\n"
                 f"{custom}\n"
-                f"KB (referencia):\n" + "\n".join(kb_lines)
+                "TEMAS FAQ (ante una de estos, llamá responder_kb con la pregunta "
+                f"literal del usuario y volvé a pedir la confirmación de asistencia; "
+                f"NO improvises la respuesta): {kb_topics}.\n"
             )
         return (
             f"Sos {self.session.nombre_agente}, asistente de agenda de {self.session.nombre_empresa}.\n"
@@ -101,15 +107,17 @@ class AppointmentSchedulingTask(KbMixin, BaseTask):
             "finalizar(reagendar_despues) si pide que lo llamen otro día.\n"
             "No verbalices nombres de tools.\n"
             f"{custom}\n"
-            f"KB (referencia):\n" + "\n".join(kb_lines)
+            "TEMAS FAQ (ante una de estos, llamá responder_kb con la pregunta "
+            f"literal del usuario; NO improvises la respuesta): {kb_topics}.\n"
         )
 
     def tools(self) -> Sequence[Callable[..., Any]]:
         if self._confirm_mode():
+            # agendar_cita == reagendar_cita en confirm mode: una sola tool
+            # (menos tokens de schema por request y menos ambigüedad de routing).
             return [
                 self.confirmar_asistencia,
                 self.reagendar_cita,
-                self.agendar_cita,
                 self.cancelar_cita,
                 self.finalizar,
                 self.responder_kb,
