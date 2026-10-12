@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,54 +7,153 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Rajdhani:wght@500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./styles.css?v=20260922k4" />
   </head>
   <body>
     <div class="stage" id="stage">
       <div id="globe-host" class="globe-host" aria-hidden="true"></div>
       <div class="vignette" aria-hidden="true"></div>
       <div class="scanlines" aria-hidden="true"></div>
+      <div class="sparkle" aria-hidden="true"></div>
 
       <header class="chrome">
-        <p class="chrome-mark">BITBIT</p>
-        <p class="chrome-sub">agente conversacional</p>
+        <div class="chrome-brand">
+          <span class="chrome-mark-icon" aria-hidden="true">B</span>
+          <div>
+            <p class="chrome-mark">bitbit</p>
+            <p class="chrome-sub">agente conversacional</p>
+          </div>
+        </div>
+        <p id="lobby-status" class="chrome-status" role="status">Listo para conectar.</p>
       </header>
 
       <main id="lobby" class="lobby">
-        <section class="lobby-brand">
-          <p class="kicker">Inteligencia operativa · en tiempo real</p>
-          <h1>
-            BITBIT
-            <span>agente conversacional</span>
-          </h1>
+        <section class="lobby-hero">
+          <h1>Hablá con el agente.<br />Cloná tu voz.</h1>
           <p class="manifesto">
-            El mundo gira detrás. La voz responde adelante. Un enlace WebRTC
-            con el mismo núcleo 3D del inicio.
+            Encendé el runtime, elegí flujo y voz, después iniciá la llamada.
           </p>
-        </section>
 
-        <aside class="lobby-panel aurus-panel">
-          <p class="panel-kicker">Establecer enlace</p>
-          <label class="field">
+          <div class="cta-row">
+            <button id="start-btn" class="btn-pill btn-pill-primary" type="button">
+              <span class="btn-pill-kicker">Runtime</span>
+              <span class="btn-pill-label">Encender bot</span>
+            </button>
+            <button id="connect-btn" class="btn-pill btn-pill-secondary" type="button" disabled>
+              <span class="btn-pill-kicker">Live</span>
+              <span class="btn-pill-label">Iniciar llamada</span>
+            </button>
+            <button id="shutdown-btn" class="btn-pill btn-pill-ghost" type="button" disabled>
+              Apagar
+            </button>
+          </div>
+
+          <label class="field field-flow">
             <span>Flujo</span>
             <select id="flow-select"></select>
           </label>
-          <p id="lobby-status" class="lobby-status" role="status">
-            Listo para conectar.
+        </section>
+
+        <section
+          id="voice-lab"
+          class="voice-lab"
+          aria-label="Laboratorio de voz"
+        >
+          <header class="voice-lab-head">
+            <div>
+              <p class="panel-kicker">Voces</p>
+              <h2>Elegí tu voz</h2>
+              <p class="voice-lab-lead">
+                Tocá una de tus voces clonadas (o un preset). Al iniciar la llamada se usa esa.
+              </p>
+            </div>
+            <p id="voice-active" class="voice-active">Para la llamada: —</p>
+          </header>
+
+          <div class="voice-mine-block">
+            <h3>Mis voces</h3>
+            <p class="voice-clone-help">
+              Elegí la que quieras oír en la llamada. Podés probarla antes.
+            </p>
+            <div id="voice-clones" class="voice-clones" aria-live="polite"></div>
+          </div>
+
+          <button
+            id="voice-clone-toggle"
+            class="voice-clone-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="voice-clone-panel"
+          >
+            <span class="voice-clone-toggle-label">Grabar una voz nueva</span>
+            <span class="voice-clone-toggle-meta" data-clone-count>0 guardadas</span>
+            <span class="voice-clone-toggle-chevron" aria-hidden="true">▾</span>
+          </button>
+
+          <div
+            id="voice-clone-panel"
+            data-clone-panel
+            class="voice-clone-panel is-collapsed"
+            hidden
+          >
+            <div class="voice-clone-block">
+              <h3>Nueva clonación</h3>
+              <label class="field">
+                <span>Nombre de la voz</span>
+                <input id="voice-name" type="text" maxlength="48" placeholder="Ana · demo" />
+              </label>
+              <label class="field field-transcript">
+                <span>Transcripción exacta</span>
+                <textarea
+                  id="voice-transcript"
+                  rows="3"
+                  maxlength="400"
+                  placeholder="Lo que vas a leer en voz alta"
+                ></textarea>
+              </label>
+              <p id="voice-hint" class="voice-hint"></p>
+
+              <div class="voice-recorder">
+                <div class="voice-meter-wrap">
+                  <div id="voice-meter" class="voice-meter" aria-hidden="true"></div>
+                  <span id="voice-timer" class="voice-timer">0s</span>
+                </div>
+                <div class="voice-recorder-actions">
+                  <button id="voice-record" class="btn-pill btn-pill-primary" type="button">
+                    Grabar
+                  </button>
+                  <button id="voice-stop" class="btn-pill btn-pill-secondary" type="button">
+                    Detener
+                  </button>
+                  <button id="voice-play" class="btn-pill btn-pill-secondary" type="button">
+                    Probar toma
+                  </button>
+                  <button id="voice-save" class="btn-pill btn-pill-primary" type="button">
+                    Guardar y elegir
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div data-preset-panel class="voice-preset-panel">
+            <p class="voice-preset-kicker">O usá un preset Qwen</p>
+            <label class="field">
+              <span>Preset</span>
+              <select id="voice-preset"></select>
+            </label>
+            <button id="voice-activate-preset" class="btn-pill btn-pill-secondary" type="button">
+              Elegir este preset
+            </button>
+          </div>
+
+          <p data-voice-status class="lobby-status" role="status">
+            Elegí una de tus voces arriba e iniciá la llamada.
           </p>
-          <button id="connect-btn" class="btn-primary" type="button">
-            Iniciar enlace
-          </button>
-          <button id="start-btn" class="btn-secondary" type="button">
-            Encender bot
-          </button>
-          <button id="shutdown-btn" class="btn-danger" type="button">
-            Apagar bot
-          </button>
-        </aside>
+        </section>
       </main>
 
       <section id="hud" class="hud is-hidden" aria-label="Consola de conversación">
@@ -156,6 +255,6 @@
     </div>
 
     <audio id="remote-audio" autoplay playsinline></audio>
-    <script type="module" src="./js/app.js?v=20260922b"></script>
+    <script type="module" src="./js/app.js?v=20260922k4"></script>
   </body>
 </html>

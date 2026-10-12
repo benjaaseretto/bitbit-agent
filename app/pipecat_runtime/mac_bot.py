@@ -49,8 +49,20 @@ _active_call = False
 
 
 def _tts_engine_name() -> str:
-    # Kokoro is the stable default on Mac after Qwen streaming cutoffs.
-    return (os.getenv("TTS_ENGINE") or "kokoro").strip().lower()
+    # Qwen is the natural default on Mac; Kokoro remains opt-in.
+    return (os.getenv("TTS_ENGINE") or "qwen-mlx").strip().lower()
+
+
+def _apply_mac_voice_env() -> None:
+    """Studio voice lab wins over parent shell / shared `.env` (TTS_ENGINE=kokoro)."""
+    try:
+        from app.pipecat_runtime.voice_lab import env_overrides_from_active
+
+        for key, value in env_overrides_from_active().items():
+            os.environ[key] = value
+    except Exception as exc:
+        logger.warning("No se pudo aplicar active voice: {}", exc)
+        os.environ.setdefault("TTS_ENGINE", "qwen-mlx")
 
 
 # Kokoro Mac: sintetizar en paquetes cortos y yield ya, para no esperar
@@ -63,8 +75,10 @@ def _build_tts(engine: MLXAudioEngine, config: RuntimeConfig):
     if name in ("qwen", "qwen-mlx", "mlx"):
         tts = QwenMLXTTSService(engine)
         logger.info(
-            "TTS ready engine=qwen-mlx voice={} speed={} volume={}",
-            config.voice,
+            "TTS ready engine=qwen-mlx mode={} voice={} ref={} speed={} volume={}",
+            config.voice_mode,
+            config.voice if config.voice_mode == "preset" else "(clone)",
+            (config.reference_audio or "")[:72],
             config.tts_speed,
             config.tts_volume,
         )
@@ -329,7 +343,9 @@ async def run_bot(transport, runner_args: RunnerArguments):
         raise RuntimeError(
             "Este perfil admite una conversación a la vez en la Mac de 16 GB."
         )
+    _apply_mac_voice_env()
     config = RuntimeConfig.from_env()
+    _apply_mac_voice_env()
     await check_llm(config)
     session, flow = build_session(merge_call_metadata(load_metadata(), runner_args))
     _active_call = True
@@ -337,6 +353,17 @@ async def run_bot(transport, runner_args: RunnerArguments):
     owned = _engine is None
     worker_holder: dict = {}
     use_qwen_tts = _tts_engine_name() in ("qwen", "qwen-mlx", "mlx")
+    voice_label = (
+        config.reference_audio
+        if config.voice_mode == "clone"
+        else (config.voice or "preset")
+    )
+    try:
+        from app.pipecat_runtime.voice_lab import set_call_lock
+
+        set_call_lock(active=True, voice_label=str(voice_label or ""))
+    except Exception as exc:
+        logger.warning("No se pudo escribir call lock: {}", exc)
     try:
         if owned:
             await engine.load(with_tts=use_qwen_tts)
@@ -344,10 +371,14 @@ async def run_bot(transport, runner_args: RunnerArguments):
         stt = MLXSTTService(engine)
         tts = _build_tts(engine, config)
         playout_hold = PlayoutHoldTTSStopped(engine)
-        if use_qwen_tts and config.voice_mode == "preset":
-            logger.warning(
-                "VOICE mode=preset: voz de prueba; pendiente referencia humana en español"
+        if use_qwen_tts and config.voice_mode == "clone":
+            logger.info(
+                "VOICE mode=clone ref_audio={} ref_text_chars={}",
+                config.reference_audio,
+                len(config.reference_text or ""),
             )
+        elif use_qwen_tts and config.voice_mode == "preset":
+            logger.info("VOICE mode=preset voice={}", config.voice)
 
         async def speak(text):
             # Un solo TTSSpeakFrame por turno. Partir en ~280 (log 21:39:50,
@@ -496,6 +527,12 @@ async def run_bot(transport, runner_args: RunnerArguments):
             await runner.run()
     finally:
         _active_call = False
+        try:
+            from app.pipecat_runtime.voice_lab import set_call_lock
+
+            set_call_lock(active=False)
+        except Exception:
+            pass
         if owned:
             await engine.close()
 
@@ -521,12 +558,23 @@ async def bot(runner_args: RunnerArguments):
 
 def _main():
     global _engine
+    # Apply before and after dotenv: shared `.env` still says kokoro for Linux.
+    _apply_mac_voice_env()
     config = RuntimeConfig.from_env()
+    _apply_mac_voice_env()
     _engine = MLXAudioEngine(config)
 
     async def prepare():
         await check_llm(config)
-        use_qwen = _tts_engine_name() in ("qwen", "qwen-mlx", "mlx")
+        _apply_mac_voice_env()
+        engine_name = _tts_engine_name()
+        use_qwen = engine_name in ("qwen", "qwen-mlx", "mlx")
+        logger.info(
+            "Mac audio profile tts_engine={} load_qwen_weights={} env={}",
+            engine_name,
+            use_qwen,
+            os.getenv("TTS_ENGINE"),
+        )
         await _engine.load(with_tts=use_qwen)
         await _engine.warmup(with_tts=use_qwen)
 

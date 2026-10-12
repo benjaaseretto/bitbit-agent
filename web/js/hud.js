@@ -79,7 +79,7 @@ export function createHud(els) {
           setText(els.total, `${message.latency_total_ms}ms`);
           latencySeries.push(message.latency_total_ms);
           if (latencySeries.length > 28) latencySeries.shift();
-          sparkline(els.chartLatency, latencySeries, "#39e7ff");
+          sparkline(els.chartLatency, latencySeries, "#0a0a0a");
         }
         const live = [];
         if (message.listening) live.push("ESCUCHANDO…");
@@ -105,11 +105,11 @@ export function createHud(els) {
           setText(els.infer, `${message.latency_infer_ms}ms`);
           latencySeries.push(message.latency_infer_ms);
           if (latencySeries.length > 28) latencySeries.shift();
-          sparkline(els.chartLatency, latencySeries, "#39e7ff");
+          sparkline(els.chartLatency, latencySeries, "#0a0a0a");
         }
         tokenSeries.push(Number(message.tokens_total || 0));
         if (tokenSeries.length > 28) tokenSeries.shift();
-        sparkline(els.chartTokens, tokenSeries, "#ff4ec8");
+        sparkline(els.chartTokens, tokenSeries, "#6b6b6b");
       }
     },
     setRtt(ms) {
