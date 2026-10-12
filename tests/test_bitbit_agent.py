@@ -90,6 +90,14 @@ def _params():
     return SimpleNamespace(result_callback=cb), cb
 
 
+def test_confirm_mode_tools_no_duplicate_booking():
+    """confirm mode: agendar_cita duplica reagendar_cita; una sola tool viaja en el schema."""
+    ctrl, _session, _spoken = _controller()
+    names = [fn.__name__ for fn in ctrl.tools_for_phase("negotiation")]
+    assert "reagendar_cita" in names
+    assert names.count("agendar_cita") == 0
+
+
 @pytest.mark.asyncio
 async def test_script_titular_ok():
     ctrl, session, spoken = _controller()

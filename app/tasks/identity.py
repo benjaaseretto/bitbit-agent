@@ -270,7 +270,8 @@ class IdentityVerificationTask(BaseTask):
                     "phase": self.session.phase,
                     "status": self.session.final_status,
                     "note": (
-                        "Identidad ya resuelta. Usá agendar_cita(fecha_iso) o finalizar. "
+                        "Identidad ya resuelta. Usá agendar_cita(fecha_iso), "
+                        "reagendar_cita(fecha_iso) o finalizar. "
                         "NO vuelvas a llamar esta tool."
                     ),
                 },
